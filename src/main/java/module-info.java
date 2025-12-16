@@ -13,6 +13,7 @@ module com.travelmate.travelmate {
 
 
     opens com.travelmate.travelmate to javafx.fxml;
+    opens com.travelmate.travelmate.controller to javafx.fxml;
 
     exports com.travelmate.travelmate;
 }
