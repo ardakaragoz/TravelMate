@@ -1,10 +1,16 @@
 package com.travelmate.travelmate.model;
 
+import java.util.concurrent.ExecutionException;
+
 public class DirectMessage extends ChatRoom {
 
-    public DirectMessage(int id, User user1, User user2) {
-        super(id, "DIRECT");
+    public DirectMessage(String id, User user1, User user2) throws ExecutionException, InterruptedException {
+        super(id, "Direct");
         this.addUser(user1);
         this.addUser(user2);
+    }
+
+    public DirectMessage(String id) throws ExecutionException, InterruptedException {
+        super(id, "Direct");
     }
 }
