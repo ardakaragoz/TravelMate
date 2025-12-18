@@ -49,8 +49,10 @@ public class Hobby {
         this.compatibilityScores = compatibilityScores;
         Firestore db = FirebaseService.getFirestore();
         HashMap<String, Object> data = new HashMap<>();
-        data.put("compatibilityScores", compatibilityScores);
-        db.collection("cities").document(id).set(data);
+        data.put("funPoint", compatibilityScores[0]);
+        data.put("culturePoint", compatibilityScores[1]);
+        data.put("chillPoint", compatibilityScores[2]);
+        db.collection("hobbies").document(id).set(data);
     }
 
     @Override
