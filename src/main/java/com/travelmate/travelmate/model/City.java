@@ -39,7 +39,9 @@ public class City {
         this.compatibilityScores = compatibilityScores;
         Firestore db = FirebaseService.getFirestore();
         HashMap<String, Object> data = new HashMap<>();
-        data.put("compatibilityScores", compatibilityScores);
+        data.put("funPoint", compatibilityScores[0]);
+        data.put("culturePoint", compatibilityScores[1]);
+        data.put("chillPoint", compatibilityScores[2]);
         db.collection("cities").document(id).set(data);
     }
 }
