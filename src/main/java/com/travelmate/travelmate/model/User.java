@@ -58,6 +58,7 @@ public class User {
         this.commitIDs = new ArrayList<>();
         this.levelCommits = new ArrayList<>();
         setCurrentUser();
+        updateUser();
     }
 
     public User(String id) throws ExecutionException, InterruptedException {
@@ -102,7 +103,7 @@ public class User {
         chatRooms = (ArrayList<String>) doc.get("chatRooms");
         pastTrips = (ArrayList<String>) doc.get("pastTrips");
         levelPoint = doc.getLong("levelPoint").intValue();
-        commitIDs = (ArrayList<String>) doc.get("levelCommits");
+        commitIDs = (ArrayList<String>) doc.get("commitIDs");
         for (int i = 0; i < commitIDs.size(); i++) {
             levelCommits.add(new LevelCommit(commitIDs.get(i)));
         }
