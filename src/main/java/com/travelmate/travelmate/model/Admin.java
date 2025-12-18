@@ -12,8 +12,10 @@ public class Admin extends User {
         super(id);
     }
 
-    public void acceptRecommendation(Recommendation recommendation) {
+    public void acceptRecommendation(Recommendation recommendation) throws ExecutionException, InterruptedException {
+
         recommendation.setStatus("ACCEPTED");
+        recommendation.getSender().increaseLevel(10);
     }
 
     public void rejectRecommendation(Recommendation recommendation) {

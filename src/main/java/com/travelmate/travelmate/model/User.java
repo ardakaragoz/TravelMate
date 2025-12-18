@@ -3,9 +3,11 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 public class User {
@@ -23,6 +25,9 @@ public class User {
     private ArrayList<String> messages;
     private ArrayList<String> tripRequests;
     private ArrayList<String> chatRooms;
+    private int levelPoint;
+    private ArrayList<String> commitIDs;
+    private ArrayList<LevelCommit> levelCommits;
 
     public User(String id, String username, String name, String nationality, String email, 
                 String password, String gender, int age) throws ExecutionException, InterruptedException {
@@ -49,8 +54,9 @@ public class User {
         this.chatRooms = new ArrayList<>();
         this.reviewCount = 0;
         this.reviewPoints = 0;
-        channels.add("14243");
-        channels.add("49834");
+        this.levelPoint = 0;
+        this.commitIDs = new ArrayList<>();
+        this.levelCommits = new ArrayList<>();
         setCurrentUser();
     }
 
@@ -95,6 +101,11 @@ public class User {
         tripRequests = (ArrayList<String>) doc.get("tripRequests");
         chatRooms = (ArrayList<String>) doc.get("chatRooms");
         pastTrips = (ArrayList<String>) doc.get("pastTrips");
+        levelPoint = doc.getLong("levelPoint").intValue();
+        commitIDs = (ArrayList<String>) doc.get("levelCommits");
+        for (int i = 0; i < commitIDs.size(); i++) {
+            levelCommits.add(new LevelCommit(commitIDs.get(i)));
+        }
 
     }
 
@@ -123,6 +134,8 @@ public class User {
         data.put("tripRequests", tripRequests);
         data.put("chatRooms", chatRooms);
         data.put("joinRequests", joinRequests);
+        data.put("levelPoint", levelPoint);
+        data.put("commitIDs", commitIDs);
 
         Firestore db = FirebaseService.getFirestore();
         db.collection("users")
@@ -134,6 +147,15 @@ public class User {
     public void addRequest(JoinRequest req) throws ExecutionException, InterruptedException {
         this.joinRequests.add(req.getId());
         req.getTrip().addPendingMate(this);
+    }
+
+    public void increaseLevel(int point) throws ExecutionException, InterruptedException {
+        Random rand = new Random();
+        String levelID = "" + rand.nextInt(100000000);
+        this.level += point;
+        this.levelCommits.add(new LevelCommit(levelID, this, point));
+        this.commitIDs.add(levelID);
+        updateUser();
     }
 
     public void removeUserRequest(JoinRequest req, User mate) throws ExecutionException, InterruptedException {
@@ -163,8 +185,16 @@ public class User {
     public void addReview(Review review) throws ExecutionException, InterruptedException {
         this.reviews.add(review.getId());
         this.reviewCount++;
-        this.reviewPoints += review.getOverallPoints();
+        double review_points = review.getOverallPoints();
+        this.reviewPoints += (int) review_points;
+        if (review_points >= 4.0){
+            increaseLevel((int) Math.floor(25 * (review_points - 3.8)));
+        }
         updateUser();
+    }
+
+    public void sendReview(Review review) throws ExecutionException, InterruptedException {
+        review.getEvaluatedUser().addReview(review);
     }
 
     public double getAverageReviewScore() {
