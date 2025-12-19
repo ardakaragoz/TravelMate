@@ -24,7 +24,7 @@ public class Message {
         Firestore db = FirebaseService.getFirestore();
         Map<String, Object> messageMap = new HashMap<>();
         messageMap.put("message", message);
-        messageMap.put("sender", sender);
+        messageMap.put("sender", sender.getId());
         messageMap.put("createdAt", (long) createdAt.getTime());
         db.collection("messages").document(id).set(messageMap).get();
     }
