@@ -50,7 +50,7 @@ public class SignInController {
 
     @FXML
     public void handleSignUpLink(ActionEvent event) {
-        changeScene("/view/register-page.fxml", event);
+        changeScene("/view/Home.fxml", event);
     }
 
     private void changeScene(String fileName, ActionEvent event) {
