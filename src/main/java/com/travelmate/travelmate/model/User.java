@@ -78,6 +78,7 @@ public class User {
         if (!doc.exists()) {
             return;
         }
+        this.profile = new Profile(id);
 
         id = id;
         username = doc.getString("username");
