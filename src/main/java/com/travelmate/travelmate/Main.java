@@ -14,13 +14,14 @@ import java.util.concurrent.ExecutionException;
 public class Main extends Application {
     @Override
     public void start(Stage stage) throws IOException, ExecutionException, InterruptedException {
-        FirebaseService.initialize();
+        //FirebaseService.initialize();
         Parent root = FXMLLoader.load(getClass().getResource("/view/sign-in-page.fxml"));        //StackPane root = new StackPane();
         Scene scene = new Scene(root);
         stage.setTitle("Hello!");
         stage.setScene(scene);
         stage.show();
-
+        //User user = new User("HuZUKiHoRQg7XRkRx5gq", "ardakaragoz", "Arda", "TR", "ahmetarda2006@hotmail.com.tr", "Arda123", "Male", 19);
+        //user.updateUser();
     }
 
     public static void main(String[] args) {
