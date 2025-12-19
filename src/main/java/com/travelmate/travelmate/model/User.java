@@ -92,6 +92,7 @@ public class User {
         monthlyPoints = doc.getLong("monthlyPoints").intValue();
         reviewCount = doc.getLong("reviewCount").intValue();
         reviewPoints = doc.getLong("reviewPoints").intValue();
+        password = doc.getString("password");
 
         currentTrips = (ArrayList<String>) doc.get("currentTrips");
         channels = (ArrayList<String>) doc.get("channels");
