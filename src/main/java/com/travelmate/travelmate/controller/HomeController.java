@@ -1,5 +1,7 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -16,7 +18,9 @@ public class HomeController {
     @FXML private VBox helpPopup;
     @FXML private VBox leaderboardContainer;
     @FXML
+    private User currentUser;
     public void initialize() {
+        currentUser = UserSession.getCurrentUser();
         addLeaderboardRow("1. placidezigira", "350");
         addLeaderboardRow("2. ardakaragoz", "320");
         addLeaderboardRow("3. mkeremakturkoglu", "290");
