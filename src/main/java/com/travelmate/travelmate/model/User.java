@@ -176,7 +176,7 @@ public class User {
     }
 
     public void addChatRoom(ChatRoom chatRoom) throws ExecutionException, InterruptedException {
-        if (this.chatRooms.contains(chatRoom.getId())){
+        if (!this.chatRooms.contains(chatRoom.getId())){
             this.chatRooms.add(chatRoom.getId());
             updateUser();
         }

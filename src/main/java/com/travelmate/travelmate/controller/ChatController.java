@@ -34,6 +34,8 @@ import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ChatController implements Initializable {
 
@@ -45,7 +47,7 @@ public class ChatController implements Initializable {
     @FXML private TextField messageInput;
     @FXML private Label headerUsernameLabel;
     @FXML private ImageView headerProfileImage;
-
+    private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
     // --- DATA ---
     private User currentUser;
     private ChatRoom activeChatRoom;
@@ -209,20 +211,56 @@ public class ChatController implements Initializable {
     }
 
     private void loadMessages(ChatRoom room) {
-        new Thread(() -> {
+        // UI'ı hemen temizle ve yükleniyor yazısı koy (Kullanıcı donmadığını anlasın)
+        Platform.runLater(() -> {
+            messageBubbleContainer.getChildren().clear();
+            Label loading = new Label("Mesajlar yükleniyor...");
+            loading.setStyle("-fx-text-fill: gray; -fx-padding: 10;");
+            messageBubbleContainer.getChildren().add(loading);
+        });
+
+        CompletableFuture.runAsync(() -> {
             try {
-                ArrayList<Message> messageObjects = new ArrayList<>();
-                if (room.getMessages() != null) {
-                    for (String msgId : room.getMessages()) {
-                        //
-                        messageObjects.add(new Message(msgId));
-                    }
+                if (room.getMessages() == null || room.getMessages().isEmpty()) {
+                    Platform.runLater(() -> messageBubbleContainer.getChildren().clear());
+                    return;
                 }
-                Platform.runLater(() -> renderMessages(messageObjects));
+
+                List<CompletableFuture<Message>> messageFutures = new ArrayList<>();
+
+                for (String msgId : room.getMessages()) {
+                    // --- KRİTİK DEĞİŞİKLİK BURADA ---
+                    // Varsayılan havuz yerine 'networkExecutor' kullanıyoruz.
+                    CompletableFuture<Message> future = CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return new Message(msgId);
+                        } catch (Exception e) {
+                            return null;
+                        }
+                    }, networkExecutor); // <--- BURAYA DİKKAT
+
+                    messageFutures.add(future);
+                }
+
+                CompletableFuture.allOf(messageFutures.toArray(new CompletableFuture[0])).join();
+
+                ArrayList<Message> loadedMessages = new ArrayList<>();
+                for (CompletableFuture<Message> f : messageFutures) {
+                    try {
+                        Message m = f.get();
+                        if (m != null) loadedMessages.add(m);
+                    } catch (Exception e) { e.printStackTrace(); }
+                }
+
+                // Mesajlar paralel indiği için sırası karışabilir, burada zaman damgasına göre sıralamalısın
+                // loadedMessages.sort(Comparator.comparing(Message::getTimestamp));
+
+                Platform.runLater(() -> renderMessages(loadedMessages));
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }).start();
+        }, networkExecutor);
     }
 
     private void renderMessages(ArrayList<Message> messages) {
