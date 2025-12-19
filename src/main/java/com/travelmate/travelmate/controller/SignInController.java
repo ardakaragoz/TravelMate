@@ -4,6 +4,7 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -24,6 +25,7 @@ public class SignInController {
     public void handleLoginButton(ActionEvent event) throws ExecutionException, InterruptedException {
         User user = checkLogin();
         if (user != null) {
+            UserSession.setCurrentUser(user);
             changeScene("/view/Home.fxml", event);
         } else {
             System.out.println("Login Failed");
