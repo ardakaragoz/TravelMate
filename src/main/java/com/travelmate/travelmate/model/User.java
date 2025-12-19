@@ -176,8 +176,11 @@ public class User {
     }
 
     public void addChatRoom(ChatRoom chatRoom) throws ExecutionException, InterruptedException {
-        this.chatRooms.add(chatRoom.getId());
-        updateUser();
+        if (this.chatRooms.contains(chatRoom.getId())){
+            this.chatRooms.add(chatRoom.getId());
+            updateUser();
+        }
+
     }
 
     public void addTripRequest(Trip trip) throws ExecutionException, InterruptedException {
