@@ -29,7 +29,7 @@ public class ChatRoom {
             this.messages = (ArrayList<String>) doc.get("messages");
             this.activeUsers = (ArrayList<String>) doc.get("activeUsers");
             this.type = (String) doc.get("type");
-
+            updateChatRoom();
         } else {
             this.type = type;
             this.messages = new ArrayList<>();
@@ -43,6 +43,10 @@ public class ChatRoom {
         Firestore db = FirebaseService.getFirestore();
         DocumentReference docRef = db.collection("chatrooms").document(id);
         Map<String, Object>  data = new HashMap<>();
+        for (String userID : activeUsers) {
+            User user = new User(userID);
+            user.addChatRoom(this);
+        }
         data.put("messages", messages);
         data.put("activeUsers", activeUsers);
         data.put("type", type);

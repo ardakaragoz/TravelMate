@@ -3,6 +3,7 @@ package com.travelmate.travelmate.controller;
 import com.travelmate.travelmate.model.ChatRoom;
 import com.travelmate.travelmate.model.Message;
 import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -46,14 +47,8 @@ public class ChatController implements Initializable {
             try {
                 // 1. Fetch the Logged-in User
                 // Use your specific test ID from the previous prompt
-                String userId = "HuZUKiHoRQg7XRkRx5gq";
-                currentUser = new User(userId);
+                currentUser = UserSession.getCurrentUser();
 
-                // Safety fallback
-                if (currentUser.getUsername() == null) {
-                    System.err.println("User not found in DB. Using mock data.");
-                    currentUser = new User("mock_id", "Unknown", "User", "TR", "mail", "pass", "M", 20);
-                }
 
                 Platform.runLater(() -> {
                     if (headerUsernameLabel != null) headerUsernameLabel.setText(currentUser.getUsername());

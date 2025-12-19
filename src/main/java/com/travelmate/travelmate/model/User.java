@@ -85,7 +85,7 @@ public class User {
         email = doc.getString("email");
         gender = doc.getString("gender");
         nationality = doc.getString("nationality");
-
+        profile = new Profile(id);
         age = doc.getLong("age").intValue();
         level = doc.getLong("level").intValue();
         allPoints = doc.getLong("allPoints").intValue();
