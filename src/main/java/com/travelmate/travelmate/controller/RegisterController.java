@@ -29,6 +29,7 @@ public class RegisterController {
         String email = emailField.getText();
         String password = passwordField.getText();
         String confirmPassword = confirmPasswordField.getText();
+        System.out.println(password);
         if (password.equals(confirmPassword)) {
             Firestore db = FirebaseService.getFirestore();
             User user = new User(email, "", "", "", email, password, "", 0);

@@ -26,7 +26,7 @@ public class SignInController {
         User user = checkLogin();
         if (user != null) {
             UserSession.setCurrentUser(user);
-            changeScene("/view/Home.fxml", event);
+            changeScene("/view/Chat.fxml", event);
         } else {
             System.out.println("Login Failed");
         }
