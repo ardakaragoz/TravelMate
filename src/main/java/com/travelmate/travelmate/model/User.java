@@ -78,6 +78,7 @@ public class User {
         if (!doc.exists()) {
             return;
         }
+        this.profile = new Profile(id);
 
         id = id;
         username = doc.getString("username");
@@ -92,6 +93,7 @@ public class User {
         monthlyPoints = doc.getLong("monthlyPoints").intValue();
         reviewCount = doc.getLong("reviewCount").intValue();
         reviewPoints = doc.getLong("reviewPoints").intValue();
+        password = doc.getString("password");
 
         currentTrips = (ArrayList<String>) doc.get("currentTrips");
         channels = (ArrayList<String>) doc.get("channels");
@@ -174,8 +176,11 @@ public class User {
     }
 
     public void addChatRoom(ChatRoom chatRoom) throws ExecutionException, InterruptedException {
-        this.chatRooms.add(chatRoom.getId());
-        updateUser();
+        if (!this.chatRooms.contains(chatRoom.getId())){
+            this.chatRooms.add(chatRoom.getId());
+            updateUser();
+        }
+
     }
 
     public void addTripRequest(Trip trip) throws ExecutionException, InterruptedException {

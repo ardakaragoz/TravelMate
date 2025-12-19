@@ -25,10 +25,11 @@
 
                 <HBox alignment="CENTER_RIGHT" layoutX="1050.0" layoutY="10.0" prefHeight="40.0" spacing="10.0" style="-fx-background-color: #D4F65E; -fx-background-radius: 30; -fx-padding: 0 10 0 5;">
                     <children>
-                        <ImageView fitHeight="34.0" fitWidth="34.0" pickOnBounds="true" preserveRatio="true">
+                        <ImageView fx:id="headerProfileImage" onMouseClicked="#goToProfile" fitHeight="34.0" fitWidth="34.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
                             <image><Image url="@../images/user_icon.png" /></image>
                             <clip><Circle centerX="17.0" centerY="17.0" radius="17.0" /></clip>
                         </ImageView>
+
                         <Label fx:id="headerUsernameLabel" text="Loading..." textFill="#1e2a47">
                             <font><Font name="System Bold" size="14.0" /></font>
                         </Label>
