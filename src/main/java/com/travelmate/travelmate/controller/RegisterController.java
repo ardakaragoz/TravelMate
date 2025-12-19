@@ -39,10 +39,14 @@ public class RegisterController {
         String email = emailField.getText();
         String password = passwordField.getText();
         String confirmPassword = confirmPasswordField.getText();
+        String name = nameField.getText();
+        String surname = surnameField.getText();
+        String age = ageField.getText();
+        String gender = genderComboBox.getValue();
         System.out.println(password);
         if (password.equals(confirmPassword)) {
             Firestore db = FirebaseService.getFirestore();
-            User user = new User(email, "", "", "", email, password, "", 0);
+            User user = new User(email, name, name + " " + surname, "", email, password, gender, Integer.parseInt(age));
             UserSession.setCurrentUser(user);
             changeScene("/view/Home.fxml", event);
         } else {
