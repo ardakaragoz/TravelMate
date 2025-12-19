@@ -1,5 +1,7 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -16,8 +18,24 @@ public class TopBarController {
 
     @FXML
     public void initialize() {
-        userNameLabel.setText("Berken Keni");
-        userLevelLabel.setText("Lvl. 35");
+        // Fetch the logged-in user from the session
+        User currentUser = UserSession.getCurrentUser();
+
+        if (currentUser != null) {
+            // Set Name (Prefer Name, fallback to Username)
+            String displayName = currentUser.getName();
+            if (displayName == null || displayName.isEmpty()) {
+                displayName = currentUser.getUsername();
+            }
+            userNameLabel.setText(displayName != null ? displayName : "Unknown");
+
+            // Set Level
+            userLevelLabel.setText("Lvl. " + currentUser.getLevel());
+        } else {
+            // Fallback if no user is logged in (e.g., testing)
+            userNameLabel.setText("Guest");
+            userLevelLabel.setText("");
+        }
     }
 
     @FXML
