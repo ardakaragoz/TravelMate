@@ -3,6 +3,7 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.UserList;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -50,7 +51,7 @@ public class Message {
                 this.createdAt = new Date(data.getLong("createdAt"));
             }
             if (data.getString("sender") != null) {
-                this.sender = new User(data.getString("sender"));
+                this.sender = UserList.getUser(data.getString("sender"));
             }
         }
     }

@@ -15,35 +15,20 @@ public class Channel {
     private ArrayList<String> members;
     private ArrayList<String> tripRequests;
     private ArrayList<String> recommendations;
-    private ChannelChat channelChat;
+    private String channelChat;
 
-    public Channel(String id, String name) throws Exception {
+    public Channel(String id, String name, ArrayList<String> members, ArrayList<String> tripRequests, ArrayList<String> recommendations, String channelChatID) throws Exception {
         this.id = id;
-        Firestore db = FirebaseService.getFirestore();
-
-        DocumentSnapshot doc = db.collection("channels")
-                .document(id)
-                .get()
-                .get();
-
-        if (doc.exists()) {
-            this.name = doc.get("name").toString();
-            this.members = (ArrayList<String>) doc.get("members");
-            this.tripRequests = (ArrayList<String>) doc.get("tripRequests");
-            this.recommendations = (ArrayList<String>) doc.get("recommendations");
-            this.channelChat = new ChannelChat(doc.getString("channelChat"), this);
-        } else {
-            this.name = name;
-            this.members = new ArrayList<>();
-            this.tripRequests = new ArrayList<>();
-            this.recommendations = new ArrayList<>();
-            this.channelChat = new ChannelChat(id, this);
-            updateChannel();
-        }
-
-
-
+        this.name = name;
+        this.members = members;
+        this.tripRequests = tripRequests;
+        this.recommendations = recommendations;
+        this.channelChat = channelChatID;
+        updateChannel();
     }
+
+
+
 
     public void updateChannel() throws ExecutionException, InterruptedException {
         Map<String, Object> data = new HashMap<>();
@@ -52,7 +37,7 @@ public class Channel {
         data.put("members", members);
         data.put("tripRequests", tripRequests);
         data.put("recommendations", recommendations);
-        data.put("channelChat", channelChat.getId());
+        data.put("channelChat", channelChat);
 
         Firestore db = FirebaseService.getFirestore();
         db.collection("channels")
@@ -93,5 +78,5 @@ public class Channel {
     public ArrayList<String> getMembers() { return members; }
     public ArrayList<String> getTripRequests() { return tripRequests; }
     public ArrayList<String> getRecommendations() { return recommendations; }
-    public ChannelChat getChannelChat() { return channelChat; }
+    public String getChannelChat() { return channelChat; }
 }

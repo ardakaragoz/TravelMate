@@ -3,6 +3,7 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.UserList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +38,8 @@ public class JoinRequest {
         this.id = id;
         Firestore db = FirebaseService.getFirestore();
         DocumentSnapshot data = db.collection("join_requests").document(id).get().get();
-        this.requester = new User(data.get("requester").toString());
-        this.tripOwner = new User(data.get("tripOwner").toString());
+        this.requester = UserList.getUser(data.get("requester").toString());
+        this.tripOwner = UserList.getUser(data.get("tripOwner").toString());
         this.message = data.get("message").toString();
         this.status = data.get("status").toString();
         this.trip = new Trip(data.get("trip").toString());

@@ -3,6 +3,7 @@ package com.travelmate.travelmate.controller;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -66,6 +67,7 @@ public class RegisterController {
             int ageVal = (age != null && !age.isEmpty()) ? Integer.parseInt(age) : 0;
             User user = new User(email, name, name + " " + surname, "", email, password, gender, ageVal);
             UserSession.setCurrentUser(user);
+            UserList.addUser(user);
 
             
             changeScene("/view/Home.fxml", event);
