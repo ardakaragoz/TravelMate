@@ -36,10 +36,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class ChatController implements Initializable {
 
-    // --- FXML ELEMENTS ---
     @FXML private VBox chatListContainer;
     @FXML private VBox messageBubbleContainer;
     @FXML private ScrollPane messageScrollPane;
@@ -47,29 +47,27 @@ public class ChatController implements Initializable {
     @FXML private TextField messageInput;
     @FXML private Label headerUsernameLabel;
     @FXML private ImageView headerProfileImage;
+
+    // Use a cached thread pool for better performance with network tasks
     private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
-    // --- DATA ---
+
     private User currentUser;
     private ChatRoom activeChatRoom;
 
-    // Thread-safe collections for concurrent loading
     private final List<ChatRoom> myChats = new CopyOnWriteArrayList<>();
     private final Map<String, User> chatFriends = new ConcurrentHashMap<>();
 
-    // Styling Constants
     private static final String DEFAULT_STYLE = "-fx-background-color: white; -fx-background-radius: 15; -fx-cursor: hand; -fx-border-color: black; -fx-border-radius: 15; -fx-border-width: 2px;";
     private static final String SELECTED_STYLE = "-fx-background-color: #e0f7fa; -fx-background-radius: 15; -fx-cursor: hand; -fx-border-color: #1E2A47; -fx-border-radius: 15; -fx-border-width: 3px;";
 
-    // Track selected row for animation
     private HBox selectedRow = null;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        new Thread(() -> {
+        // Load User in Background
+        CompletableFuture.runAsync(() -> {
             try {
-                // 1. Get Logged-in User
-                currentUser = UserSession.getCurrentUser(); //
-
+                currentUser = UserSession.getCurrentUser();
                 if (currentUser == null) {
                     System.out.println("DEBUG: UserSession is null. Using Test ID.");
                     currentUser = new User("HuZUKiHoRQg7XRkRx5gq");
@@ -80,70 +78,45 @@ public class ChatController implements Initializable {
                         headerUsernameLabel.setText(currentUser.getUsername());
                     }
                     setProfileImage(headerProfileImage, currentUser);
-                    loadChatRoomsFast(); // Using the NEW fast loader
+                    loadChatRoomsFast();
                 });
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }).start();
+        }, networkExecutor);
     }
 
-    // --- OPTIMIZATION: PARALLEL LOADING ---
     private void loadChatRoomsFast() {
-        // Clear previous data
         myChats.clear();
         chatFriends.clear();
 
-        //
         ArrayList<String> chatIds = currentUser.getChatRooms();
+        if (chatIds == null || chatIds.isEmpty()) return;
 
-        if (chatIds == null || chatIds.isEmpty()) {
-            System.out.println("DEBUG: No chats found.");
-            return;
-        }
-
-        // List to hold all background tasks
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         for (String chatId : chatIds) {
-            // Create a background task for EACH chat
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
-                    // 1. Fetch Chat Room (Network Call)
-                    DirectMessage room = new DirectMessage(chatId); //
+                    // Fetch ChatRoom
+                    DirectMessage room = new DirectMessage(chatId);
                     myChats.add(room);
 
-                    // 2. Fetch Friend User (Network Call)
+                    // Fetch Friend
                     String friendId = getOtherUserId(room);
-                    try {
-                        User friendUser = new User(friendId); //
+                    if (!chatFriends.containsKey(friendId)) {
+                        User friendUser = new User(friendId);
                         chatFriends.put(chatId, friendUser);
-                    } catch (Exception e) {
-                        System.err.println("Could not fetch friend: " + friendId);
                     }
                 } catch (Exception e) {
                     System.err.println("Error loading chat: " + chatId);
                 }
-            });
+            }, networkExecutor);
             futures.add(future);
         }
 
-        // Wait for ALL tasks to finish, then update UI
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenRun(() -> Platform.runLater(() -> {
-                    renderChatList();
-                    // Auto-select first chat if available
-                    if (!myChats.isEmpty()) {
-                        // We need to find the HBox corresponding to the first chat to select it visually
-                        if (!chatListContainer.getChildren().isEmpty()) {
-                            Node firstRow = chatListContainer.getChildren().get(0);
-                            if (firstRow instanceof HBox) {
-                                selectChat(myChats.get(0), (HBox) firstRow);
-                            }
-                        }
-                    }
-                }));
+                .thenRun(() -> Platform.runLater(this::renderChatList));
     }
 
     private void renderChatList() {
@@ -151,26 +124,22 @@ public class ChatController implements Initializable {
 
         for (ChatRoom room : myChats) {
             User friend = chatFriends.get(room.getId());
-            String displayName = (friend != null && friend.getUsername() != null) ? friend.getUsername() : "Unknown";
+            String displayName = (friend != null) ? friend.getUsername() : "Unknown";
 
-            // Row Container
             HBox row = new HBox(10);
             row.setAlignment(Pos.CENTER_LEFT);
             row.setPadding(new Insets(10));
             row.setPrefHeight(60);
-            row.setStyle(DEFAULT_STYLE); // Set default style initially
+            row.setStyle(DEFAULT_STYLE);
 
-            // Avatar
             ImageView avatar = new ImageView();
             avatar.setFitWidth(40);
             avatar.setFitHeight(40);
             setProfileImage(avatar, friend);
 
-            // Name
             Label nameLabel = new Label(displayName);
             nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1E2A47;");
 
-            // Arrow
             HBox spacer = new HBox();
             HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
             Label arrow = new Label(">");
@@ -178,121 +147,133 @@ public class ChatController implements Initializable {
 
             row.getChildren().addAll(avatar, nameLabel, spacer, arrow);
 
-            // Click Action: Pass the 'row' itself to handle animation
             row.setOnMouseClicked(e -> selectChat(room, row));
-
             chatListContainer.getChildren().add(row);
         }
     }
 
-    // --- ANIMATION & SELECTION LOGIC ---
     private void selectChat(ChatRoom room, HBox clickedRow) {
         this.activeChatRoom = room;
 
-        // 1. Reset old selection
-        if (selectedRow != null) {
-            selectedRow.setStyle(DEFAULT_STYLE);
-        }
-
-        // 2. Highlight new selection
+        if (selectedRow != null) selectedRow.setStyle(DEFAULT_STYLE);
         selectedRow = clickedRow;
-        if (selectedRow != null) {
-            selectedRow.setStyle(SELECTED_STYLE);
-        }
+        if (selectedRow != null) selectedRow.setStyle(SELECTED_STYLE);
 
-        // 3. Update Header Info
         User friend = chatFriends.get(room.getId());
         if (currentChatNameLabel != null && friend != null) {
             currentChatNameLabel.setText(friend.getUsername());
         }
 
-        // 4. Load Messages
         loadMessages(room);
     }
 
     private void loadMessages(ChatRoom room) {
-        // UI'ı hemen temizle ve yükleniyor yazısı koy (Kullanıcı donmadığını anlasın)
         Platform.runLater(() -> {
             messageBubbleContainer.getChildren().clear();
-            Label loading = new Label("Mesajlar yükleniyor...");
+            Label loading = new Label("Loading...");
             loading.setStyle("-fx-text-fill: gray; -fx-padding: 10;");
             messageBubbleContainer.getChildren().add(loading);
         });
 
-        CompletableFuture.runAsync(() -> {
-            try {
-                if (room.getMessages() == null || room.getMessages().isEmpty()) {
-                    Platform.runLater(() -> messageBubbleContainer.getChildren().clear());
-                    return;
-                }
+        // Fetch ALL messages in Parallel
+        CompletableFuture.supplyAsync(() -> {
+            List<Message> loadedMessages = new ArrayList<>();
+            if (room.getMessages() != null && !room.getMessages().isEmpty()) {
 
-                List<CompletableFuture<Message>> messageFutures = new ArrayList<>();
-
+                List<CompletableFuture<Message>> msgFutures = new ArrayList<>();
                 for (String msgId : room.getMessages()) {
-                    // --- KRİTİK DEĞİŞİKLİK BURADA ---
-                    // Varsayılan havuz yerine 'networkExecutor' kullanıyoruz.
-                    CompletableFuture<Message> future = CompletableFuture.supplyAsync(() -> {
+                    msgFutures.add(CompletableFuture.supplyAsync(() -> {
                         try {
+                            // This blocks, but it runs on a separate thread in the pool
                             return new Message(msgId);
                         } catch (Exception e) {
                             return null;
                         }
-                    }, networkExecutor); // <--- BURAYA DİKKAT
-
-                    messageFutures.add(future);
+                    }, networkExecutor));
                 }
 
-                CompletableFuture.allOf(messageFutures.toArray(new CompletableFuture[0])).join();
-
-                ArrayList<Message> loadedMessages = new ArrayList<>();
-                for (CompletableFuture<Message> f : messageFutures) {
-                    try {
-                        Message m = f.get();
-                        if (m != null) loadedMessages.add(m);
-                    } catch (Exception e) { e.printStackTrace(); }
-                }
-
-                // Mesajlar paralel indiği için sırası karışabilir, burada zaman damgasına göre sıralamalısın
-                // loadedMessages.sort(Comparator.comparing(Message::getTimestamp));
-
-                Platform.runLater(() -> renderMessages(loadedMessages));
-
-            } catch (Exception e) {
-                e.printStackTrace();
+                // Join all threads and collect results
+                loadedMessages = msgFutures.stream()
+                        .map(CompletableFuture::join)
+                        .filter(m -> m != null)
+                        .sorted((m1, m2) -> {
+                            if (m1.getCreatedAt() == null || m2.getCreatedAt() == null) return 0;
+                            return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+                        })
+                        .collect(Collectors.toList());
             }
-        }, networkExecutor);
+            return loadedMessages;
+        }, networkExecutor).thenAccept(messages ->
+                Platform.runLater(() -> renderMessages(messages))
+        );
     }
 
-    private void renderMessages(ArrayList<Message> messages) {
+    private void renderMessages(List<Message> messages) {
         messageBubbleContainer.getChildren().clear();
         for (Message msg : messages) {
-            HBox bubbleRow = new HBox();
-            Label text = new Label(msg.getMessage());
-            text.setWrapText(true);
-            text.setMaxWidth(350);
-            text.setPadding(new Insets(10));
-
-            boolean isMe = msg.getSender() != null && msg.getSender().getId().equals(currentUser.getId());
-
-            if (isMe) {
-                bubbleRow.setAlignment(Pos.CENTER_RIGHT);
-                text.setStyle("-fx-background-color: #1E2A47; -fx-text-fill: white; -fx-background-radius: 15 15 0 15; -fx-font-size: 14px;");
-            } else {
-                bubbleRow.setAlignment(Pos.CENTER_LEFT);
-                text.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-background-radius: 15 15 15 0; -fx-border-color: #ccc; -fx-border-radius: 15 15 15 0; -fx-font-size: 14px;");
-            }
-            bubbleRow.getChildren().add(text);
-            messageBubbleContainer.getChildren().add(bubbleRow);
+            renderSingleBubble(msg);
         }
+        scrollToBottom();
+    }
+
+    private void renderSingleBubble(Message msg) {
+        HBox bubbleRow = new HBox();
+        Label text = new Label(msg.getMessage());
+        text.setWrapText(true);
+        text.setMaxWidth(350);
+        text.setPadding(new Insets(10));
+
+        boolean isMe = msg.getSender() != null && currentUser != null && msg.getSender().getId().equals(currentUser.getId());
+
+        if (isMe) {
+            bubbleRow.setAlignment(Pos.CENTER_RIGHT);
+            text.setStyle("-fx-background-color: #1E2A47; -fx-text-fill: white; -fx-background-radius: 15 15 0 15; -fx-font-size: 14px;");
+        } else {
+            bubbleRow.setAlignment(Pos.CENTER_LEFT);
+            text.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-background-radius: 15 15 15 0; -fx-border-color: #ccc; -fx-border-radius: 15 15 15 0; -fx-font-size: 14px;");
+        }
+        bubbleRow.getChildren().add(text);
+        messageBubbleContainer.getChildren().add(bubbleRow);
+    }
+
+    private void scrollToBottom() {
         messageScrollPane.applyCss();
         messageScrollPane.layout();
         messageScrollPane.setVvalue(1.0);
     }
 
-    // --- HELPER: Safe Image Loading ---
+    @FXML
+    private void handleSendMessage() {
+        String text = messageInput.getText().trim();
+        if (text.isEmpty() || activeChatRoom == null) return;
+
+        messageInput.clear();
+
+        // --- OPTIMIZATION: Optimistic UI Update ---
+        // 1. Create message locally
+        String tempId = "msg_" + System.currentTimeMillis();
+        // Use the fast constructor which saves to DB in background
+        Message newMessage = new Message(tempId, text, currentUser);
+
+        // 2. Add to UI immediately
+        renderSingleBubble(newMessage);
+        scrollToBottom();
+
+        // 3. Update ChatRoom and User objects in background
+        new Thread(() -> {
+            try {
+                activeChatRoom.addMessage(newMessage);
+                currentUser.addMessage(newMessage);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    // --- Helper Methods ---
+
     private void setProfileImage(ImageView imageView, User user) {
         if (imageView == null) return;
-
         Image image = null;
         try {
             var resource = getClass().getResourceAsStream("/images/user_icon.png");
@@ -301,20 +282,17 @@ public class ChatController implements Initializable {
         } catch (Exception e) { }
 
         if (user != null && user.getProfile() != null) {
-            String url = user.getProfile().getProfilePictureUrl(); //
-            if (url != null && !url.isEmpty() && (url.startsWith("http") || url.startsWith("https"))) {
+            String url = user.getProfile().getProfilePictureUrl();
+            if (url != null && !url.isEmpty() && url.startsWith("http")) {
                 try {
-                    image = new Image(url, true);
+                    image = new Image(url, true); // true = load in background
                 } catch (Exception e) { }
             }
         }
-
         if (image != null) {
             imageView.setImage(image);
-            if (imageView.getClip() == null) {
-                double radius = Math.min(imageView.getFitWidth(), imageView.getFitHeight()) / 2;
-                imageView.setClip(new Circle(radius, radius, radius));
-            }
+            double radius = Math.min(imageView.getFitWidth(), imageView.getFitHeight()) / 2;
+            imageView.setClip(new Circle(radius, radius, radius));
         }
     }
 
@@ -326,30 +304,11 @@ public class ChatController implements Initializable {
                 .orElse("Unknown");
     }
 
-    // --- NAVIGATION ---
-    @FXML
-    private void goToProfile(MouseEvent event) throws IOException {
+    @FXML private void goToProfile(MouseEvent event) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/view/Profile.fxml"));
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.setScene(new Scene(root));
         stage.show();
-    }
-
-    @FXML private void handleSendMessage() {
-        String text = messageInput.getText();
-        if (text.isEmpty() || activeChatRoom == null) return;
-        messageInput.clear();
-        new Thread(() -> {
-            try {
-                String msgId = "msg_" + System.currentTimeMillis();
-                Message newMessage = new Message(msgId, text, currentUser);
-                activeChatRoom.addMessage(newMessage);
-                currentUser.addMessage(newMessage);
-
-                // Refresh only the message view, keep the selection style
-                Platform.runLater(() -> loadMessages(activeChatRoom));
-            } catch (Exception e) { e.printStackTrace(); }
-        }).start();
     }
 
     @FXML private void goToHome(javafx.event.ActionEvent event) throws IOException {

@@ -1,107 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.shape.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #FFF8F0;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.ChatController">
+<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.ChatController">
     <children>
+        <BorderPane style="-fx-background-color: #FFF7EA;">
 
-        <AnchorPane maxHeight="60.0" minHeight="60.0" prefHeight="60.0" prefWidth="1280.0" style="-fx-background-color: #1E2A47;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <children>
-                <Button layoutX="40.0" layoutY="10.0" mnemonicParsing="false" onAction="#goToHome" prefHeight="40.0" prefWidth="100.0" style="-fx-background-color: #D4F65E; -fx-background-radius: 30;" text="HOME">
-                    <font><Font name="System Bold" size="16.0" /></font>
-                </Button>
+            <top>
+                <fx:include source="TopBar.fxml" />
+            </top>
 
-                <HBox alignment="CENTER" layoutX="450.0" layoutY="0.0" prefHeight="60.0" prefWidth="380.0">
+            <left>
+                <VBox prefHeight="640.0" prefWidth="300.0" spacing="10.0" BorderPane.alignment="CENTER">
+                    <padding>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="30.0" />
+                    </padding>
                     <children>
-                        <ImageView fitHeight="55.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
-                            <image><Image url="@../images/logoWhite.png" /></image>
-                        </ImageView>
+                        <fx:include source="Sidebar.fxml" />
+                    </children>
+                </VBox>
+            </left>
+
+            <center>
+                <HBox spacing="20.0" style="-fx-background-color: #FFF7EA;" BorderPane.alignment="CENTER">
+                    <padding>
+                        <Insets bottom="30.0" right="30.0" top="30.0" />
+                    </padding>
+                    <children>
+
+                        <VBox prefWidth="300.0" spacing="10.0">
+                            <children>
+                                <Label text="Messages" textFill="#1e2a47">
+                                    <font>
+                                        <Font name="System Bold" size="20.0" />
+                                    </font>
+                                </Label>
+                                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
+                                    <content>
+                                        <VBox fx:id="chatListContainer" spacing="10.0" />
+                                    </content>
+                                </ScrollPane>
+                            </children>
+                        </VBox>
+
+                        <VBox style="-fx-background-color: white; -fx-background-radius: 20; -fx-border-color: #1E2A47; -fx-border-width: 2; -fx-border-radius: 20;" HBox.hgrow="ALWAYS">
+                            <children>
+
+                                <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="10.0" style="-fx-background-color: #eee; -fx-background-radius: 18 18 0 0; -fx-padding: 10;">
+                                    <children>
+                                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                                            <image>
+                                                <Image url="@../images/user_icon.png" />
+                                            </image>
+                                            <clip>
+                                                <Circle centerX="20.0" centerY="20.0" radius="20.0" />
+                                            </clip>
+                                        </ImageView>
+                                        <Label fx:id="currentChatNameLabel" text="Select a Chat" textFill="#1e2a47">
+                                            <font>
+                                                <Font name="System Bold" size="18.0" />
+                                            </font>
+                                        </Label>
+                                    </children>
+                                </HBox>
+
+                                <ScrollPane fx:id="messageScrollPane" fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
+                                    <content>
+                                        <VBox fx:id="messageBubbleContainer" spacing="15.0" style="-fx-padding: 20;" />
+                                    </content>
+                                </ScrollPane>
+
+                                <HBox alignment="CENTER" prefHeight="60.0" spacing="10.0" style="-fx-padding: 10; -fx-border-color: #ddd; -fx-border-width: 1 0 0 0;">
+                                    <children>
+                                        <TextField fx:id="messageInput" onAction="#handleSendMessage" prefHeight="40.0" promptText="Type a message..." style="-fx-background-radius: 20; -fx-background-color: #f5f5f5;" HBox.hgrow="ALWAYS">
+                                            <font>
+                                                <Font size="14.0" />
+                                            </font>
+                                        </TextField>
+                                        <Button mnemonicParsing="false" onAction="#handleSendMessage" prefHeight="40.0" prefWidth="80.0" style="-fx-background-color: #1E2A47; -fx-background-radius: 20; -fx-cursor: hand;" text="Send" textFill="WHITE">
+                                            <font>
+                                                <Font name="System Bold" size="14.0" />
+                                            </font>
+                                        </Button>
+                                    </children>
+                                </HBox>
+
+                            </children>
+                        </VBox>
+
                     </children>
                 </HBox>
-
-                <HBox alignment="CENTER_RIGHT" layoutX="1050.0" layoutY="10.0" prefHeight="40.0" spacing="10.0" style="-fx-background-color: #D4F65E; -fx-background-radius: 30; -fx-padding: 0 10 0 5;">
-                    <children>
-                        <ImageView fx:id="headerProfileImage" onMouseClicked="#goToProfile" fitHeight="34.0" fitWidth="34.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
-                            <image><Image url="@../images/user_icon.png" /></image>
-                            <clip><Circle centerX="17.0" centerY="17.0" radius="17.0" /></clip>
-                        </ImageView>
-
-                        <Label fx:id="headerUsernameLabel" text="Loading..." textFill="#1e2a47">
-                            <font><Font name="System Bold" size="14.0" /></font>
-                        </Label>
-                    </children>
-                </HBox>
-            </children>
-        </AnchorPane>
-
-        <VBox layoutX="20.0" layoutY="80.0" spacing="15.0">
-            <children>
-                <Button alignment="CENTER_RIGHT" prefHeight="45.0" prefWidth="180.0" style="-fx-background-color: white; -fx-background-radius: 30; -fx-border-color: black; -fx-border-radius: 30; -fx-border-width: 2.5;" text="Channels      &gt;">
-                    <font><Font name="System Bold" size="16.0" /></font>
-                </Button>
-                <Button alignment="CENTER_RIGHT" prefHeight="45.0" prefWidth="180.0" style="-fx-background-color: white; -fx-background-radius: 30; -fx-border-color: black; -fx-border-radius: 30; -fx-border-width: 2.5;" text="My Trips      &gt;">
-                    <font><Font name="System Bold" size="16.0" /></font>
-                </Button>
-                <Button alignment="CENTER_RIGHT" prefHeight="45.0" prefWidth="180.0" style="-fx-background-color: white; -fx-background-radius: 30; -fx-border-color: black; -fx-border-radius: 30; -fx-border-width: 2.5;" text="Post Trip      &gt;">
-                    <font><Font name="System Bold" size="16.0" /></font>
-                </Button>
-                <AnchorPane prefHeight="45.0" prefWidth="180.0">
-                    <children>
-                        <Button alignment="CENTER_RIGHT" prefHeight="45.0" prefWidth="180.0" style="-fx-background-color: #D4F65E; -fx-background-radius: 30; -fx-border-color: black; -fx-border-radius: 30; -fx-border-width: 2.5;" text="Chat             &gt;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                            <font><Font name="System Bold" size="16.0" /></font>
-                        </Button>
-                    </children>
-                </AnchorPane>
-            </children>
-        </VBox>
-
-        <VBox layoutX="240.0" layoutY="80.0" prefHeight="600.0" prefWidth="300.0" spacing="10.0">
-            <children>
-                <Label text="Messages" textFill="#1e2a47"><font><Font name="System Bold" size="20.0" /></font></Label>
-                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
-                    <content>
-                        <VBox fx:id="chatListContainer" spacing="10.0" />
-                    </content>
-                </ScrollPane>
-            </children>
-        </VBox>
-
-        <VBox layoutX="560.0" layoutY="80.0" prefHeight="600.0" prefWidth="680.0" style="-fx-background-color: white; -fx-background-radius: 20; -fx-border-color: #1E2A47; -fx-border-width: 2; -fx-border-radius: 20;">
-            <children>
-                <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="10.0" style="-fx-background-color: #eee; -fx-background-radius: 18 18 0 0; -fx-padding: 10;">
-                    <children>
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                            <image><Image url="@../images/user_icon.png" /></image>
-                            <clip><Circle centerX="20.0" centerY="20.0" radius="20.0" /></clip>
-                        </ImageView>
-                        <Label fx:id="currentChatNameLabel" text="Select a Chat" textFill="#1e2a47">
-                            <font><Font name="System Bold" size="18.0" /></font>
-                        </Label>
-                    </children>
-                </HBox>
-
-                <ScrollPane fx:id="messageScrollPane" fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
-                    <content>
-                        <VBox fx:id="messageBubbleContainer" spacing="15.0" style="-fx-padding: 20;" />
-                    </content>
-                </ScrollPane>
-
-                <HBox alignment="CENTER" prefHeight="60.0" spacing="10.0" style="-fx-padding: 10; -fx-border-color: #ddd; -fx-border-width: 1 0 0 0;">
-                    <children>
-                        <TextField fx:id="messageInput" onAction="#handleSendMessage" prefHeight="40.0" promptText="Type a message..." style="-fx-background-radius: 20; -fx-background-color: #f5f5f5;" HBox.hgrow="ALWAYS">
-                            <font><Font size="14.0" /></font>
-                        </TextField>
-                        <Button mnemonicParsing="false" onAction="#handleSendMessage" prefHeight="40.0" prefWidth="80.0" style="-fx-background-color: #1E2A47; -fx-background-radius: 20; -fx-cursor: hand;" text="Send" textFill="WHITE">
-                            <font><Font name="System Bold" size="14.0" /></font>
-                        </Button>
-                    </children>
-                </HBox>
-            </children>
-        </VBox>
-
+            </center>
+        </BorderPane>
     </children>
-</AnchorPane>
+</StackPane>
