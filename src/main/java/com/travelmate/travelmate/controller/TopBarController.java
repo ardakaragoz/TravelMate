@@ -1,5 +1,7 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;

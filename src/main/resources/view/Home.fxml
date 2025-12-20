@@ -76,7 +76,7 @@
                                                         <Label fx:id="promotedCityNameLabel" style="-fx-background-color: #1E3A5F; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #ccff00;" text="ROME">
                                                             <font><Font name="System Italic" size="40.0" /></font>
                                                         </Label>
-                                                        <Label fx:id="averageBudgetLabel" text="Average Budget: 800$"><font><Font name="System Bold Italic" size="18.0" /></font></Label>
+
                                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                                             <children>
                                                                 <Label text="Compatibility Score:"><font><Font name="System Bold" size="14.0" /></font></Label>

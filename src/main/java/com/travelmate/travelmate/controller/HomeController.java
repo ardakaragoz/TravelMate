@@ -1,7 +1,12 @@
 package com.travelmate.travelmate.controller;
 
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.firebase.cloud.FirestoreClient;
+import com.travelmate.travelmate.model.City;
+import com.travelmate.travelmate.model.Trip;
 import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.session.UserSession;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -24,7 +29,11 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class HomeController {
 
@@ -41,7 +50,7 @@ public class HomeController {
 
 
     private int currentCityIndex = 0;
-    private final List<PromotedCityData> promotedCities = new ArrayList<>();
+    private final List<City> promotedCities = new ArrayList<>();
 
 
     @FXML private VBox detailsPopup;
@@ -58,58 +67,129 @@ public class HomeController {
 
     private User currentUser;
 
-    public void initialize() {
+    public void initialize() throws ExecutionException, InterruptedException {
         System.out.println("Home Sayfası Başlatılıyor...");
         currentUser = UserSession.getCurrentUser();
 
         setupLeaderboard();
 
-        promotedCities.add(new PromotedCityData("Rome", 800, 70));
-        promotedCities.add(new PromotedCityData("Paris", 1200, 85));
-        promotedCities.add(new PromotedCityData("Tokyo", 2500, 90));
-        promotedCities.add(new PromotedCityData("Amsterdam", 1100, 82));
-        promotedCities.add(new PromotedCityData("Barcelona", 950, 75));
+        // --- SLAYT VERİLERİNİ HAZIRLA ---
+        promotedCities.add(new City("Amsterdam", "Amsterdam", ""));
+        promotedCities.add(new City("Berlin", "Berlin", ""));
+        promotedCities.add(new City("Barcelona", "Barcelona", ""));
+        promotedCities.add(new City("Madrid", "Madrid", ""));
+        promotedCities.add(new City("Istanbul", "Istanbul", ""));
+
+        // İlk Şehri Yükle (Index 0: Rome)
         loadPromotedCity(currentCityIndex);
 
         if (tripsContainer != null) {
-            tripsContainer.getChildren().clear();
-            addTripCard("Ahmet Arda", 38, "user1", "Istanbul", "12-01-2026", 4, 0, 2, 500, 68, "Budapest",
-                    "Hi, I am looking for two travel mates for my trip to Budapest! I want to stay in a hotel with 3 or 4 stars.");
-            addTripCard("Zeynep Kaya", 28, "user1", "Bursa", "10-05-2026", 6, 1, 2, 900, 75, "Rome",
-                    "Ciao! Planning a cultural trip to Rome. Pizza, pasta, and history!");
-            addTripCard("Mert Demir", 41, "user1", "Izmir", "20-06-2026", 4, 1, 2, 1100, 82, "Amsterdam",
-                    "Bisiklet turu ve kanal gezisi planlıyorum. Kafa dengi birini arıyorum.");
-        }
-
-        if(searchField != null) {
-            searchField.setOnAction(event -> System.out.println("Aranan: " + searchField.getText()));
+            loadRandomTrips();
         }
     }
 
-    @FXML
-    public void handleViewDetailsButton(ActionEvent event) {
-        openDetailsPopup("Ahmet Arda Karagöz", "user1", "This is a default description for the static card.");
+    private void loadRandomTrips() {
+        // UI thread'i kilitlememek için arka planda çalıştırıyoruz
+        CompletableFuture.runAsync(() -> {
+            try {
+                // 1. Tüm gezileri çek (Performans notu: Veri çoksa .limit(50) kullanıp içinden 10 seçebilirsin)
+                List<QueryDocumentSnapshot> documents = FirestoreClient.getFirestore()
+                        .collection("trips")
+                        .get().get().getDocuments();
+
+                List<Trip> allTrips = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : documents) {
+                    Trip trip = new Trip(doc.getId());
+                    allTrips.add(trip);
+                }
+
+                Collections.shuffle(allTrips);
+
+                List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
+
+                for (Trip trip : randomTrips) {
+                    User owner = null;
+                    try {
+                        owner = trip.getUser();
+                    } catch (Exception e) {
+                        continue;
+                    }
+
+                    final User finalOwner = owner;
+
+                    // 5. UI güncelleme (JavaFX Thread)
+                    Platform.runLater(() -> {
+                        // Mevcut katılımcı sayısı
+                        int foundMates = trip.getMateCount();
+
+
+                        int compatibility = 50;
+                        try {
+                            //compatibility = currentUser.calculateCompatibility(new City());
+                        } catch (Exception e) {}
+
+                        addTripCard(
+                                finalOwner.getUsername(),      // Username
+                                1,                             // Level (User modelinde varsa oradan al)
+                                finalOwner.getUsername(),      // User Img (İsimden buluyor kodun)
+                                trip.getDepartureLocation(),                // Nereden
+                                trip.getDepartureDate().toString(),                // Tarih
+                                trip.getDays(),                // Gün
+                                trip.getJoinedMates().size(),                    // Bulunan
+                                foundMates,          // Toplam kişi
+                                trip.getAverageBudget(),              // Bütçe
+                                compatibility,                 // Score
+                                trip.getDestinationName(),         // Hedef Şehir
+                                trip.getAdditionalNotes()          // Açıklama
+                        );
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
-    private void openProfilePopup(String username, String imgName, int lvl) {
-        if (profilePopup == null) return;
-        popupProfileName.setText(username);
-        popupProfileLevel.setText("Lvl. " + lvl);
-        popupProfileBio.setText("Hi! I am " + username + ". Let's travel!");
-        setCircleImage(popupProfileImage, imgName);
-        if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
-        profilePopup.setVisible(true);
+    // ==========================================================
+    //          PROMOTED CITY SLAYT MANTIĞI 🎠
+    // ==========================================================
+
+    @FXML
+    public void handleNextPromoted(ActionEvent event) throws ExecutionException, InterruptedException {
+        // İndeksi artır, listenin sonuna geldiyse başa dön
+        currentCityIndex++;
+        if (currentCityIndex >= promotedCities.size()) {
+            currentCityIndex = 0;
+        }
     }
 
     @FXML
-    public void closeProfilePopup() {
-        if (mainContainer != null) mainContainer.setEffect(null);
-        if (profilePopup != null) profilePopup.setVisible(false);
+    public void handlePrevPromoted(ActionEvent event) throws ExecutionException, InterruptedException {
+        // İndeksi azalt, başa geldiyse sona dön
+        currentCityIndex--;
+        if (currentCityIndex < 0) {
+            currentCityIndex = promotedCities.size() - 1;
+        }
+        loadPromotedCity(currentCityIndex);
     }
 
-    @FXML
-    public void closeDetailsPopup() {
-        if (mainContainer != null) mainContainer.setEffect(null);
-        if (detailsPopup != null) detailsPopup.setVisible(false);
+    private void loadPromotedCity(int index) throws ExecutionException, InterruptedException {
+        City city = promotedCities.get(index);
+        System.out.println(Arrays.toString(city.getCompatibilityScores()));
+        int compatibility = currentUser.calculateCompatibility(city);
+        updatePromotedCity(city.getName(), compatibility);
+    }
+
+
+
+    // ==========================================================
+    //          DİĞER METOTLAR (AYNEN KALIYOR)
+    // ==========================================================
+
+    public void updatePromotedCity(String cityName, int score) {
+        if (promotedCityNameLabel != null) promotedCityNameLabel.setText(cityName.toUpperCase());
+        if (compalibilityScoreLabel != null) compalibilityScoreLabel.setText("%" + score);
+        if (compatibilityScoreBar != null) compatibilityScoreBar.setProgress(score / 100.0);
+        setSmartImage(promotedCitiesCityImage, cityName);
     }
 
     private void switchToChannel(javafx.event.ActionEvent event, String cityName) {
@@ -260,13 +340,12 @@ public class HomeController {
         if (img != null) targetCircle.setFill(new ImagePattern(img));
     }
     private Image findImage(String baseName) {
-        String[] extensions = {".png", ".jpg", ".jpeg"};
-        for (String ext : extensions) {
+        baseName = baseName.toLowerCase().replaceAll("ı", "i");
             try {
-                String path = "/images/" + baseName.toLowerCase() + ext;
+                String path = "/images/city photos/" + baseName.toLowerCase() + ".jpg";
                 if (getClass().getResource(path) != null) return new Image(getClass().getResourceAsStream(path));
             } catch (Exception e) {}
-        }
+
         return null;
     }
     private void setupLeaderboard() {

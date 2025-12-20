@@ -4,6 +4,8 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,20 +31,32 @@ public class Trip {
     private Firestore db = FirebaseService.getFirestore();
 
     public Trip(String id, String destination, String departureLocation, int days,
-                int averageBudget, String currency, Date departureDate, Date endDate, User user) throws ExecutionException, InterruptedException {
+                int averageBudget, String currency, LocalDate departureDate, LocalDate endDate, User user, String itinerary, int mateCount, String additionalNotes) throws ExecutionException, InterruptedException {
         this.id = id;
         this.destination = destination;
         this.departureLocation = departureLocation;
         this.days = days;
         this.averageBudget = averageBudget;
         this.currency = currency;
-        this.departureDate = departureDate;
-        this.endDate = endDate;
+        Date date1 = Date.from(
+                departureDate
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+        );
+        Date date2 = Date.from(
+                endDate
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+        );
+        this.departureDate = date1;
+        this.endDate = date2;
         this.user = user;
         this.joinedMates = new ArrayList<>();
         this.pendingMates = new ArrayList<>();
-        this.mateCount = 0;
+        this.mateCount = mateCount;
         this.tripChat = new TripChat(id, this);
+        this.itinerary = itinerary;
+        this.additionalNotes = additionalNotes;
         Map<String, Object> data = new HashMap<>();
         data.put("id", id);
         data.put("destination", destination);
@@ -50,13 +64,16 @@ public class Trip {
         data.put("days", days);
         data.put("averageBudget", averageBudget);
         data.put("currency", currency);
-        data.put("departureDate", departureDate);
-        data.put("endDate", endDate);
-        data.put("user", user);
+        data.put("departureDate", date1);
+        data.put("endDate", date2);
+        data.put("user", user.getId());
         data.put("joinedMates", joinedMates);
         data.put("pendingMates", pendingMates);
         data.put("mateCount", mateCount);
         data.put("tripChat", tripChat.getId());
+        data.put("itinerary", itinerary);
+        data.put("additionalNotes", additionalNotes);
+        user.addCurrentTrip(id);
         db.collection("trips").document(id).set(data).get();
     }
 
@@ -66,9 +83,9 @@ public class Trip {
         this.destination = data.getString("destination");
         this.departureLocation = data.getString("departureLocation");
         this.additionalNotes = data.getString("additionalNotes");
-        this.days = (int)data.get("days");
-        this.averageBudget = (int)data.get("averageBudget");
-        this.mateCount = (int)data.get("mateCount");
+        this.days = Integer.parseInt(data.get("days").toString());
+        this.averageBudget = Integer.parseInt(data.get("averageBudget").toString());
+        this.mateCount = Integer.parseInt(data.get("mateCount").toString());
         this.currency = data.getString("currency");
         this.itinerary = data.getString("itinerary");
         this.departureDate = data.getDate("departureDate");
@@ -78,8 +95,9 @@ public class Trip {
         this.pendingMates = new ArrayList<>();
         this.joinedMates = (ArrayList) data.get("joinedMates");
         this.pendingMates = (ArrayList) data.get("pendingMates");
-        this.mateCount = (int)data.get("mateCount");
         this.tripChat = new TripChat(data.get("tripChat").toString(), this);
+        this.itinerary = data.getString("itinerary");
+        this.additionalNotes = data.getString("additionalNotes");
     }
 
     public void updateTrip() throws ExecutionException, InterruptedException {
