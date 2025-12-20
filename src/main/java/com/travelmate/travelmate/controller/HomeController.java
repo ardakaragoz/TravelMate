@@ -153,28 +153,10 @@ public class HomeController {
     //          PROMOTED CITY SLAYT MANTIĞI 🎠
     // ==========================================================
 
-    @FXML
-    public void handleNextPromoted(ActionEvent event) throws ExecutionException, InterruptedException {
-        // İndeksi artır, listenin sonuna geldiyse başa dön
-        currentCityIndex++;
-        if (currentCityIndex >= promotedCities.size()) {
-            currentCityIndex = 0;
-        }
-    }
 
-    @FXML
-    public void handlePrevPromoted(ActionEvent event) throws ExecutionException, InterruptedException {
-        // İndeksi azalt, başa geldiyse sona dön
-        currentCityIndex--;
-        if (currentCityIndex < 0) {
-            currentCityIndex = promotedCities.size() - 1;
-        }
-        loadPromotedCity(currentCityIndex);
-    }
 
     private void loadPromotedCity(int index) throws ExecutionException, InterruptedException {
         City city = promotedCities.get(index);
-        System.out.println(Arrays.toString(city.getCompatibilityScores()));
         int compatibility = currentUser.calculateCompatibility(city);
         updatePromotedCity(city.getName(), compatibility);
     }
@@ -282,26 +264,18 @@ public class HomeController {
         if(tripsContainer != null) tripsContainer.getChildren().add(card);
     }
 
-    @FXML public void handleNextPromoted(ActionEvent event) {
+    @FXML public void handleNextPromoted(ActionEvent event) throws ExecutionException, InterruptedException {
         currentCityIndex++;
         if (currentCityIndex >= promotedCities.size()) currentCityIndex = 0;
         loadPromotedCity(currentCityIndex);
     }
-    @FXML public void handlePrevPromoted(ActionEvent event) {
+    @FXML public void handlePrevPromoted(ActionEvent event) throws ExecutionException, InterruptedException {
         currentCityIndex--;
         if (currentCityIndex < 0) currentCityIndex = promotedCities.size() - 1;
         loadPromotedCity(currentCityIndex);
     }
-    private void loadPromotedCity(int index) {
-        PromotedCityData city = promotedCities.get(index);
-        updatePromotedCity(city.name, city.budget, city.score);
-    }
-    private static class PromotedCityData {
-        String name; int budget; int score;
-        public PromotedCityData(String name, int budget, int score) {
-            this.name = name; this.budget = budget; this.score = score;
-        }
-    }
+
+
     public void updatePromotedCity(String cityName, int budget, int score) {
         if (promotedCityNameLabel != null) promotedCityNameLabel.setText(cityName.toUpperCase());
         if (averageBudgetLabel != null) averageBudgetLabel.setText("Average Budget: " + budget + "$");
@@ -364,6 +338,26 @@ public class HomeController {
         Label scoreLabel = new Label(score); scoreLabel.setStyle("-fx-text-fill: #1E3A5F; -fx-font-weight: bold;");
         row.getChildren().addAll(nameLabel, spacer, scoreLabel);
         leaderboardContainer.getChildren().add(row);
+    }
+
+    public void closeDetailsPopup() {
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (detailsPopup != null) detailsPopup.setVisible(false);
+    }
+    private void openProfilePopup(String username, String imgName, int lvl) {
+        if (profilePopup == null) return;
+        popupProfileName.setText(username);
+        popupProfileLevel.setText("Lvl. " + lvl);
+        popupProfileBio.setText("Hi! I am " + username + ". Let's travel!");
+        setCircleImage(popupProfileImage, imgName);
+        if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
+        profilePopup.setVisible(true);
+    }
+
+    @FXML
+    public void closeProfilePopup() {
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (profilePopup != null) profilePopup.setVisible(false);
     }
     @FXML public void handleHelpButton() {
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
