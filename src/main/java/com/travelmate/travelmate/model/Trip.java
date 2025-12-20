@@ -31,7 +31,7 @@ public class Trip {
     private Firestore db = FirebaseService.getFirestore();
 
     public Trip(String id, String destination, String departureLocation, int days,
-                int averageBudget, String currency, LocalDate departureDate, LocalDate endDate, User user, String itinerary) throws ExecutionException, InterruptedException {
+                int averageBudget, String currency, LocalDate departureDate, LocalDate endDate, User user, String itinerary, int mateCount, String additionalNotes) throws ExecutionException, InterruptedException {
         this.id = id;
         this.destination = destination;
         this.departureLocation = departureLocation;
@@ -53,9 +53,10 @@ public class Trip {
         this.user = user;
         this.joinedMates = new ArrayList<>();
         this.pendingMates = new ArrayList<>();
-        this.mateCount = 0;
+        this.mateCount = mateCount;
         this.tripChat = new TripChat(id, this);
-        this.itinerary = "";
+        this.itinerary = itinerary;
+        this.additionalNotes = additionalNotes;
         Map<String, Object> data = new HashMap<>();
         data.put("id", id);
         data.put("destination", destination);
@@ -71,6 +72,7 @@ public class Trip {
         data.put("mateCount", mateCount);
         data.put("tripChat", tripChat.getId());
         data.put("itinerary", itinerary);
+        data.put("additionalNotes", additionalNotes);
         user.addCurrentTrip(id);
         db.collection("trips").document(id).set(data).get();
     }
@@ -81,9 +83,9 @@ public class Trip {
         this.destination = data.getString("destination");
         this.departureLocation = data.getString("departureLocation");
         this.additionalNotes = data.getString("additionalNotes");
-        this.days = (int)data.get("days");
-        this.averageBudget = (int)data.get("averageBudget");
-        this.mateCount = (int)data.get("mateCount");
+        this.days = Integer.parseInt(data.get("days").toString());
+        this.averageBudget = Integer.parseInt(data.get("averageBudget").toString());
+        this.mateCount = Integer.parseInt(data.get("mateCount").toString());
         this.currency = data.getString("currency");
         this.itinerary = data.getString("itinerary");
         this.departureDate = data.getDate("departureDate");
@@ -93,8 +95,9 @@ public class Trip {
         this.pendingMates = new ArrayList<>();
         this.joinedMates = (ArrayList) data.get("joinedMates");
         this.pendingMates = (ArrayList) data.get("pendingMates");
-        this.mateCount = (int)data.get("mateCount");
         this.tripChat = new TripChat(data.get("tripChat").toString(), this);
+        this.itinerary = data.getString("itinerary");
+        this.additionalNotes = data.getString("additionalNotes");
     }
 
     public void updateTrip() throws ExecutionException, InterruptedException {

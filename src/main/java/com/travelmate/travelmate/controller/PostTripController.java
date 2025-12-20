@@ -48,6 +48,6 @@ public class PostTripController {
             return;
         }
 
-        Trip trip = new Trip("" + System.currentTimeMillis(), destinationField.getText(), departureField.getText(), days, Integer.parseInt(budgetField.getText()), currencyChoiceBox.getValue(), datePicker.getValue(), datePicker.getValue().plusDays(4), UserSession.getCurrentUser(), itinerary);
+        Trip trip = new Trip("" + System.currentTimeMillis(), destinationField.getText(), departureField.getText(), days, Integer.parseInt(budgetField.getText()), currencyChoiceBox.getValue(), datePicker.getValue(), datePicker.getValue().plusDays(4), UserSession.getCurrentUser(), itinerary, mates, notes);
     }
 }
