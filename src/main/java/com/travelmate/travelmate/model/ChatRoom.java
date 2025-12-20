@@ -24,7 +24,6 @@ public class ChatRoom {
                 .document(id)
                 .get()
                 .get();
-        System.out.println(doc.exists());
         if (doc.exists()) {
             this.messages = (ArrayList<String>) doc.get("messages");
             this.activeUsers = (ArrayList<String>) doc.get("activeUsers");
