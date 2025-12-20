@@ -11,6 +11,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -22,7 +23,8 @@ public class SignInController {
 
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
-    @FXML private Button loginButton; // Ensure your FXML button has fx:id="loginButton"
+    @FXML private Button loginButton;
+    @FXML private Label statusLabel;
 
     @FXML
     public void handleLoginButton(ActionEvent event) {
@@ -30,15 +32,20 @@ public class SignInController {
         String password = passwordField.getText();
 
         if (email.isEmpty() || password.isEmpty()) {
-            System.out.println("Please enter email and password.");
+            if (statusLabel != null) {
+                statusLabel.setText("Please enter email and password.");
+                statusLabel.setTextFill(Color.RED);
+                statusLabel.setVisible(true);
+            }
             return;
         }
-
-        // Disable button to prevent double-clicking
         if (loginButton != null) loginButton.setDisable(true);
-        System.out.println("Logging in...");
+        if (statusLabel != null) {
+            statusLabel.setText("Logging in...");
+            statusLabel.setTextFill(Color.BLACK);
+            statusLabel.setVisible(true);
+        }
 
-        // --- OPTIMIZATION: Run Database Logic in Background Thread ---
         new Thread(() -> {
             try {
                 Firestore db = FirebaseService.getFirestore();
@@ -54,10 +61,22 @@ public class SignInController {
                     UserSession.setCurrentUser(user);
 
                     // 3. Switch Scene (Must be on UI Thread)
-                    Platform.runLater(() -> changeScene("/view/Home.fxml", event));
+                    Platform.runLater(() -> {
+                        if (statusLabel != null) {
+                            statusLabel.setText("Login Successful! Redirecting...");
+                            statusLabel.setTextFill(Color.GREEN);
+                            statusLabel.setVisible(true);
+                        }
+                        changeScene("/view/Home.fxml", event);
+                    });
                 } else {
                     Platform.runLater(() -> {
                         System.out.println("Login Failed: Incorrect credentials.");
+                        if (statusLabel != null) {
+                            statusLabel.setText("Login Failed: Incorrect credentials.");
+                            statusLabel.setTextFill(Color.RED);
+                            statusLabel.setVisible(true);
+                        }
                         if (loginButton != null) loginButton.setDisable(false);
                     });
                 }
