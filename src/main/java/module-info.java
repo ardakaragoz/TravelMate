@@ -11,6 +11,7 @@ module com.travelmate.travelmate {
     requires com.google.api.apicommon;
     requires java.sql;
     requires javafx.graphics;
+    requires java.desktop;
 
     opens com.travelmate.travelmate.model to google.cloud.firestore;
     opens com.travelmate.travelmate to javafx.fxml, javafx.graphics;

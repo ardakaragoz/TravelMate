@@ -13,6 +13,8 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
+
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 
 public class TopBarController {
@@ -88,7 +90,11 @@ public class TopBarController {
     public void handleProfileClick(MouseEvent event) {
         switchPage(event, "Profile");
     }
-    private void switchPage(Object eventSource, String fxmlName) {
+
+    public void handleHomeButton(){
+
+    }
+    private void switchPage(MouseEvent event, String fxmlName) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/Home.fxml"));
             Scene scene = new Scene(loader.load());
