@@ -32,23 +32,29 @@ public class HomeController {
     @FXML private VBox helpPopup;
     @FXML private VBox leaderboardContainer;
     @FXML private VBox tripsContainer;
-
     @FXML private TextField searchField;
-
     @FXML private ImageView promotedCitiesCityImage;
     @FXML private Label promotedCityNameLabel;
     @FXML private Label averageBudgetLabel;
     @FXML private ProgressBar compatibilityScoreBar;
     @FXML private Label compalibilityScoreLabel;
 
+
     private int currentCityIndex = 0;
     private final List<PromotedCityData> promotedCities = new ArrayList<>();
+
 
     @FXML private VBox detailsPopup;
     @FXML private Circle detailsProfilePic;
     @FXML private Label detailsOwnerName;
     @FXML private Label detailsDescription;
     @FXML private TextArea messageInputArea;
+
+    @FXML private VBox profilePopup;
+    @FXML private Circle popupProfileImage;
+    @FXML private Label popupProfileName;
+    @FXML private Label popupProfileLevel;
+    @FXML private Label popupProfileBio;
 
     private User currentUser;
 
@@ -63,7 +69,6 @@ public class HomeController {
         promotedCities.add(new PromotedCityData("Tokyo", 2500, 90));
         promotedCities.add(new PromotedCityData("Amsterdam", 1100, 82));
         promotedCities.add(new PromotedCityData("Barcelona", 950, 75));
-
         loadPromotedCity(currentCityIndex);
 
         if (tripsContainer != null) {
@@ -85,41 +90,41 @@ public class HomeController {
     public void handleViewDetailsButton(ActionEvent event) {
         openDetailsPopup("Ahmet Arda Karagöz", "user1", "This is a default description for the static card.");
     }
-
-    @FXML
-    public void handleNextPromoted(ActionEvent event) {
-        currentCityIndex++;
-        if (currentCityIndex >= promotedCities.size()) currentCityIndex = 0;
-        loadPromotedCity(currentCityIndex);
+    private void openProfilePopup(String username, String imgName, int lvl) {
+        if (profilePopup == null) return;
+        popupProfileName.setText(username);
+        popupProfileLevel.setText("Lvl. " + lvl);
+        popupProfileBio.setText("Hi! I am " + username + ". Let's travel!");
+        setCircleImage(popupProfileImage, imgName);
+        if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
+        profilePopup.setVisible(true);
     }
 
     @FXML
-    public void handlePrevPromoted(ActionEvent event) {
-        currentCityIndex--;
-        if (currentCityIndex < 0) currentCityIndex = promotedCities.size() - 1;
-        loadPromotedCity(currentCityIndex);
+    public void closeProfilePopup() {
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (profilePopup != null) profilePopup.setVisible(false);
     }
 
-    private void loadPromotedCity(int index) {
-        PromotedCityData city = promotedCities.get(index);
-        updatePromotedCity(city.name, city.budget, city.score);
+    @FXML
+    public void closeDetailsPopup() {
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (detailsPopup != null) detailsPopup.setVisible(false);
     }
 
-    private static class PromotedCityData {
-        String name; int budget; int score;
-        public PromotedCityData(String name, int budget, int score) {
-            this.name = name; this.budget = budget; this.score = score;
+    private void switchToChannel(javafx.event.ActionEvent event, String cityName) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Channels.fxml"));
+            javafx.scene.Parent root = loader.load();
+            ChannelsController controller = loader.getController();
+            controller.openChannel(cityName);
+            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            stage.getScene().setRoot(root);
+
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
         }
     }
-
-    public void updatePromotedCity(String cityName, int budget, int score) {
-        if (promotedCityNameLabel != null) promotedCityNameLabel.setText(cityName.toUpperCase());
-        if (averageBudgetLabel != null) averageBudgetLabel.setText("Average Budget: " + budget + "$");
-        if (compalibilityScoreLabel != null) compalibilityScoreLabel.setText("%" + score);
-        if (compatibilityScoreBar != null) compatibilityScoreBar.setProgress(score / 100.0);
-        setSmartImage(promotedCitiesCityImage, cityName);
-    }
-
     private void addTripCard(String username, int lvl, String userImg, String from, String date, int days,
                              int found, int totalMate, int budget, int score, String destCity, String description) {
         HBox card = new HBox();
@@ -136,18 +141,33 @@ public class HomeController {
         setCircleImage(profilePic, userImg);
 
         VBox nameBox = new VBox();
-        nameBox.getChildren().addAll(createBoldLabel(username, 16), createGrayLabel("Lvl. " + lvl, 14));
+        nameBox.setMinWidth(Region.USE_PREF_SIZE);
+        Label nameLbl = new Label(username);
+        nameLbl.setFont(Font.font("System", FontWeight.BOLD, 16));
+        nameLbl.setTextFill(Color.BLACK);
+        Label lvlLbl = new Label("Lvl. " + lvl);
+        lvlLbl.setTextFill(Color.web("#5e5e5e"));
+        nameBox.getChildren().addAll(nameLbl, lvlLbl);
 
         Region r1 = new Region(); HBox.setHgrow(r1, Priority.ALWAYS);
+
         Button viewProfileBtn = createStyledButton("View Profile", 13);
+
+        viewProfileBtn.setOnAction(e -> openProfilePopup(username, userImg, lvl));
+
         topRow.getChildren().addAll(profilePic, nameBox, r1, viewProfileBtn);
 
         Label infoLbl = new Label("Departuring from: " + from + " at " + date + " for " + days + " Days!");
         infoLbl.setFont(Font.font(16));
 
         HBox midRow = new HBox(20); midRow.setAlignment(Pos.CENTER_LEFT);
-        midRow.getChildren().addAll(createBoldLabel(found + "/" + totalMate + " mate found", 16), new Region(), createBoldLabel(budget + " $", 24));
-        ((Region) midRow.getChildren().get(1)).prefWidthProperty().bind(infoBox.widthProperty().divide(3));
+        Label mateLbl = new Label(found + "/" + totalMate + " mate found");
+        mateLbl.setFont(Font.font("System", FontWeight.BOLD, 16));
+        Label budLbl = new Label(budget + " $");
+        budLbl.setFont(Font.font("System", FontWeight.BOLD, 24));
+
+        Region r2 = new Region(); HBox.setHgrow(r2, Priority.ALWAYS);
+        midRow.getChildren().addAll(mateLbl, r2, budLbl);
 
         HBox scoreRow = new HBox(10); scoreRow.setAlignment(Pos.CENTER_LEFT);
         ProgressBar pBar = new ProgressBar(score / 100.0); pBar.setPrefWidth(120); pBar.setStyle("-fx-accent: #1E3A5F;");
@@ -155,9 +175,11 @@ public class HomeController {
 
         HBox bottomRow = new HBox(15); bottomRow.setAlignment(Pos.CENTER);
         Button channelBtn = createStyledButton("View Channel", 14);
-        Label cityLbl = createBoldLabel(destCity.toUpperCase(), 28); cityLbl.setTextFill(Color.web("#1e3a5f"));
+        channelBtn.setOnAction(e -> switchToChannel(e, destCity));
+        Label cityLbl = new Label(destCity.toUpperCase());
+        cityLbl.setFont(Font.font("System", FontWeight.BOLD, 28));
+        cityLbl.setTextFill(Color.web("#1e3a5f"));
         Button detailsBtn = createStyledButton("View Details", 14);
-
         detailsBtn.setOnAction(e -> openDetailsPopup(username, userImg, description));
 
         Region s1 = new Region(); HBox.setHgrow(s1, Priority.ALWAYS);
@@ -180,19 +202,33 @@ public class HomeController {
         if(tripsContainer != null) tripsContainer.getChildren().add(card);
     }
 
-    private Label createBoldLabel(String text, int size) {
-        Label l = new Label(text); l.setFont(Font.font("System", FontWeight.BOLD, size)); return l;
+    @FXML public void handleNextPromoted(ActionEvent event) {
+        currentCityIndex++;
+        if (currentCityIndex >= promotedCities.size()) currentCityIndex = 0;
+        loadPromotedCity(currentCityIndex);
     }
-    private Label createGrayLabel(String text, int size) {
-        Label l = new Label(text); l.setTextFill(Color.web("#5e5e5e")); l.setFont(Font.font("System", javafx.scene.text.FontPosture.ITALIC, size)); return l;
+    @FXML public void handlePrevPromoted(ActionEvent event) {
+        currentCityIndex--;
+        if (currentCityIndex < 0) currentCityIndex = promotedCities.size() - 1;
+        loadPromotedCity(currentCityIndex);
     }
-    private Button createStyledButton(String text, int fontSize) {
-        Button btn = new Button(text);
-        btn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 20;");
-        btn.setFont(Font.font("System", FontWeight.BOLD, fontSize));
-        return btn;
+    private void loadPromotedCity(int index) {
+        PromotedCityData city = promotedCities.get(index);
+        updatePromotedCity(city.name, city.budget, city.score);
     }
-
+    private static class PromotedCityData {
+        String name; int budget; int score;
+        public PromotedCityData(String name, int budget, int score) {
+            this.name = name; this.budget = budget; this.score = score;
+        }
+    }
+    public void updatePromotedCity(String cityName, int budget, int score) {
+        if (promotedCityNameLabel != null) promotedCityNameLabel.setText(cityName.toUpperCase());
+        if (averageBudgetLabel != null) averageBudgetLabel.setText("Average Budget: " + budget + "$");
+        if (compalibilityScoreLabel != null) compalibilityScoreLabel.setText("%" + score);
+        if (compatibilityScoreBar != null) compatibilityScoreBar.setProgress(score / 100.0);
+        setSmartImage(promotedCitiesCityImage, cityName);
+    }
     private void openDetailsPopup(String ownerName, String imgName, String description) {
         if (detailsPopup == null) return;
         if (detailsOwnerName != null) detailsOwnerName.setText(ownerName);
@@ -201,32 +237,28 @@ public class HomeController {
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
         detailsPopup.setVisible(true);
     }
-
-    @FXML public void closeDetailsPopup() {
-        if (mainContainer != null) mainContainer.setEffect(null);
-        if (detailsPopup != null) detailsPopup.setVisible(false);
-    }
-
     @FXML public void handleSendRequestButton(ActionEvent event) {
         if(messageInputArea != null) {
-            System.out.println("Mesaj: " + messageInputArea.getText());
             messageInputArea.clear();
         }
         closeDetailsPopup();
     }
-
+    private Button createStyledButton(String text, int fontSize) {
+        Button btn = new Button(text);
+        btn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 20;");
+        btn.setFont(Font.font("System", FontWeight.BOLD, fontSize));
+        return btn;
+    }
     private void setSmartImage(ImageView targetView, String name) {
         if (targetView == null) return;
         Image img = findImage(name);
         if (img != null) targetView.setImage(img);
     }
-
     private void setCircleImage(Circle targetCircle, String name) {
         if (targetCircle == null) return;
         Image img = findImage(name);
         if (img != null) targetCircle.setFill(new ImagePattern(img));
     }
-
     private Image findImage(String baseName) {
         String[] extensions = {".png", ".jpg", ".jpeg"};
         for (String ext : extensions) {
@@ -237,7 +269,6 @@ public class HomeController {
         }
         return null;
     }
-
     private void setupLeaderboard() {
         if (leaderboardContainer == null) return;
         leaderboardContainer.getChildren().clear();
@@ -247,7 +278,6 @@ public class HomeController {
         addLeaderboardRow("4. jhonduran10", "250");
         addLeaderboardRow("5. ismailyuksek", "200");
     }
-
     private void addLeaderboardRow(String name, String score) {
         HBox row = new HBox(); row.setSpacing(10);
         Label nameLabel = new Label(name); nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
@@ -256,7 +286,6 @@ public class HomeController {
         row.getChildren().addAll(nameLabel, spacer, scoreLabel);
         leaderboardContainer.getChildren().add(row);
     }
-
     @FXML public void handleHelpButton() {
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
         if (helpPopup != null) helpPopup.setVisible(true);
@@ -265,8 +294,7 @@ public class HomeController {
         if (mainContainer != null) mainContainer.setEffect(null);
         if (helpPopup != null) helpPopup.setVisible(false);
     }
-    @FXML public void handleHomeButton(ActionEvent event) {
-    }
+    @FXML public void handleHomeButton(ActionEvent event) {  }
     @FXML public void handleViewProfileButton(ActionEvent event) {}
     @FXML public void handleViewChannelButton(ActionEvent event) {}
 }

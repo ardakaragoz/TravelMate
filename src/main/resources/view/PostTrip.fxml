@@ -111,13 +111,17 @@
                                     <font><Font size="14.0" /></font>
                                 </TextField>
                             </VBox>
-
+                            <Label fx:id="statusLabel" alignment="CENTER" text="" visible="false">
+                                <font><Font name="System Bold" size="16.0" /></font>
+                                <VBox.margin><Insets bottom="10.0" /></VBox.margin>
+                            </Label>
                             <HBox alignment="CENTER_RIGHT">
                                 <Button onAction="#handleSubmit" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20; -fx-border-width: 2;" text="Submit">
                                     <font><Font name="System Bold" size="18.0" /></font>
                                     <padding><Insets bottom="10.0" left="40.0" right="40.0" top="10.0" /></padding>
                                     <effect><DropShadow color="#00000033" offsetX="3.0" offsetY="3.0" /></effect>
                                 </Button>
+
                             </HBox>
                         </VBox>
                     </content>

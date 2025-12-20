@@ -17,7 +17,7 @@ public class Main extends Application {
         //FirebaseService.initialize();
         Parent root = FXMLLoader.load(getClass().getResource("/view/Home.fxml"));        //StackPane root = new StackPane();
         Scene scene = new Scene(root);
-        stage.setTitle("Hello!");
+        stage.setTitle("TravelMate");
         stage.setScene(scene);
         stage.show();
         //User user = new User("HuZUKiHoRQg7XRkRx5gq", "ardakaragoz", "Arda", "TR", "ahmetarda2006@hotmail.com.tr", "Arda123", "Male", 19);

@@ -3,13 +3,14 @@ package com.travelmate.travelmate.controller;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public class PostTripController {
-
+    @FXML private Label statusLabel;
     @FXML private TextField destinationField;
     @FXML private Spinner<Integer> daysSpinner;
     @FXML private TextField departureField;
@@ -39,9 +40,18 @@ public class PostTripController {
         LocalDate date = datePicker.getValue();
         String notes = notesArea.getText();
         String itinerary = itinerariesField.getText();
+            if (!destinationField.getText().isEmpty()) {
+                statusLabel.setText("Trip Request Created Successfully!");
+                statusLabel.setTextFill(Color.web("#1E3A5F"));
+                statusLabel.setVisible(true);
+                // destinationField.clear();
+            } else {
+                statusLabel.setText("Please fill in the destination!");
+                statusLabel.setTextFill(Color.RED);
+                statusLabel.setVisible(true);
+            }
 
         if (dest.isEmpty() || from.isEmpty() || date == null) {
-            System.out.println("Hata: Lütfen zorunlu alanları doldurun!");
             return;
         }
 

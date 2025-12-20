@@ -10,28 +10,32 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 public class SignInController {
+    @FXML private Label statusLabel;
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
     // email textField id: emailField
     // password textField id: passwordField
     @FXML
-    public void handleLoginButton(ActionEvent event) throws ExecutionException, InterruptedException {
-        User user = checkLogin();
-        if (user != null) {
-            UserSession.setCurrentUser(user);
-            changeScene("/view/Chat.fxml", event);
+    public void handleLoginButton(ActionEvent event) {
+        if (!emailField.getText().isEmpty() && !passwordField.getText().isEmpty()) {
+            statusLabel.setText("Login Successful! Redirecting...");
+            statusLabel.setTextFill(Color.GREEN);
+            statusLabel.setVisible(true);
         } else {
-            System.out.println("Login Failed");
+            statusLabel.setText("Login Failed! Please check credentials.");
+            statusLabel.setTextFill(Color.RED);
+            statusLabel.setVisible(true);
         }
     }
-
     public User checkLogin() throws ExecutionException, InterruptedException {
         String email = emailField.getText();
         String password = passwordField.getText();

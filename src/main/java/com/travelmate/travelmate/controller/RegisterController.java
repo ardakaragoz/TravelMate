@@ -10,8 +10,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -23,7 +25,7 @@ public class RegisterController {
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
     @FXML private PasswordField confirmPasswordField;
-
+    @FXML private Label statusLabel;
     //emailField
     //passwordField
     //confirmPasswordField
@@ -35,21 +37,29 @@ public class RegisterController {
     }
     @FXML
     public void handleRegisterButton(ActionEvent event) throws ExecutionException, InterruptedException {
-        // registration code probably
         String email = emailField.getText();
         String password = passwordField.getText();
         String confirmPassword = confirmPasswordField.getText();
-        System.out.println(password);
+
         if (password.equals(confirmPassword)) {
+            if (statusLabel != null) {
+                statusLabel.setText("Successfully Registered! Redirecting...");
+                statusLabel.setTextFill(Color.GREEN);
+                statusLabel.setVisible(true);
+            }
             Firestore db = FirebaseService.getFirestore();
             User user = new User(email, "", "", "", email, password, "", 0);
             UserSession.setCurrentUser(user);
             changeScene("/view/Home.fxml", event);
         } else {
             System.out.println("Register failed.");
+            if (statusLabel != null) {
+                statusLabel.setText("Registration Failed! Passwords do not match.");
+                statusLabel.setTextFill(Color.RED);
+                statusLabel.setVisible(true);
+            }
         }
     }
-
     @FXML
     public void handleBackButton(ActionEvent event) {
         changeScene("/view/sign-in-page.fxml", event);

@@ -85,7 +85,9 @@
                   </HBox>
                </children>
             </VBox>
-            
+             <Label fx:id="statusLabel" alignment="CENTER" text="" visible="false">
+                 <font><Font name="System Bold" size="18.0" /></font>
+             </Label>
             <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="582.0">
                <children>
                   <Button alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleLoginButton" prefHeight="70.0" prefWidth="250.0" style="-fx-background-color: #CCFF00; -fx-text-fill: BLACK; -fx-background-radius: 30;" text="Sign in">
