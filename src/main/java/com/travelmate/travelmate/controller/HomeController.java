@@ -301,13 +301,12 @@ public class HomeController {
     }
 
     private Image findImage(String baseName) {
-        String[] extensions = {".png", ".jpg", ".jpeg"};
-        for (String ext : extensions) {
+        baseName = baseName.toLowerCase().replaceAll("ı", "i");
             try {
-                String path = "/images/" + baseName.toLowerCase() + ext;
+                String path = "/images/city photos/" + baseName.toLowerCase() + ".jpg";
                 if (getClass().getResource(path) != null) return new Image(getClass().getResourceAsStream(path));
             } catch (Exception e) {}
-        }
+
         return null;
     }
 
