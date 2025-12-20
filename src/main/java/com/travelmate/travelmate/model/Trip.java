@@ -3,6 +3,7 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.CityList;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -116,9 +117,9 @@ public class Trip {
         db.collection("trips").document(id).set(data).get();
     }
 
-    public City getDestination() throws ExecutionException, InterruptedException {
+    public String getDestination() throws ExecutionException, InterruptedException {
 
-        return new City(destination, "", "");
+        return destination;
     }
 
     public void addMate(User mate) throws ExecutionException, InterruptedException {

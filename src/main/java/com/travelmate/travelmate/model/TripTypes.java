@@ -13,30 +13,10 @@ public class TripTypes {
     private String name;
     private int[] compatibilityScores;
 
-    public TripTypes(String id, String name) throws ExecutionException, InterruptedException {
+    public TripTypes(String id, String name, int[] compatibilityScores) throws ExecutionException, InterruptedException {
         this.id = id;
         this.name = name;
-        Firestore db = FirebaseService.getFirestore();
-        DocumentSnapshot data = db.collection("trip_types").document(id).get().get();
-        if (data.exists()){
-            this.compatibilityScores = (int[]) data.get("compatibilityScores");
-        } else {
-            this.compatibilityScores = new int[3];
-            Arrays.fill(compatibilityScores, 0);
-        }
-    }
-
-    public TripTypes(String id) throws ExecutionException, InterruptedException {
-        this.id = id;
-        Firestore db = FirebaseService.getFirestore();
-        DocumentSnapshot data = db.collection("trip_types").document(id).get().get();
-        if (data.exists()){
-            this.name = data.getString("name");
-            this.compatibilityScores = (int[]) data.get("compatibilityScores");
-        } else {
-            this.compatibilityScores = new int[3];
-            Arrays.fill(compatibilityScores, 0);
-        }
+        this.compatibilityScores = compatibilityScores;
     }
 
     // Getters and Setters

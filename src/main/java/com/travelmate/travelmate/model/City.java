@@ -14,22 +14,11 @@ public class City {
     private String pictureURL;
     private int[] compatibilityScores;
 
-    public City(String id, String name, String pictureURL) throws ExecutionException, InterruptedException {
+    public City(String id, String name, String pictureURL, int[] compatibilityScores) throws ExecutionException, InterruptedException {
         this.id = id;
         this.name = name;
         this.pictureURL = pictureURL;
-        Firestore db = FirebaseService.getFirestore();
-        DocumentSnapshot data = db.collection("cities").document(id).get().get();
-        if (data.exists()){
-            this.compatibilityScores = new int[3];
-            this.compatibilityScores[0] = Integer.parseInt(data.get("funPoint").toString());
-            this.compatibilityScores[1] = Integer.parseInt(data.get("culturePoint").toString());
-            this.compatibilityScores[2] = Integer.parseInt(data.get("chillPoint").toString());
-
-        } else {
-            this.compatibilityScores = new int[3];
-            Arrays.fill(compatibilityScores, 0);
-        }
+        this.compatibilityScores = compatibilityScores;
     }
 
 
