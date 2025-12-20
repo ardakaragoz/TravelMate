@@ -22,7 +22,7 @@ public class SidebarController {
     public void setActivePage(String pageName) {
         resetStyles();
 
-        // Active Style: Green Background, White Text
+        // Green Background, Navy Border, Navy Text
         String activeStyle = "-fx-background-color: #CCFF00; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px;";
         String activeChatStyle = "-fx-background-color: #CCFF00; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px;";
 
@@ -37,7 +37,7 @@ public class SidebarController {
     }
 
     private void resetStyles() {
-        // Default Style: White Background, Navy Border
+        // White Background, Navy Border, Navy Text
         String defaultStyle = "-fx-background-color: WHITE; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px;";
         String defaultChatStyle = "-fx-background-color: WHITE; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px;";
 

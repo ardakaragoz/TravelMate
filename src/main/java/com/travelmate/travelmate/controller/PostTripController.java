@@ -23,8 +23,13 @@ public class PostTripController {
     @FXML private DatePicker datePicker;
     @FXML private TextArea notesArea;
     @FXML private TextField itinerariesField;
+    @FXML private SidebarController sidebarController;
 
     public void initialize() {
+        if (sidebarController != null) {
+            sidebarController.setActivePage("PostTrip");
+        }
+
         currencyChoiceBox.getItems().addAll("$", "€", "₺", "£");
         currencyChoiceBox.setValue("$");
 
