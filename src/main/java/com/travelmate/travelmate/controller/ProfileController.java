@@ -29,8 +29,6 @@ public class ProfileController {
     @FXML private FlowPane hobbiesContainer;
     @FXML private FlowPane tripTypesContainer;
     @FXML private Label pastTripsLabel;
-
-    // Help Popup
     @FXML private VBox helpPopup;
 
     public void initialize() {
@@ -41,8 +39,6 @@ public class ProfileController {
         fullNameLabel.setText("Berken Keni");
         usernameLabel.setText("@berkenkenny, 20");
         levelLabel.setText("Level 35");
-
-        // Level Barı Ayarla (%75 dolu)
         if (levelProgressBar != null) {
             levelProgressBar.setProgress(0.75);
         }
@@ -61,7 +57,6 @@ public class ProfileController {
         addTag(tripTypesContainer, "Cultural", "#a4c2f2");
     }
 
-    // --- POPUP İŞLEMLERİ ---
     @FXML
     public void handleHelpButton() {
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));

@@ -1,10 +1,18 @@
 package com.travelmate.travelmate.controller;
 
+import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
+import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.City;
 import com.travelmate.travelmate.model.Trip;
 import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.CityList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -84,12 +92,12 @@ public class HomeController {
         // 2. Setup Leaderboard (Fast UI ops)
         setupLeaderboard();
 
-        // 3. Prepare Data
-        promotedCities.add(new City("Amsterdam", "Amsterdam", ""));
-        promotedCities.add(new City("Berlin", "Berlin", ""));
-        promotedCities.add(new City("Barcelona", "Barcelona", ""));
-        promotedCities.add(new City("Madrid", "Madrid", ""));
-        promotedCities.add(new City("Istanbul", "Istanbul", ""));
+        // --- SLAYT VERİLERİNİ HAZIRLA ---
+        promotedCities.add(CityList.getCity("Amsterdam"));
+        promotedCities.add(CityList.getCity("Berlin"));
+        promotedCities.add(CityList.getCity("Barcelona"));
+        promotedCities.add(CityList.getCity("Prague"));
+        promotedCities.add(CityList.getCity("London"));
 
         // 4. Load Promoted City (NOW OPTIMIZED to be Non-Blocking)
         // This runs in background, allowing the scene to show immediately
@@ -369,12 +377,54 @@ public class HomeController {
 
     private void setupLeaderboard() {
         if (leaderboardContainer == null) return;
-        leaderboardContainer.getChildren().clear();
-        addLeaderboardRow("1. placidezigira", "350");
-        addLeaderboardRow("2. ardakaragoz", "320");
-        addLeaderboardRow("3. mkeremakturkoglu", "290");
-        addLeaderboardRow("4. jhonduran10", "250");
-        addLeaderboardRow("5. ismailyuksek", "200");
+
+        // Yükleniyor... yazısı ekleyebilirsin istersen
+        // leaderboardContainer.getChildren().add(new Label("Yükleniyor..."));
+
+        Firestore db = FirebaseService.getFirestore();
+
+        // Veritabanı Sorgusu:
+        // 1. "users" koleksiyonuna git
+        // 2. "levelPoint" değerine göre AZALAN (En yüksekten en düşüğe) sırala
+        // 3. Sadece ilk 5 kişiyi al (Limit) - Performans için çok önemli!
+        ApiFuture<QuerySnapshot> future = db.collection("users")
+                .orderBy("levelPoint", Query.Direction.DESCENDING)
+                .limit(5)
+                .get();
+
+        // Asenkron işlem (Arka planda çalışır, arayüzü dondurmaz)
+        ApiFutures.addCallback(future, new ApiFutureCallback<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                // UI güncellemeleri MUTLAKA Platform.runLater içinde olmalıdır
+                Platform.runLater(() -> {
+                    leaderboardContainer.getChildren().clear(); // Varsa eski listeyi temizle
+
+                    int rank = 1;
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        // Veriyi güvenli bir şekilde çek
+                        String username = doc.getString("username");
+                        if (username == null || username.isEmpty()) {
+                            username = "Unknown User";
+                        }
+
+                        // Puanı güvenli çek (Null check)
+                        Long pointsLong = doc.getLong("levelPoint");
+                        int points = (pointsLong != null) ? pointsLong.intValue() : 0;
+
+                        // Listeye satır ekle
+                        addLeaderboardRow(rank + ". " + username, String.valueOf(points));
+                        rank++;
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                System.err.println("Leaderboard verisi çekilemedi: " + t.getMessage());
+                t.printStackTrace();
+            }
+        }, Runnable::run);
     }
 
     private void addLeaderboardRow(String name, String score) {

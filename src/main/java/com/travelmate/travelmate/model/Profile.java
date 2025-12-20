@@ -3,6 +3,8 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.HobbyList;
+import com.travelmate.travelmate.session.TripTypeList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,14 +90,14 @@ public class Profile {
     public ArrayList<Hobby> getHobbies() throws ExecutionException, InterruptedException {
         ArrayList<Hobby> hobbiesList = new ArrayList<>();
         for (String hobbyId : hobbies) {
-            hobbiesList.add(new Hobby(hobbyId));
+            hobbiesList.add(HobbyList.getHobby(hobbyId));
         }
         return hobbiesList;
     }
     public ArrayList<TripTypes> getFavoriteTripTypes() throws ExecutionException, InterruptedException {
         ArrayList<TripTypes> triptypeList = new ArrayList<>();
         for (String typeID : favoriteTripTypes) {
-            triptypeList.add(new TripTypes(typeID));
+            triptypeList.add(TripTypeList.getTripType(typeID));
         }
 
         return triptypeList;

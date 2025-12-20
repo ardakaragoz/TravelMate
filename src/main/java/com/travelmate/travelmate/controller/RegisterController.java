@@ -26,15 +26,16 @@ public class RegisterController {
     @FXML private PasswordField passwordField;
     @FXML private PasswordField confirmPasswordField;
     @FXML private Label statusLabel;
-    //emailField
-    //passwordField
-    //confirmPasswordField
+
+    
     @FXML private ComboBox<String> genderComboBox;
+
     public void initialize() {
         if (genderComboBox != null) {
             genderComboBox.getItems().addAll("Male", "Female", "Prefer not to say");
         }
     }
+
     @FXML
     public void handleRegisterButton(ActionEvent event) throws ExecutionException, InterruptedException {
         String email = emailField.getText();
@@ -43,18 +44,32 @@ public class RegisterController {
         String name = nameField.getText();
         String surname = surnameField.getText();
         String age = ageField.getText();
-        String gender = genderComboBox.getValue();
+
+        
+        String gender = (genderComboBox.getValue() != null) ? genderComboBox.getValue() : "";
+
         System.out.println(password);
+
         if (password.equals(confirmPassword)) {
+            
             if (statusLabel != null) {
                 statusLabel.setText("Successfully Registered! Redirecting...");
                 statusLabel.setTextFill(Color.GREEN);
                 statusLabel.setVisible(true);
             }
+
+            
+            
             Firestore db = FirebaseService.getFirestore();
-            User user = new User(email, name, name + " " + surname, "", email, password, gender, Integer.parseInt(age));
+
+            
+            int ageVal = (age != null && !age.isEmpty()) ? Integer.parseInt(age) : 0;
+            User user = new User(email, name, name + " " + surname, "", email, password, gender, ageVal);
             UserSession.setCurrentUser(user);
+
+            
             changeScene("/view/Home.fxml", event);
+
         } else {
             System.out.println("Register failed.");
             if (statusLabel != null) {
@@ -64,6 +79,7 @@ public class RegisterController {
             }
         }
     }
+
     @FXML
     public void handleBackButton(ActionEvent event) {
         changeScene("/view/sign-in-page.fxml", event);
