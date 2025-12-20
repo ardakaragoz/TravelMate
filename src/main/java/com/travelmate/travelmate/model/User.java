@@ -1,9 +1,9 @@
 package com.travelmate.travelmate.model;
+
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,25 +14,33 @@ public class User {
     private String id, username, name, nationality, email, password, gender;
     private int age, level, allPoints, monthlyPoints;
     private Profile profile;
-    private ArrayList<String> pastTrips;
-    private ArrayList<String> currentTrips;
-    private ArrayList<String> channels;
-    private ArrayList<String> reviews;
+
+    // Initialize lists immediately to avoid NullPointerException
+    private ArrayList<String> pastTrips = new ArrayList<>();
+    private ArrayList<String> currentTrips = new ArrayList<>();
+    private ArrayList<String> channels = new ArrayList<>();
+    private ArrayList<String> reviews = new ArrayList<>();
+    private ArrayList<String> joinRequests = new ArrayList<>();
+    private ArrayList<String> recommendations = new ArrayList<>();
+    private ArrayList<String> messages = new ArrayList<>();
+    private ArrayList<String> tripRequests = new ArrayList<>();
+    private ArrayList<String> chatRooms = new ArrayList<>();
+    private ArrayList<String> commitIDs = new ArrayList<>();
+    private ArrayList<LevelCommit> levelCommits = new ArrayList<>();
+
     private int reviewCount;
     private int reviewPoints;
-    private ArrayList<String> joinRequests;
-    private ArrayList<String> recommendations;
-    private ArrayList<String> messages;
-    private ArrayList<String> tripRequests;
-    private ArrayList<String> chatRooms;
     private int levelPoint;
-    private ArrayList<String> commitIDs;
-    private ArrayList<LevelCommit> levelCommits;
 
-    public User(String id, String username, String name, String nationality, String email, 
+    // --- CRITICAL FIX: Empty Constructor for Firestore ---
+    public User() {
+        // Firestore needs this to create the object before filling fields
+    }
+
+    // --- Constructor 1: Create New User (Registration) ---
+    public User(String id, String username, String name, String nationality, String email,
                 String password, String gender, int age) throws ExecutionException, InterruptedException {
         this.id = id;
-        this.profile = new Profile(id);
         this.username = username;
         this.name = name;
         this.nationality = nationality;
@@ -43,73 +51,71 @@ public class User {
         this.level = 1;
         this.allPoints = 0;
         this.monthlyPoints = 0;
-        this.pastTrips = new ArrayList<>();
-        this.currentTrips = new ArrayList<>();
-        this.channels = new ArrayList<>();
-        this.reviews = new ArrayList<>();
-        this.recommendations = new ArrayList<>();
-        this.messages = new ArrayList<>();
-        this.tripRequests = new ArrayList<>();
-        this.joinRequests = new ArrayList<>();
-        this.chatRooms = new ArrayList<>();
         this.reviewCount = 0;
         this.reviewPoints = 0;
         this.levelPoint = 0;
-        this.commitIDs = new ArrayList<>();
-        this.levelCommits = new ArrayList<>();
-        setCurrentUser();
+
+        // For new users, create profile immediately (one-time cost)
+        this.profile = new Profile(id);
+
         updateUser();
     }
 
+    // --- Constructor 2: Optimized Loader (Login) ---
+    // This receives the data directly from SignInController
+    public User(String id, DocumentSnapshot doc) {
+        this.id = id;
+        // Load data directly from the doc we already have!
+        loadFromDoc(doc);
+    }
+
+    // --- Constructor 3: Legacy Loader (Slow) ---
     public User(String id) throws ExecutionException, InterruptedException {
         this.id = id;
         setCurrentUser();
     }
 
+    // Helper to parse data (Used by both Optimized and Legacy loaders)
+    private void loadFromDoc(DocumentSnapshot doc) {
+        if (!doc.exists()) return;
+
+        this.username = doc.getString("username");
+        this.name = doc.getString("name");
+        this.email = doc.getString("email");
+        this.gender = doc.getString("gender");
+        this.nationality = doc.getString("nationality");
+        this.password = doc.getString("password");
+
+        // Safe unboxing for numbers
+        if (doc.getLong("age") != null) this.age = doc.getLong("age").intValue();
+        if (doc.getLong("level") != null) this.level = doc.getLong("level").intValue();
+        if (doc.getLong("allPoints") != null) this.allPoints = doc.getLong("allPoints").intValue();
+        if (doc.getLong("monthlyPoints") != null) this.monthlyPoints = doc.getLong("monthlyPoints").intValue();
+        if (doc.getLong("reviewCount") != null) this.reviewCount = doc.getLong("reviewCount").intValue();
+        if (doc.getLong("reviewPoints") != null) this.reviewPoints = doc.getLong("reviewPoints").intValue();
+        if (doc.getLong("levelPoint") != null) this.levelPoint = doc.getLong("levelPoint").intValue();
+
+        // Load Lists Safely
+        if (doc.get("currentTrips") != null) this.currentTrips = (ArrayList<String>) doc.get("currentTrips");
+        if (doc.get("channels") != null) this.channels = (ArrayList<String>) doc.get("channels");
+        if (doc.get("reviews") != null) this.reviews = (ArrayList<String>) doc.get("reviews");
+        if (doc.get("joinRequests") != null) this.joinRequests = (ArrayList<String>) doc.get("joinRequests");
+        if (doc.get("recommendations") != null) this.recommendations = (ArrayList<String>) doc.get("recommendations");
+        if (doc.get("messages") != null) this.messages = (ArrayList<String>) doc.get("messages");
+        if (doc.get("tripRequests") != null) this.tripRequests = (ArrayList<String>) doc.get("tripRequests");
+        if (doc.get("chatRooms") != null) this.chatRooms = (ArrayList<String>) doc.get("chatRooms");
+        if (doc.get("pastTrips") != null) this.pastTrips = (ArrayList<String>) doc.get("pastTrips");
+        if (doc.get("commitIDs") != null) this.commitIDs = (ArrayList<String>) doc.get("commitIDs");
+
+        // --- SPEED FIX: PROFILE LOADING REMOVED ---
+        // We do NOT load 'new Profile(id)' here because it freezes the login.
+        // It will be loaded lazily in getProfile() or by specific controllers.
+    }
+
     public void setCurrentUser() throws ExecutionException, InterruptedException {
-
         Firestore db = FirebaseService.getFirestore();
-
-        DocumentSnapshot doc = db.collection("users")
-                .document(id)
-                .get()
-                .get();
-
-        if (!doc.exists()) {
-            return;
-        }
-        this.profile = new Profile(id);
-
-        id = id;
-        username = doc.getString("username");
-        name = doc.getString("name");
-        email = doc.getString("email");
-        gender = doc.getString("gender");
-        nationality = doc.getString("nationality");
-        profile = new Profile(id);
-        age = doc.getLong("age").intValue();
-        level = doc.getLong("level").intValue();
-        allPoints = doc.getLong("allPoints").intValue();
-        monthlyPoints = doc.getLong("monthlyPoints").intValue();
-        reviewCount = doc.getLong("reviewCount").intValue();
-        reviewPoints = doc.getLong("reviewPoints").intValue();
-        password = doc.getString("password");
-
-        currentTrips = (ArrayList<String>) doc.get("currentTrips");
-        channels = (ArrayList<String>) doc.get("channels");
-        reviews = (ArrayList<String>) doc.get("reviews");
-        joinRequests = (ArrayList<String>) doc.get("joinRequests");
-        recommendations = (ArrayList<String>) doc.get("recommendations");
-        messages = (ArrayList<String>) doc.get("messages");
-        tripRequests = (ArrayList<String>) doc.get("tripRequests");
-        chatRooms = (ArrayList<String>) doc.get("chatRooms");
-        pastTrips = (ArrayList<String>) doc.get("pastTrips");
-        levelPoint = doc.getLong("levelPoint").intValue();
-        commitIDs = (ArrayList<String>) doc.get("commitIDs");
-        for (int i = 0; i < commitIDs.size(); i++) {
-            levelCommits.add(new LevelCommit(commitIDs.get(i)));
-        }
-
+        DocumentSnapshot doc = db.collection("users").document(id).get().get(); // Still blocks, but used less often
+        loadFromDoc(doc);
     }
 
     public void updateUser() throws ExecutionException, InterruptedException {
@@ -125,7 +131,7 @@ public class User {
         data.put("level", level);
         data.put("monthlyPoints", monthlyPoints);
         data.put("name", name);
-        data.put("profile", profile.getId());
+        if (profile != null) data.put("profile", profile.getId());
         data.put("password", password);
         data.put("username", username);
         data.put("reviews", reviews);
@@ -141,10 +147,23 @@ public class User {
         data.put("commitIDs", commitIDs);
 
         Firestore db = FirebaseService.getFirestore();
-        db.collection("users")
-                .document(this.id)
-                .set(data)
-                .get();
+        // Optimization: removed .get() to avoid blocking if just saving
+        db.collection("users").document(this.id).set(data);
+    }
+
+    // --- LAZY LOADING PROFILE GETTER ---
+    public Profile getProfile() {
+        if (this.profile == null) {
+            try {
+                // If the profile is requested and null, fetch it now.
+                // This might cause a slight delay when opening the Profile page,
+                // but it keeps the Login page instant.
+                this.profile = new Profile(this.id);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return this.profile;
     }
 
     public void addRequest(JoinRequest req) throws ExecutionException, InterruptedException {
@@ -180,7 +199,6 @@ public class User {
             this.chatRooms.add(chatRoom.getId());
             updateUser();
         }
-
     }
 
     public void addTripRequest(Trip trip) throws ExecutionException, InterruptedException {
@@ -204,9 +222,7 @@ public class User {
     }
 
     public double getAverageReviewScore() {
-        if (reviewCount == 0){
-            return 0.0;
-        }
+        if (reviewCount == 0) return 0.0;
         return (double) reviewPoints / reviewCount;
     }
 
@@ -222,9 +238,9 @@ public class User {
 
     public int calculateCompatibility(User otherUser) throws ExecutionException, InterruptedException {
         int score = 0;
-        
-        // Calculate based on hobbies
-        if (this.profile != null && otherUser.profile != null) {
+
+        // Ensure profiles are loaded before calculation
+        if (this.getProfile() != null && otherUser.getProfile() != null) {
             double funPoint = 0;
             double funPoint2 = 0;
             double culturePoint = 0;
@@ -233,10 +249,9 @@ public class User {
             double chillPoint2 = 0;
             double user1Count = 0;
             double user2Count = 0;
+
             for (Hobby hobby : this.profile.getHobbies()) {
-                if (otherUser.profile.getHobbies().contains(hobby)) {
-                    score += 10;
-                }
+                if (otherUser.profile.getHobbies().contains(hobby)) score += 10;
                 funPoint += (hobby.getCompatibilityScores()[0]);
                 culturePoint += (hobby.getCompatibilityScores()[1]);
                 chillPoint += (hobby.getCompatibilityScores()[2]);
@@ -249,12 +264,9 @@ public class User {
                 chillPoint2 += (hobby.getCompatibilityScores()[2]);
                 user2Count++;
             }
-            
-            // Calculate based on trip types
+
             for (TripTypes tripType : this.profile.getFavoriteTripTypes()) {
-                if (otherUser.profile.getFavoriteTripTypes().contains(tripType)) {
-                    score += 8;
-                }
+                if (otherUser.profile.getFavoriteTripTypes().contains(tripType)) score += 8;
                 funPoint += (tripType.getCompatibilityScores()[0]);
                 culturePoint += (tripType.getCompatibilityScores()[1]);
                 chillPoint += (tripType.getCompatibilityScores()[2]);
@@ -268,16 +280,12 @@ public class User {
                 user2Count++;
             }
 
-            funPoint /= user1Count;
-            funPoint2 /= user2Count;
-            culturePoint /= user1Count;
-            culturePoint2 /= user2Count;
-            chillPoint /= user1Count;
-            chillPoint2 /= user2Count;
+            if (user1Count > 0) { funPoint /= user1Count; culturePoint /= user1Count; chillPoint /= user1Count; }
+            if (user2Count > 0) { funPoint2 /= user2Count; culturePoint2 /= user2Count; chillPoint2 /= user2Count; }
+
             score += (int) (20 - (2 * Math.abs(funPoint - funPoint2)));
             score += (int) (20 - (2 * Math.abs(chillPoint - chillPoint2)));
             score += (int) (20 - (2 * Math.abs(culturePoint - culturePoint2)));
-
         }
 
         if (Math.abs(this.age - otherUser.age) <= 5) score += 4;
@@ -286,15 +294,12 @@ public class User {
 
     public int calculateCompatibility(City city) throws ExecutionException, InterruptedException {
         int score = 0;
-        
-        if (this.profile != null) {
+
+        if (this.getProfile() != null) {
             int[] cityScores = city.getCompatibilityScores();
-            double funPoint = 0;
-            double funPoint2 = cityScores[0];
-            double culturePoint = 0;
-            double culturePoint2 = cityScores[1];
-            double chillPoint = 0;
-            double chillPoint2 = cityScores[2];
+            double funPoint = 0, funPoint2 = cityScores[0];
+            double culturePoint = 0, culturePoint2 = cityScores[1];
+            double chillPoint = 0, chillPoint2 = cityScores[2];
             int count = 0;
 
             for (Hobby hobby : this.profile.getHobbies()) {
@@ -303,7 +308,7 @@ public class User {
                 chillPoint += (hobby.getCompatibilityScores()[2]);
                 count++;
             }
-            
+
             for (TripTypes tripType : this.profile.getFavoriteTripTypes()) {
                 funPoint += (tripType.getCompatibilityScores()[0]);
                 culturePoint += (tripType.getCompatibilityScores()[1]);
@@ -311,15 +316,12 @@ public class User {
                 count++;
             }
 
-            funPoint /= count;
-            culturePoint /= count;
-            chillPoint /= count;
+            if(count > 0) { funPoint /= count; culturePoint /= count; chillPoint /= count; }
+
             score += (int) (35 - (2 * Math.abs(funPoint - funPoint2)));
             score += (int) (35 - (2 * Math.abs(chillPoint - chillPoint2)));
             score += (int) (35 - (2 * Math.abs(culturePoint -culturePoint2)));
-
         }
-        
         return Math.min(score, 100);
     }
 
@@ -352,8 +354,9 @@ public class User {
         updateUser();
     }
 
-    // Getters
+    // Getters and Setters
     public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getUsername() { return username; }
     public String getName() { return name; }
     public String getNationality() { return nationality; }
@@ -364,7 +367,7 @@ public class User {
     public int getLevel() { return level; }
     public int getAllPoints() { return allPoints; }
     public int getMonthlyPoints() { return monthlyPoints; }
-    public Profile getProfile() { return profile; }
+    // Note: getProfile is defined above as a lazy loader
     public ArrayList<String> getPastTrips() { return pastTrips; }
     public ArrayList<String> getCurrentTrips() { return currentTrips; }
     public ArrayList<String> getChannels() { return channels; }
@@ -376,8 +379,6 @@ public class User {
     public ArrayList<String> getMessages() { return messages; }
     public ArrayList<String> getTripRequests() { return tripRequests; }
     public ArrayList<String> getChatRooms() { return chatRooms; }
-
-    // Setters
 
     public void setProfile(Profile profile) { this.profile = profile; }
     public void setLevel(int level) { this.level = level; }
