@@ -116,7 +116,9 @@
                         </PasswordField>
                     </children>
                 </VBox>
-
+                <Label fx:id="statusLabel" alignment="CENTER" text="" visible="false">
+                    <font><Font name="System Bold" size="18.0" /></font>
+                </Label>
                 <HBox alignment="CENTER_LEFT" prefHeight="80.0">
                     <children>
                         <Button alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleRegisterButton" prefHeight="60.0" prefWidth="200.0" style="-fx-background-color: #CCFF00; -fx-text-fill: BLACK; -fx-background-radius: 30;" text="Register">
