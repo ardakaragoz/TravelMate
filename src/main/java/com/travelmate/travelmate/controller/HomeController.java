@@ -23,33 +23,27 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class HomeController {
 
-    // --- 1. ANA KAPLAR ---
     @FXML private BorderPane mainContainer;
     @FXML private VBox helpPopup;
     @FXML private VBox leaderboardContainer;
     @FXML private VBox tripsContainer;
 
-    // --- 2. ARAMA ---
     @FXML private TextField searchField;
 
-    // --- 3. PROMOTED CITY (SLAYT İÇİN GEREKLİLER) ---
     @FXML private ImageView promotedCitiesCityImage;
     @FXML private Label promotedCityNameLabel;
     @FXML private Label averageBudgetLabel;
     @FXML private ProgressBar compatibilityScoreBar;
     @FXML private Label compalibilityScoreLabel;
 
-    // Slayt Verileri
     private int currentCityIndex = 0;
     private final List<PromotedCityData> promotedCities = new ArrayList<>();
 
-    // --- 4. DETAILS POPUP ---
     @FXML private VBox detailsPopup;
     @FXML private Circle detailsProfilePic;
     @FXML private Label detailsOwnerName;
@@ -64,49 +58,45 @@ public class HomeController {
 
         setupLeaderboard();
 
-        // --- SLAYT VERİLERİNİ HAZIRLA ---
         promotedCities.add(new PromotedCityData("Rome", 800, 70));
         promotedCities.add(new PromotedCityData("Paris", 1200, 85));
         promotedCities.add(new PromotedCityData("Tokyo", 2500, 90));
-        promotedCities.add(new PromotedCityData("Amsterdam", 1100, 82)); // İşte istediğin Amsterdam
+        promotedCities.add(new PromotedCityData("Amsterdam", 1100, 82));
         promotedCities.add(new PromotedCityData("Barcelona", 950, 75));
 
-        // İlk Şehri Yükle (Index 0: Rome)
         loadPromotedCity(currentCityIndex);
 
-        // Gezi Listesini Doldur
         if (tripsContainer != null) {
             tripsContainer.getChildren().clear();
             addTripCard("Ahmet Arda", 38, "user1", "Istanbul", "12-01-2026", 4, 0, 2, 500, 68, "Budapest",
-                    "Hi, I am looking for two travel mates for my trip to Budapest!");
+                    "Hi, I am looking for two travel mates for my trip to Budapest! I want to stay in a hotel with 3 or 4 stars.");
             addTripCard("Zeynep Kaya", 28, "user1", "Bursa", "10-05-2026", 6, 1, 2, 900, 75, "Rome",
                     "Ciao! Planning a cultural trip to Rome. Pizza, pasta, and history!");
             addTripCard("Mert Demir", 41, "user1", "Izmir", "20-06-2026", 4, 1, 2, 1100, 82, "Amsterdam",
                     "Bisiklet turu ve kanal gezisi planlıyorum. Kafa dengi birini arıyorum.");
         }
+
+        if(searchField != null) {
+            searchField.setOnAction(event -> System.out.println("Aranan: " + searchField.getText()));
+        }
     }
 
-    // ==========================================================
-    //          PROMOTED CITY SLAYT MANTIĞI 🎠
-    // ==========================================================
+    @FXML
+    public void handleViewDetailsButton(ActionEvent event) {
+        openDetailsPopup("Ahmet Arda Karagöz", "user1", "This is a default description for the static card.");
+    }
 
     @FXML
     public void handleNextPromoted(ActionEvent event) {
-        // İndeksi artır, listenin sonuna geldiyse başa dön
         currentCityIndex++;
-        if (currentCityIndex >= promotedCities.size()) {
-            currentCityIndex = 0;
-        }
+        if (currentCityIndex >= promotedCities.size()) currentCityIndex = 0;
         loadPromotedCity(currentCityIndex);
     }
 
     @FXML
     public void handlePrevPromoted(ActionEvent event) {
-        // İndeksi azalt, başa geldiyse sona dön
         currentCityIndex--;
-        if (currentCityIndex < 0) {
-            currentCityIndex = promotedCities.size() - 1;
-        }
+        if (currentCityIndex < 0) currentCityIndex = promotedCities.size() - 1;
         loadPromotedCity(currentCityIndex);
     }
 
@@ -115,19 +105,12 @@ public class HomeController {
         updatePromotedCity(city.name, city.budget, city.score);
     }
 
-    // Basit Veri Tutucu Sınıf (Sadece bu dosya içinde kullanılır)
     private static class PromotedCityData {
-        String name;
-        int budget;
-        int score;
+        String name; int budget; int score;
         public PromotedCityData(String name, int budget, int score) {
             this.name = name; this.budget = budget; this.score = score;
         }
     }
-
-    // ==========================================================
-    //          DİĞER METOTLAR (AYNEN KALIYOR)
-    // ==========================================================
 
     public void updatePromotedCity(String cityName, int budget, int score) {
         if (promotedCityNameLabel != null) promotedCityNameLabel.setText(cityName.toUpperCase());
@@ -174,6 +157,7 @@ public class HomeController {
         Button channelBtn = createStyledButton("View Channel", 14);
         Label cityLbl = createBoldLabel(destCity.toUpperCase(), 28); cityLbl.setTextFill(Color.web("#1e3a5f"));
         Button detailsBtn = createStyledButton("View Details", 14);
+
         detailsBtn.setOnAction(e -> openDetailsPopup(username, userImg, description));
 
         Region s1 = new Region(); HBox.setHgrow(s1, Priority.ALWAYS);
@@ -282,9 +266,7 @@ public class HomeController {
         if (helpPopup != null) helpPopup.setVisible(false);
     }
     @FXML public void handleHomeButton(ActionEvent event) {
-        System.out.println("Zaten Ana Sayfadasınız.");
     }
     @FXML public void handleViewProfileButton(ActionEvent event) {}
     @FXML public void handleViewChannelButton(ActionEvent event) {}
-    @FXML public void handleViewDetailsButton(ActionEvent event) {}
 }
