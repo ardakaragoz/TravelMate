@@ -1,0 +1,56 @@
+package com.travelmate.travelmate.controller;
+
+import com.google.cloud.firestore.Firestore;
+import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.model.User;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+
+public class RegisterController {
+    @FXML private TextField emailField;
+    @FXML private PasswordField passwordField;
+    @FXML private PasswordField confirmPasswordField;
+
+    //emailField
+    //passwordField
+    //confirmPasswordField
+    @FXML
+    public void handleRegisterButton(ActionEvent event) throws ExecutionException, InterruptedException {
+        // registration code probably
+        String email = emailField.getText();
+        String password = passwordField.getText();
+        String confirmPassword = confirmPasswordField.getText();
+        if (password.equals(confirmPassword)) {
+            Firestore db = FirebaseService.getFirestore();
+            User user = new User(email, "", "", "", email, password, "", 0);
+            changeScene("/view/Home.fxml", event);
+        } else {
+            System.out.println("Register failed.");
+        }
+    }
+
+    @FXML
+    public void handleBackButton(ActionEvent event) {
+        changeScene("/view/sign-in-page.fxml", event);
+    }
+
+    private void changeScene(String fileName, ActionEvent event) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(fileName));
+            Scene scene = new Scene(fxmlLoader.load());
+            Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
