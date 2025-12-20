@@ -5,7 +5,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.ImageView?>
@@ -14,7 +13,6 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
@@ -34,25 +32,25 @@
 
                         <fx:include source="Sidebar.fxml" />
 
-                        <VBox prefHeight="240.0" prefWidth="100.0" spacing="10.0" style="-fx-background-color: WHITE; -fx-border-color: BLACK; -fx-border-width: 2; -fx-background-radius: 15; -fx-border-radius: 15;">
+                        <VBox prefHeight="240.0" prefWidth="100.0" spacing="10.0" style="-fx-background-color: #FFE7C2; -fx-border-color: #253A63; -fx-border-width: 2; -fx-background-radius: 15; -fx-border-radius: 15;">
                             <children>
                                 <HBox alignment="CENTER" spacing="10.0">
                                     <children>
-                                        <Label text="Leaderboard" underline="true">
+                                        <Label text="Leaderboard" underline="true" textFill="#253A63">
                                             <font><Font name="System Bold" size="20.0" /></font>
                                         </Label>
-                                        <Button mnemonicParsing="false" onAction="#handleHelpButton" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 30px;" text="?">
+                                        <Button mnemonicParsing="false" onAction="#handleHelpButton" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 30px; -fx-text-fill: #253A63;" text="?">
                                             <font><Font name="System Bold" size="14.0" /></font>
-                                            <effect><DropShadow color="#00000040" offsetX="2.0" offsetY="2.0" /></effect>
+                                            <effect><DropShadow color="#00000020" offsetX="2.0" offsetY="2.0" /></effect>
                                         </Button>
                                     </children>
                                 </HBox>
                                 <HBox alignment="CENTER" spacing="10.0">
                                     <children>
-                                        <Button mnemonicParsing="false" style="-fx-background-color: #CCFF00; -fx-background-radius: 10;" text="All-time">
+                                        <Button mnemonicParsing="false" style="-fx-background-color: #CCFF00; -fx-background-radius: 10; -fx-text-fill: #253A63;" text="All-time">
                                             <font><Font name="System Bold" size="12.0" /></font>
                                         </Button>
-                                        <Button mnemonicParsing="false" style="-fx-background-color: transparent;" text="Monthly">
+                                        <Button mnemonicParsing="false" style="-fx-background-color: transparent; -fx-text-fill: #253A63;" text="Monthly">
                                             <font><Font size="12.0" /></font>
                                         </Button>
                                     </children>
@@ -60,7 +58,7 @@
                                 <VBox fx:id="leaderboardContainer" spacing="5.0" />
                             </children>
                             <padding><Insets bottom="10.0" left="15.0" right="15.0" top="10.0" /></padding>
-                            <effect><DropShadow color="#00000033" offsetX="5.0" offsetY="5.0" radius="0.0" /></effect>
+                            <effect><DropShadow color="#00000015" offsetX="5.0" offsetY="5.0" radius="0.0" /></effect>
                             <VBox.margin><Insets top="10.0" /></VBox.margin>
                         </VBox>
                     </children>
@@ -74,37 +72,39 @@
                             <padding><Insets bottom="30.0" right="30.0" top="30.0" /></padding>
                             <children>
 
-                                <Label text="Promoted Cities"><font><Font name="System Bold" size="20.0" /></font></Label>
+                                <Label text="Promoted Cities" textFill="#253A63"><font><Font name="System Bold" size="20.0" /></font></Label>
 
                                 <HBox alignment="CENTER" spacing="10.0">
                                     <children>
-                                        <Button onAction="#handlePrevPromoted" mnemonicParsing="false" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 40px; -fx-min-height: 40px;" text="&lt;">
+                                        <Button onAction="#handlePrevPromoted" mnemonicParsing="false" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 40px; -fx-min-height: 40px; -fx-text-fill: #253A63;" text="&lt;">
                                             <font><Font name="System Bold" size="20.0" /></font>
-                                            <effect><DropShadow color="#00000040" offsetX="2.0" offsetY="2.0" radius="0.0" /></effect>
+                                            <effect><DropShadow color="#00000020" offsetX="2.0" offsetY="2.0" radius="0.0" /></effect>
                                         </Button>
 
-                                        <HBox alignment="CENTER_LEFT" prefHeight="220.0" prefWidth="800.0" style="-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 3; -fx-border-radius: 20;" HBox.hgrow="ALWAYS">
+                                        <HBox alignment="CENTER_LEFT" prefHeight="220.0" prefWidth="800.0" style="-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 2; -fx-border-radius: 20;" HBox.hgrow="ALWAYS">
                                             <children>
                                                 <VBox alignment="CENTER_LEFT" spacing="15.0" HBox.hgrow="ALWAYS">
                                                     <children>
-                                                        <Label fx:id="promotedCityNameLabel" style="-fx-background-color: #1E3A5F; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #ccff00;" text="ROME">
+                                                        <Label fx:id="promotedCityNameLabel" style="-fx-background-color: #253A63; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #CCFF00;" text="ROME">
                                                             <font><Font name="System Italic" size="40.0" /></font>
                                                         </Label>
-
+                                                        <Label fx:id="averageBudgetLabel" text="Average Budget: 800$" textFill="#253A63">
+                                                            <font><Font name="System Bold Italic" size="18.0" /></font>
+                                                        </Label>
                                                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                                                             <children>
-                                                                <Label text="Compatibility Score:">
+                                                                <Label text="Compatibility Score:" textFill="#253A63">
                                                                     <font><Font name="System Bold" size="14.0" /></font>
                                                                 </Label>
-                                                                <ProgressBar fx:id="compatibilityScoreBar" prefWidth="150.0" progress="0.7" style="-fx-accent: #1E3A5F; -fx-control-inner-background: #FFF;" />
-                                                                <Label fx:id="compalibilityScoreLabel" text="\%70"><font><Font name="System Bold" size="14.0" /></font></Label>
+                                                                <ProgressBar fx:id="compatibilityScoreBar" prefWidth="150.0" progress="0.7" style="-fx-accent: #253A63; -fx-control-inner-background: #FFF;" />
+                                                                <Label fx:id="compalibilityScoreLabel" text="\%70" textFill="#253A63"><font><Font name="System Bold" size="14.0" /></font></Label>
                                                             </children>
                                                         </HBox>
                                                     </children>
                                                     <padding><Insets left="30.0" /></padding>
                                                 </VBox>
 
-                                                <StackPane alignment="CENTER" maxHeight="200.0" maxWidth="280.0" minHeight="200.0" minWidth="280.0" style="-fx-background-color: #cce5ff; -fx-background-radius: 20;">
+                                                <StackPane alignment="CENTER" maxHeight="200.0" maxWidth="280.0" minHeight="200.0" minWidth="280.0" style="-fx-background-color: #FFF7EA; -fx-background-radius: 20;">
                                                     <children>
                                                         <ImageView fx:id="promotedCitiesCityImage" fitHeight="300.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true" />
                                                     </children>
@@ -114,29 +114,29 @@
                                                     <StackPane.margin><Insets right="10.0" /></StackPane.margin>
                                                 </StackPane>
                                             </children>
-                                            <effect><DropShadow color="#00000033" offsetX="5.0" offsetY="5.0" radius="0.0" /></effect>
+                                            <effect><DropShadow color="#00000015" offsetX="5.0" offsetY="5.0" radius="0.0" /></effect>
                                         </HBox>
 
-                                        <Button onAction="#handleNextPromoted" mnemonicParsing="false" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 40px; -fx-min-height: 40px;" text="&gt;">
+                                        <Button onAction="#handleNextPromoted" mnemonicParsing="false" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 40px; -fx-min-height: 40px; -fx-text-fill: #253A63;" text="&gt;">
                                             <font><Font name="System Bold" size="20.0" /></font>
-                                            <effect><DropShadow color="#00000040" offsetX="2.0" offsetY="2.0" radius="0.0" /></effect>
+                                            <effect><DropShadow color="#00000020" offsetX="2.0" offsetY="2.0" radius="0.0" /></effect>
                                         </Button>
                                     </children>
                                 </HBox>
 
                                 <HBox alignment="CENTER_LEFT" spacing="15.0">
                                     <children>
-                                        <TextField fx:id="searchField" promptText="Search city, date, budget..." style="-fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-radius: 20; -fx-border-width: 2;" HBox.hgrow="ALWAYS">
+                                        <TextField fx:id="searchField" promptText="Search city, date, budget..." style="-fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-radius: 20; -fx-border-width: 2; -fx-text-fill: #253A63;" HBox.hgrow="ALWAYS">
                                             <font><Font size="18.0" /></font>
                                             <padding><Insets bottom="10.0" left="20.0" right="20.0" top="10.0" /></padding>
                                         </TextField>
-                                        <Button mnemonicParsing="false" style="-fx-background-color: transparent;" text="Y">
+                                        <Button mnemonicParsing="false" style="-fx-background-color: transparent; -fx-text-fill: #253A63;" text="Y">
                                             <font><Font name="System Bold" size="24.0" /></font>
                                         </Button>
                                     </children>
                                 </HBox>
 
-                                <Label text="Available Trips"><font><Font name="System Bold" size="22.0" /></font></Label>
+                                <Label text="Available Trips" textFill="#253A63"><font><Font name="System Bold" size="22.0" /></font></Label>
 
                                 <VBox fx:id="tripsContainer" spacing="20.0" />
 
@@ -148,78 +148,16 @@
 
         </BorderPane>
 
-        <VBox fx:id="helpPopup" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="450.0" prefWidth="550.0" spacing="20.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
+        <VBox fx:id="helpPopup" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="450.0" prefWidth="550.0" spacing="20.0" style="-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
             <children>
-                <Label text="How to Earn Points?" textFill="#1e3a5f" underline="true">
+                <Label text="How to Earn Points?" textFill="#253A63" underline="true">
                     <font><Font name="System Bold" size="28.0" /></font>
                 </Label>
-                <VBox alignment="CENTER_LEFT" maxWidth="450.0" spacing="10.0">
-                    <children>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Completing a trip with a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+50" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Completing biography &amp; hobbies:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+25" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Receiving a 4-5 star review:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+20" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Writing a review for a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+15" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Posting a trip request:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+10" textFill="#2ecc71" /></HBox>
-                    </children>
-                </VBox>
-                <Button onAction="#closeHelpPopup" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px; -fx-cursor: hand;" text="Close">
+                <Button onAction="#closeHelpPopup" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px; -fx-cursor: hand; -fx-text-fill: #253A63;" text="Close">
                     <padding><Insets bottom="10.0" left="40.0" right="40.0" top="10.0" /></padding>
-                    <effect><DropShadow color="#00000040" offsetX="3.0" offsetY="3.0" radius="0.0" /></effect>
                 </Button>
             </children>
             <effect><DropShadow color="#00000080" radius="20.0" /></effect>
-        </VBox>
-
-        <VBox fx:id="detailsPopup" visible="false" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="480.0" spacing="15.0" style="-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;">
-            <padding><Insets bottom="20.0" left="25.0" right="25.0" top="20.0" /></padding>
-            <children>
-                <HBox alignment="CENTER_LEFT">
-                    <children>
-                        <Label text="Details" textFill="BLACK">
-                            <font><Font name="System Bold" size="22.0" /></font>
-                        </Label>
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Button onAction="#closeDetailsPopup" style="-fx-background-color: #CCFF00; -fx-background-radius: 20;" text="Back">
-                            <font><Font name="System Bold" size="13.0" /></font>
-                            <effect><DropShadow color="#00000033" offsetX="2.0" offsetY="2.0" /></effect>
-                            <padding><Insets bottom="5.0" left="15.0" right="15.0" top="5.0" /></padding>
-                        </Button>
-                    </children>
-                </HBox>
-
-                <HBox alignment="CENTER_LEFT" spacing="15.0">
-                    <children>
-                        <Circle fx:id="detailsProfilePic" fill="DODGERBLUE" radius="22.0" stroke="BLACK" strokeType="INSIDE" />
-                        <Label fx:id="detailsOwnerName" text="User Name">
-                            <font><Font name="System Bold" size="16.0" /></font>
-                        </Label>
-                    </children>
-                    <VBox.margin><Insets top="5.0" /></VBox.margin>
-                </HBox>
-
-                <VBox style="-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-padding: 12;">
-                    <children>
-                        <Label fx:id="detailsDescription" text="Description..." wrapText="true">
-                            <font><Font size="14.0" /></font>
-                        </Label>
-                    </children>
-                </VBox>
-
-                <javafx.scene.control.TextArea fx:id="messageInputArea" prefHeight="70.0" promptText="Please write down your message to the trip owner..." style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-control-inner-background: WHITE;" wrapText="true">
-                    <font><Font size="13.0" /></font>
-                </javafx.scene.control.TextArea>
-
-                <HBox alignment="CENTER_RIGHT">
-                    <children>
-                        <Button onAction="#handleSendRequestButton" style="-fx-background-color: #CCFF00; -fx-border-color: BLACK; -fx-border-radius: 20; -fx-background-radius: 20; -fx-border-width: 2;" text="Send Request">
-                            <font><Font name="System Bold" size="16.0" /></font>
-                            <padding><Insets bottom="8.0" left="20.0" right="20.0" top="8.0" /></padding>
-                            <effect><DropShadow color="#00000033" offsetX="3.0" offsetY="3.0" /></effect>
-                        </Button>
-                    </children>
-                </HBox>
-            </children>
-            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
         </VBox>
 
     </children>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.MyTripsController">
+    <children>
+        <BorderPane style="-fx-background-color: #FFF7EA;">
+
+            <top>
+                <fx:include source="TopBar.fxml" />
+            </top>
+
+            <left>
+                <VBox prefHeight="640.0" prefWidth="300.0" spacing="10.0" BorderPane.alignment="CENTER">
+                    <padding>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="30.0" />
+                    </padding>
+                    <children>
+                        <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+                    </children>
+                </VBox>
+            </left>
+
+            <center>
+                <ScrollPane fitToWidth="true" style="-fx-background-color: #FFF7EA; -fx-background: #FFF7EA; -fx-border-color: transparent;" BorderPane.alignment="CENTER">
+                    <content>
+                        <VBox spacing="25.0" style="-fx-background-color: #FFF7EA;">
+                            <padding>
+                                <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+                            </padding>
+                            <children>
+
+                                <Label text="My Trips" textFill="#253A63" underline="true">
+                                    <font>
+                                        <Font name="System Bold" size="36.0" />
+                                    </font>
+                                </Label>
+
+                                <VBox spacing="15.0">
+                                    <children>
+                                        <Label text="Current &amp; Upcoming" textFill="#253A63">
+                                            <font>
+                                                <Font name="System Bold" size="24.0" />
+                                            </font>
+                                        </Label>
+                                        <VBox fx:id="upcomingTripsContainer" spacing="20.0" style="-fx-min-height: 50;" />
+                                    </children>
+                                </VBox>
+
+                                <Separator opacity="0.3" style="-fx-background-color: #253A63;" />
+
+                                <VBox spacing="15.0">
+                                    <children>
+                                        <Label text="Travel History" textFill="#253A63">
+                                            <font>
+                                                <Font name="System Bold" size="24.0" />
+                                            </font>
+                                        </Label>
+                                        <VBox fx:id="pastTripsContainer" spacing="20.0" style="-fx-min-height: 50;" />
+                                    </children>
+                                </VBox>
+
+                            </children>
+                        </VBox>
+                    </content>
+                </ScrollPane>
+            </center>
+
+        </BorderPane>
+    </children>
+</StackPane>
