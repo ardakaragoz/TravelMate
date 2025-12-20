@@ -47,6 +47,7 @@ public class ChatController implements Initializable {
     @FXML private TextField messageInput;
     @FXML private Label headerUsernameLabel;
     @FXML private ImageView headerProfileImage;
+    @FXML private SidebarController sidebarController;
 
     // Use a cached thread pool for better performance with network tasks
     private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
@@ -64,9 +65,13 @@ public class ChatController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if (sidebarController != null) {
+            sidebarController.setActivePage("Chat");
+        }
         // Load User in Background
         CompletableFuture.runAsync(() -> {
             try {
+
                 currentUser = UserSession.getCurrentUser();
                 if (currentUser == null) {
                     System.out.println("DEBUG: UserSession is null. Using Test ID.");

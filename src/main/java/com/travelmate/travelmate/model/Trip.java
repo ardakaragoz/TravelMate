@@ -3,6 +3,7 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.CityList;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -30,6 +31,12 @@ public class Trip {
     private TripChat tripChat;
     private Firestore db = FirebaseService.getFirestore();
 
+    // --- CRITICAL FIX: Empty Constructor ---
+    public Trip() {
+        this.joinedMates = new ArrayList<>();
+        this.pendingMates = new ArrayList<>();
+    }
+
     public Trip(String id, String destination, String departureLocation, int days,
                 int averageBudget, String currency, LocalDate departureDate, LocalDate endDate, User user, String itinerary, int mateCount, String additionalNotes) throws ExecutionException, InterruptedException {
         this.id = id;
@@ -38,16 +45,10 @@ public class Trip {
         this.days = days;
         this.averageBudget = averageBudget;
         this.currency = currency;
-        Date date1 = Date.from(
-                departureDate
-                        .atStartOfDay(ZoneId.systemDefault())
-                        .toInstant()
-        );
-        Date date2 = Date.from(
-                endDate
-                        .atStartOfDay(ZoneId.systemDefault())
-                        .toInstant()
-        );
+
+        Date date1 = Date.from(departureDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date date2 = Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
         this.departureDate = date1;
         this.endDate = date2;
         this.user = user;
@@ -57,51 +58,47 @@ public class Trip {
         this.tripChat = new TripChat(id, this);
         this.itinerary = itinerary;
         this.additionalNotes = additionalNotes;
-        Map<String, Object> data = new HashMap<>();
-        data.put("id", id);
-        data.put("destination", destination);
-        data.put("departureLocation", departureLocation);
-        data.put("days", days);
-        data.put("averageBudget", averageBudget);
-        data.put("currency", currency);
-        data.put("departureDate", date1);
-        data.put("endDate", date2);
-        data.put("user", user.getId());
-        data.put("joinedMates", joinedMates);
-        data.put("pendingMates", pendingMates);
-        data.put("mateCount", mateCount);
-        data.put("tripChat", tripChat.getId());
-        data.put("itinerary", itinerary);
-        data.put("additionalNotes", additionalNotes);
+
+        // This is safe to keep here as it's part of your creation logic
         user.addCurrentTrip(id);
-        db.collection("trips").document(id).set(data).get();
+        updateTrip();
     }
 
     public Trip(String id) throws ExecutionException, InterruptedException {
         this.id = id;
         DocumentSnapshot data = db.collection("trips").document(id).get().get();
-        this.destination = data.getString("destination");
-        this.departureLocation = data.getString("departureLocation");
-        this.additionalNotes = data.getString("additionalNotes");
-        this.days = Integer.parseInt(data.get("days").toString());
-        this.averageBudget = Integer.parseInt(data.get("averageBudget").toString());
-        this.mateCount = Integer.parseInt(data.get("mateCount").toString());
-        this.currency = data.getString("currency");
-        this.itinerary = data.getString("itinerary");
-        this.departureDate = data.getDate("departureDate");
-        this.endDate = data.getDate("endDate");
-        this.user = new User(data.getString("user"));
-        this.joinedMates = new ArrayList<>();
-        this.pendingMates = new ArrayList<>();
-        this.joinedMates = (ArrayList) data.get("joinedMates");
-        this.pendingMates = (ArrayList) data.get("pendingMates");
-        this.tripChat = new TripChat(data.get("tripChat").toString(), this);
-        this.itinerary = data.getString("itinerary");
-        this.additionalNotes = data.getString("additionalNotes");
+        if (data.exists()) {
+            this.destination = data.getString("destination");
+            this.departureLocation = data.getString("departureLocation");
+            this.additionalNotes = data.getString("additionalNotes");
+            if (data.get("days") != null) this.days = Integer.parseInt(data.get("days").toString());
+            if (data.get("averageBudget") != null) this.averageBudget = Integer.parseInt(data.get("averageBudget").toString());
+            if (data.get("mateCount") != null) this.mateCount = Integer.parseInt(data.get("mateCount").toString());
+            this.currency = data.getString("currency");
+            this.itinerary = data.getString("itinerary");
+            this.departureDate = data.getDate("departureDate");
+            this.endDate = data.getDate("endDate");
+
+            if (data.getString("user") != null) {
+                this.user = new User(data.getString("user"));
+            }
+
+            this.joinedMates = (ArrayList<String>) data.get("joinedMates");
+            this.pendingMates = (ArrayList<String>) data.get("pendingMates");
+
+            // Safety checks
+            if (this.joinedMates == null) this.joinedMates = new ArrayList<>();
+            if (this.pendingMates == null) this.pendingMates = new ArrayList<>();
+
+            if (data.get("tripChat") != null) {
+                this.tripChat = new TripChat(data.get("tripChat").toString(), this);
+            }
+        }
     }
 
     public void updateTrip() throws ExecutionException, InterruptedException {
         Map<String, Object> data = new HashMap<>();
+        data.put("id", id); // Good to store ID in document too
         data.put("destination", destination);
         data.put("departureLocation", departureLocation);
         data.put("days", days);
@@ -109,16 +106,21 @@ public class Trip {
         data.put("currency", currency);
         data.put("departureDate", departureDate);
         data.put("endDate", endDate);
-        data.put("user", user.getId());
+        data.put("user", user != null ? user.getId() : null); // Store ID, not full object
         data.put("joinedMates", joinedMates);
         data.put("pendingMates", pendingMates);
         data.put("mateCount", mateCount);
-        db.collection("trips").document(id).set(data).get();
+        if (tripChat != null) data.put("tripChat", tripChat.getId());
+        data.put("itinerary", itinerary);
+        data.put("additionalNotes", additionalNotes);
+
+        // Removed .get() to prevent blocking
+        db.collection("trips").document(id).set(data);
     }
 
-    public City getDestination() throws ExecutionException, InterruptedException {
+    public String getDestination() throws ExecutionException, InterruptedException {
 
-        return new City(destination, "", "");
+        return destination;
     }
 
     public void addMate(User mate) throws ExecutionException, InterruptedException {
@@ -136,6 +138,7 @@ public class Trip {
             updateTrip();
         }
     }
+
     public void removePendingMate(User mate) throws ExecutionException, InterruptedException {
         pendingMates.remove(mate.getId());
         updateTrip();

@@ -1,10 +1,18 @@
 package com.travelmate.travelmate.controller;
 
+import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
+import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.City;
 import com.travelmate.travelmate.model.Trip;
 import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.CityList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -28,167 +36,250 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class HomeController {
 
+    // --- 1. CONTAINERS ---
     @FXML private BorderPane mainContainer;
     @FXML private VBox helpPopup;
     @FXML private VBox leaderboardContainer;
     @FXML private VBox tripsContainer;
+    @FXML private SidebarController sidebarController;
+
+    // --- 2. SEARCH ---
     @FXML private TextField searchField;
+
+    // --- 3. PROMOTED CITY ---
     @FXML private ImageView promotedCitiesCityImage;
     @FXML private Label promotedCityNameLabel;
     @FXML private Label averageBudgetLabel;
     @FXML private ProgressBar compatibilityScoreBar;
     @FXML private Label compalibilityScoreLabel;
 
-
+    // Slide Data
     private int currentCityIndex = 0;
     private final List<City> promotedCities = new ArrayList<>();
 
+    // Thread Pool for Background Tasks
+    private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
 
+    // --- 4. DETAILS POPUP ---
     @FXML private VBox detailsPopup;
     @FXML private Circle detailsProfilePic;
     @FXML private Label detailsOwnerName;
     @FXML private Label detailsDescription;
     @FXML private TextArea messageInputArea;
 
-    @FXML private VBox profilePopup;
-    @FXML private Circle popupProfileImage;
-    @FXML private Label popupProfileName;
-    @FXML private Label popupProfileLevel;
-    @FXML private Label popupProfileBio;
-
     private User currentUser;
 
     public void initialize() throws ExecutionException, InterruptedException {
-        System.out.println("Home Sayfası Başlatılıyor...");
+        System.out.println("Home Page Initializing...");
         currentUser = UserSession.getCurrentUser();
 
+        // 1. Set Sidebar Active State
+        if (sidebarController != null) {
+            sidebarController.setActivePage("Home");
+        }
+
+        // 2. Setup Leaderboard (Fast UI ops)
         setupLeaderboard();
 
         // --- SLAYT VERİLERİNİ HAZIRLA ---
-        promotedCities.add(new City("Amsterdam", "Amsterdam", ""));
-        promotedCities.add(new City("Berlin", "Berlin", ""));
-        promotedCities.add(new City("Barcelona", "Barcelona", ""));
-        promotedCities.add(new City("Madrid", "Madrid", ""));
-        promotedCities.add(new City("Istanbul", "Istanbul", ""));
+        promotedCities.add(CityList.getCity("Amsterdam"));
+        promotedCities.add(CityList.getCity("Berlin"));
+        promotedCities.add(CityList.getCity("Barcelona"));
+        promotedCities.add(CityList.getCity("Prague"));
+        promotedCities.add(CityList.getCity("London"));
 
-        // İlk Şehri Yükle (Index 0: Rome)
+        // 4. Load Promoted City (NOW OPTIMIZED to be Non-Blocking)
+        // This runs in background, allowing the scene to show immediately
         loadPromotedCity(currentCityIndex);
 
+        // 5. Load Trips in Background
         if (tripsContainer != null) {
             loadRandomTrips();
         }
     }
 
     private void loadRandomTrips() {
-        // UI thread'i kilitlememek için arka planda çalıştırıyoruz
+        // Run in background thread
         CompletableFuture.runAsync(() -> {
             try {
-                // 1. Tüm gezileri çek (Performans notu: Veri çoksa .limit(50) kullanıp içinden 10 seçebilirsin)
+                // 1. Fetch documents
                 List<QueryDocumentSnapshot> documents = FirestoreClient.getFirestore()
                         .collection("trips")
+                        .limit(20) // Optimization: Limit query size
                         .get().get().getDocuments();
 
                 List<Trip> allTrips = new ArrayList<>();
                 for (QueryDocumentSnapshot doc : documents) {
-                    Trip trip = new Trip(doc.getId());
-                    allTrips.add(trip);
+                    try {
+                        Trip trip = new Trip(doc.getId());
+                        allTrips.add(trip);
+                    } catch (Exception e) {
+                        System.err.println("Skipping invalid trip: " + doc.getId());
+                    }
                 }
 
                 Collections.shuffle(allTrips);
-
                 List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
 
                 for (Trip trip : randomTrips) {
+                    // Pre-fetch owner data in background
                     User owner = null;
-                    try {
-                        owner = trip.getUser();
-                    } catch (Exception e) {
-                        continue;
-                    }
+                    try { owner = trip.getUser(); } catch (Exception e) { continue; }
 
                     final User finalOwner = owner;
 
-                    // 5. UI güncelleme (JavaFX Thread)
+                    // Update UI on JavaFX Thread
                     Platform.runLater(() -> {
-                        // Mevcut katılımcı sayısı
-                        int foundMates = trip.getMateCount();
-
-
-                        int compatibility = 50;
-                        try {
-                            //compatibility = currentUser.calculateCompatibility(new City());
-                        } catch (Exception e) {}
+                        if (finalOwner == null) return;
 
                         addTripCard(
-                                finalOwner.getUsername(),      // Username
-                                1,                             // Level (User modelinde varsa oradan al)
-                                finalOwner.getUsername(),      // User Img (İsimden buluyor kodun)
-                                trip.getDepartureLocation(),                // Nereden
-                                trip.getDepartureDate().toString(),                // Tarih
-                                trip.getDays(),                // Gün
-                                trip.getJoinedMates().size(),                    // Bulunan
-                                foundMates,          // Toplam kişi
-                                trip.getAverageBudget(),              // Bütçe
-                                compatibility,                 // Score
-                                trip.getDestinationName(),         // Hedef Şehir
-                                trip.getAdditionalNotes()          // Açıklama
+                                finalOwner.getUsername(),
+                                1,
+                                finalOwner.getUsername(),
+                                trip.getDepartureLocation(),
+                                (trip.getDepartureDate() != null ? trip.getDepartureDate().toString() : "TBD"),
+                                trip.getDays(),
+                                (trip.getJoinedMates() != null ? trip.getJoinedMates().size() : 0),
+                                trip.getMateCount(),
+                                trip.getAverageBudget(),
+                                50, // Default compatibility to avoid blocking
+                                trip.getDestinationName(),
+                                trip.getAdditionalNotes()
                         );
                     });
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        });
-    }
-    // ==========================================================
-    //          PROMOTED CITY SLAYT MANTIĞI 🎠
-    // ==========================================================
-
-
-
-    private void loadPromotedCity(int index) throws ExecutionException, InterruptedException {
-        City city = promotedCities.get(index);
-        int compatibility = currentUser.calculateCompatibility(city);
-        updatePromotedCity(city.getName(), compatibility);
+        }, networkExecutor);
     }
 
-
-
     // ==========================================================
-    //          DİĞER METOTLAR (AYNEN KALIYOR)
+    //          PROMOTED CITY SLIDER (OPTIMIZED)
     // ==========================================================
+
+    @FXML
+    public void handleNextPromoted(ActionEvent event) {
+        currentCityIndex++;
+        if (currentCityIndex >= promotedCities.size()) currentCityIndex = 0;
+        loadPromotedCity(currentCityIndex);
+    }
+
+    @FXML
+    public void handlePrevPromoted(ActionEvent event) {
+        currentCityIndex--;
+        if (currentCityIndex < 0) currentCityIndex = promotedCities.size() - 1;
+        loadPromotedCity(currentCityIndex);
+    }
+
+    private void loadPromotedCity(int index) {
+        // OPTIMIZATION: Run calculation in background thread
+        CompletableFuture.runAsync(() -> {
+            City city = promotedCities.get(index);
+            int compatibility = 0;
+            try {
+                if (currentUser != null) {
+                    compatibility = currentUser.calculateCompatibility(city);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            final int finalScore = compatibility;
+
+            // Update UI on JavaFX Application Thread
+            Platform.runLater(() -> updatePromotedCity(city.getName(), finalScore));
+        }, networkExecutor);
+    }
 
     public void updatePromotedCity(String cityName, int score) {
         if (promotedCityNameLabel != null) promotedCityNameLabel.setText(cityName.toUpperCase());
         if (compalibilityScoreLabel != null) compalibilityScoreLabel.setText("%" + score);
         if (compatibilityScoreBar != null) compatibilityScoreBar.setProgress(score / 100.0);
+
+        // This now uses async loading
         setSmartImage(promotedCitiesCityImage, cityName);
     }
 
-    private void switchToChannel(javafx.event.ActionEvent event, String cityName) {
-        try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Channels.fxml"));
-            javafx.scene.Parent root = loader.load();
-            ChannelsController controller = loader.getController();
-            controller.openChannel(cityName);
-            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-            stage.getScene().setRoot(root);
+    // --- FIX: ASYNCHRONOUS IMAGE LOADING ---
+    private void setSmartImage(ImageView targetView, String name) {
+        if (targetView == null || name == null) return;
 
-        } catch (java.io.IOException e) {
-            e.printStackTrace();
-        }
+        CompletableFuture.runAsync(() -> {
+            String cleanName = name.toLowerCase().replace("ı", "i");
+            Image image = null;
+            try {
+                String path = "/images/city photos/" + cleanName + ".jpg";
+                URL url = getClass().getResource(path);
+
+                if (url == null) {
+                    path = "/images/city photos/" + cleanName + ".png";
+                    url = getClass().getResource(path);
+                }
+
+                if (url != null) {
+                    // 'true' = Load in Background! This prevents freezing.
+                    image = new Image(url.toExternalForm(), true);
+                } else {
+                    URL fallbackUrl = getClass().getResource("/images/logoBlue.png");
+                    if (fallbackUrl != null) {
+                        image = new Image(fallbackUrl.toExternalForm(), true);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to load image: " + name);
+            }
+
+            final Image finalImg = image;
+            Platform.runLater(() -> {
+                if (finalImg != null) {
+                    targetView.setImage(finalImg);
+                    Rectangle clip = new Rectangle(targetView.getFitWidth(), targetView.getFitHeight());
+                    clip.setArcWidth(30.0);
+                    clip.setArcHeight(30.0);
+                    targetView.setClip(clip);
+                }
+            });
+        }, networkExecutor);
     }
+
+    private void setCircleImage(Circle targetCircle, String name) {
+        if (targetCircle == null) return;
+
+        CompletableFuture.runAsync(() -> {
+            Image image = null;
+            try {
+                String cleanName = (name != null) ? name.toLowerCase().replace("ı", "i") : "user_icon";
+                String path = "/images/" + cleanName + ".png";
+                URL url = getClass().getResource(path);
+                if (url == null) url = getClass().getResource("/images/user_icon.png");
+
+                if (url != null) {
+                    image = new Image(url.toExternalForm(), true); // Async load
+                }
+            } catch (Exception e) {}
+
+            final Image finalImg = image;
+            Platform.runLater(() -> {
+                if (finalImg != null) targetCircle.setFill(new ImagePattern(finalImg));
+            });
+        }, networkExecutor);
+    }
+
     private void addTripCard(String username, int lvl, String userImg, String from, String date, int days,
                              int found, int totalMate, int budget, int score, String destCity, String description) {
+
         HBox card = new HBox();
         card.setPrefHeight(220); card.setPrefWidth(800);
         card.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 3; -fx-border-radius: 20;");
@@ -203,16 +294,9 @@ public class HomeController {
         setCircleImage(profilePic, userImg);
 
         VBox nameBox = new VBox();
-        nameBox.setMinWidth(Region.USE_PREF_SIZE);
-        Label nameLbl = new Label(username);
-        nameLbl.setFont(Font.font("System", FontWeight.BOLD, 16));
-        nameLbl.setTextFill(Color.BLACK);
-        Label lvlLbl = new Label("Lvl. " + lvl);
-        lvlLbl.setTextFill(Color.web("#5e5e5e"));
-        nameBox.getChildren().addAll(nameLbl, lvlLbl);
+        nameBox.getChildren().addAll(createBoldLabel(username, 16), createGrayLabel("Lvl. " + lvl, 14));
 
         Region r1 = new Region(); HBox.setHgrow(r1, Priority.ALWAYS);
-
         Button viewProfileBtn = createStyledButton("View Profile", 13);
 
         viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, username, userImg, lvl));
@@ -223,13 +307,8 @@ public class HomeController {
         infoLbl.setFont(Font.font(16));
 
         HBox midRow = new HBox(20); midRow.setAlignment(Pos.CENTER_LEFT);
-        Label mateLbl = new Label(found + "/" + totalMate + " mate found");
-        mateLbl.setFont(Font.font("System", FontWeight.BOLD, 16));
-        Label budLbl = new Label(budget + " $");
-        budLbl.setFont(Font.font("System", FontWeight.BOLD, 24));
-
-        Region r2 = new Region(); HBox.setHgrow(r2, Priority.ALWAYS);
-        midRow.getChildren().addAll(mateLbl, r2, budLbl);
+        midRow.getChildren().addAll(createBoldLabel(found + "/" + totalMate + " mate found", 16), new Region(), createBoldLabel(budget + " $", 24));
+        ((Region) midRow.getChildren().get(1)).prefWidthProperty().bind(infoBox.widthProperty().divide(3));
 
         HBox scoreRow = new HBox(10); scoreRow.setAlignment(Pos.CENTER_LEFT);
         ProgressBar pBar = new ProgressBar(score / 100.0); pBar.setPrefWidth(120); pBar.setStyle("-fx-accent: #1E3A5F;");
@@ -237,10 +316,7 @@ public class HomeController {
 
         HBox bottomRow = new HBox(15); bottomRow.setAlignment(Pos.CENTER);
         Button channelBtn = createStyledButton("View Channel", 14);
-        channelBtn.setOnAction(e -> switchToChannel(e, destCity));
-        Label cityLbl = new Label(destCity.toUpperCase());
-        cityLbl.setFont(Font.font("System", FontWeight.BOLD, 28));
-        cityLbl.setTextFill(Color.web("#1e3a5f"));
+        Label cityLbl = createBoldLabel(destCity.toUpperCase(), 28); cityLbl.setTextFill(Color.web("#1e3a5f"));
         Button detailsBtn = createStyledButton("View Details", 14);
         detailsBtn.setOnAction(e -> openDetailsPopup(username, userImg, description));
 
@@ -253,9 +329,12 @@ public class HomeController {
         StackPane imagePane = new StackPane();
         imagePane.setMinSize(280, 214); imagePane.setMaxSize(280, 214);
         imagePane.setStyle("-fx-background-color: #a4c2f2; -fx-background-radius: 20;");
+
         ImageView cityImg = new ImageView();
         cityImg.setFitWidth(420); cityImg.setFitHeight(320); cityImg.setPreserveRatio(true);
+        // Async Load
         setSmartImage(cityImg, destCity);
+
         Rectangle clip = new Rectangle(280, 214); clip.setArcWidth(20); clip.setArcHeight(20);
         imagePane.setClip(clip);
         imagePane.getChildren().add(cityImg);
@@ -264,25 +343,19 @@ public class HomeController {
         if(tripsContainer != null) tripsContainer.getChildren().add(card);
     }
 
-    @FXML public void handleNextPromoted(ActionEvent event) throws ExecutionException, InterruptedException {
-        currentCityIndex++;
-        if (currentCityIndex >= promotedCities.size()) currentCityIndex = 0;
-        loadPromotedCity(currentCityIndex);
+    private Label createBoldLabel(String text, int size) {
+        Label l = new Label(text); l.setFont(Font.font("System", FontWeight.BOLD, size)); return l;
     }
-    @FXML public void handlePrevPromoted(ActionEvent event) throws ExecutionException, InterruptedException {
-        currentCityIndex--;
-        if (currentCityIndex < 0) currentCityIndex = promotedCities.size() - 1;
-        loadPromotedCity(currentCityIndex);
+    private Label createGrayLabel(String text, int size) {
+        Label l = new Label(text); l.setTextFill(Color.web("#5e5e5e")); l.setFont(Font.font("System", javafx.scene.text.FontPosture.ITALIC, size)); return l;
+    }
+    private Button createStyledButton(String text, int fontSize) {
+        Button btn = new Button(text);
+        btn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 20;");
+        btn.setFont(Font.font("System", FontWeight.BOLD, fontSize));
+        return btn;
     }
 
-
-    public void updatePromotedCity(String cityName, int budget, int score) {
-        if (promotedCityNameLabel != null) promotedCityNameLabel.setText(cityName.toUpperCase());
-        if (averageBudgetLabel != null) averageBudgetLabel.setText("Average Budget: " + budget + "$");
-        if (compalibilityScoreLabel != null) compalibilityScoreLabel.setText("%" + score);
-        if (compatibilityScoreBar != null) compatibilityScoreBar.setProgress(score / 100.0);
-        setSmartImage(promotedCitiesCityImage, cityName);
-    }
     private void openDetailsPopup(String ownerName, String imgName, String description) {
         if (detailsPopup == null) return;
         if (detailsOwnerName != null) detailsOwnerName.setText(ownerName);
@@ -291,46 +364,72 @@ public class HomeController {
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
         detailsPopup.setVisible(true);
     }
+
+    @FXML public void closeDetailsPopup() {
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (detailsPopup != null) detailsPopup.setVisible(false);
+    }
+
     @FXML public void handleSendRequestButton(ActionEvent event) {
         if(messageInputArea != null) {
+            System.out.println("Message: " + messageInputArea.getText());
             messageInputArea.clear();
         }
         closeDetailsPopup();
     }
-    private Button createStyledButton(String text, int fontSize) {
-        Button btn = new Button(text);
-        btn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 20;");
-        btn.setFont(Font.font("System", FontWeight.BOLD, fontSize));
-        return btn;
-    }
-    private void setSmartImage(ImageView targetView, String name) {
-        if (targetView == null) return;
-        Image img = findImage(name);
-        if (img != null) targetView.setImage(img);
-    }
-    private void setCircleImage(Circle targetCircle, String name) {
-        if (targetCircle == null) return;
-        Image img = findImage(name);
-        if (img != null) targetCircle.setFill(new ImagePattern(img));
-    }
-    private Image findImage(String baseName) {
-        baseName = baseName.toLowerCase().replaceAll("ı", "i");
-            try {
-                String path = "/images/city photos/" + baseName.toLowerCase() + ".jpg";
-                if (getClass().getResource(path) != null) return new Image(getClass().getResourceAsStream(path));
-            } catch (Exception e) {}
 
-        return null;
-    }
     private void setupLeaderboard() {
         if (leaderboardContainer == null) return;
-        leaderboardContainer.getChildren().clear();
-        addLeaderboardRow("1. placidezigira", "350");
-        addLeaderboardRow("2. ardakaragoz", "320");
-        addLeaderboardRow("3. mkeremakturkoglu", "290");
-        addLeaderboardRow("4. jhonduran10", "250");
-        addLeaderboardRow("5. ismailyuksek", "200");
+
+        // Yükleniyor... yazısı ekleyebilirsin istersen
+        // leaderboardContainer.getChildren().add(new Label("Yükleniyor..."));
+
+        Firestore db = FirebaseService.getFirestore();
+
+        // Veritabanı Sorgusu:
+        // 1. "users" koleksiyonuna git
+        // 2. "levelPoint" değerine göre AZALAN (En yüksekten en düşüğe) sırala
+        // 3. Sadece ilk 5 kişiyi al (Limit) - Performans için çok önemli!
+        ApiFuture<QuerySnapshot> future = db.collection("users")
+                .orderBy("levelPoint", Query.Direction.DESCENDING)
+                .limit(5)
+                .get();
+
+        // Asenkron işlem (Arka planda çalışır, arayüzü dondurmaz)
+        ApiFutures.addCallback(future, new ApiFutureCallback<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                // UI güncellemeleri MUTLAKA Platform.runLater içinde olmalıdır
+                Platform.runLater(() -> {
+                    leaderboardContainer.getChildren().clear(); // Varsa eski listeyi temizle
+
+                    int rank = 1;
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        // Veriyi güvenli bir şekilde çek
+                        String username = doc.getString("username");
+                        if (username == null || username.isEmpty()) {
+                            username = "Unknown User";
+                        }
+
+                        // Puanı güvenli çek (Null check)
+                        Long pointsLong = doc.getLong("levelPoint");
+                        int points = (pointsLong != null) ? pointsLong.intValue() : 0;
+
+                        // Listeye satır ekle
+                        addLeaderboardRow(rank + ". " + username, String.valueOf(points));
+                        rank++;
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                System.err.println("Leaderboard verisi çekilemedi: " + t.getMessage());
+                t.printStackTrace();
+            }
+        }, Runnable::run);
     }
+
     private void addLeaderboardRow(String name, String score) {
         HBox row = new HBox(); row.setSpacing(10);
         Label nameLabel = new Label(name); nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
@@ -340,25 +439,6 @@ public class HomeController {
         leaderboardContainer.getChildren().add(row);
     }
 
-    public void closeDetailsPopup() {
-        if (mainContainer != null) mainContainer.setEffect(null);
-        if (detailsPopup != null) detailsPopup.setVisible(false);
-    }
-    private void openProfilePopup(String username, String imgName, int lvl) {
-        if (profilePopup == null) return;
-        popupProfileName.setText(username);
-        popupProfileLevel.setText("Lvl. " + lvl);
-        popupProfileBio.setText("Hi! I am " + username + ". Let's travel!");
-        setCircleImage(popupProfileImage, imgName);
-        if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
-        profilePopup.setVisible(true);
-    }
-
-    @FXML
-    public void closeProfilePopup() {
-        if (mainContainer != null) mainContainer.setEffect(null);
-        if (profilePopup != null) profilePopup.setVisible(false);
-    }
     @FXML public void handleHelpButton() {
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
         if (helpPopup != null) helpPopup.setVisible(true);
@@ -384,4 +464,5 @@ public class HomeController {
     @FXML public void handleHomeButton(ActionEvent event) {  }
     @FXML public void handleViewProfileButton(ActionEvent event) {}
     @FXML public void handleViewChannelButton(ActionEvent event) {}
+    @FXML public void handleViewDetailsButton(ActionEvent event) {}
 }

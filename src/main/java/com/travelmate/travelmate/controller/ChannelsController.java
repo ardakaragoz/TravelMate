@@ -22,6 +22,9 @@ import javafx.scene.text.FontWeight;
 
 public class ChannelsController {
 
+    // --- SIDEBAR FIX: Inject the controller ---
+    @FXML private SidebarController sidebarController;
+
     @FXML private VBox profilePopup;
     @FXML private Circle popupProfileImage;
     @FXML private Label popupProfileName;
@@ -39,8 +42,14 @@ public class ChannelsController {
     @FXML private VBox channelTripsContainer;
 
     public void initialize() {
+        // --- SIDEBAR FIX: Set Active Page ---
+        if (sidebarController != null) {
+            sidebarController.setActivePage("Channels");
+        }
+
         loadCityButtons();
     }
+
     private void openProfilePopup(String username, String imgName, int lvl) {
         if (profilePopup == null) return;
 
@@ -58,37 +67,42 @@ public class ChannelsController {
         if (mainContainer != null) mainContainer.setEffect(null);
         if (profilePopup != null) profilePopup.setVisible(false);
     }
+
     private void loadCityButtons() {
         String[] cities = {"London", "Barcelona", "Rio de Janeiro", "Tokyo", "Rome", "New York", "Sydney", "Paris"};
 
         for (String city : cities) {
             Button btn = new Button(city);
             btn.setPrefSize(180, 100);
+            // Updated style to match your theme more closely if needed, keeping your logic
             btn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 15; -fx-cursor: hand;");
             btn.setFont(Font.font("System", FontWeight.BOLD, 18));
             btn.setTextFill(Color.web("#1E3A5F"));
 
             btn.setOnAction(e -> openChannel(city));
 
-            cityGrid.getChildren().add(btn);
+            if (cityGrid != null) {
+                cityGrid.getChildren().add(btn);
+            }
         }
     }
 
     public void openChannel(String cityName) {
-        citySelectionView.setVisible(false);
-        channelDetailView.setVisible(true);
-        channelTitleLabel.setText("Travel Mate " + cityName);
+        if (citySelectionView != null) citySelectionView.setVisible(false);
+        if (channelDetailView != null) channelDetailView.setVisible(true);
+        if (channelTitleLabel != null) channelTitleLabel.setText("Travel Mate " + cityName);
 
         loadTripsForCity(cityName);
     }
 
     @FXML
     public void handleBackToSelection() {
-        channelDetailView.setVisible(false);
-        citySelectionView.setVisible(true);
+        if (channelDetailView != null) channelDetailView.setVisible(false);
+        if (citySelectionView != null) citySelectionView.setVisible(true);
     }
 
     private void loadTripsForCity(String city) {
+        if (channelTripsContainer == null) return;
         channelTripsContainer.getChildren().clear();
 
         if (city.equals("London")) {
@@ -167,7 +181,12 @@ public class ChannelsController {
 
     private void setCircleImage(Circle targetCircle, String name) {
         try {
+            // Using a generic logic to avoid crashes if image missing
             String path = "/images/" + name + ".png";
+            // If user1 is missing, fallback to logo
+            if (getClass().getResource(path) == null) {
+                path = "/images/logoBlue.png";
+            }
             if (getClass().getResource(path) != null) {
                 targetCircle.setFill(new ImagePattern(new Image(getClass().getResourceAsStream(path))));
             }
