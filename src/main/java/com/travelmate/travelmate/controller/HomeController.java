@@ -298,6 +298,9 @@ public class HomeController {
 
         Region r1 = new Region(); HBox.setHgrow(r1, Priority.ALWAYS);
         Button viewProfileBtn = createStyledButton("View Profile", 13);
+
+        viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, username, userImg, lvl));
+
         topRow.getChildren().addAll(profilePic, nameBox, r1, viewProfileBtn);
 
         Label infoLbl = new Label("Departuring from: " + from + " at " + date + " for " + days + " Days!");
@@ -444,7 +447,21 @@ public class HomeController {
         if (mainContainer != null) mainContainer.setEffect(null);
         if (helpPopup != null) helpPopup.setVisible(false);
     }
-    @FXML public void handleHomeButton(ActionEvent event) {}
+    private void switchToOtherProfile(javafx.event.ActionEvent event, String username, String imgName, int lvl) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
+            javafx.scene.Parent root = loader.load();
+            OtherProfileController controller = loader.getController();
+            javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
+            controller.setProfileData(currentScene, username, username, lvl, imgName);
+            javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
+            stage.getScene().setRoot(root);
+
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+    }
+    @FXML public void handleHomeButton(ActionEvent event) {  }
     @FXML public void handleViewProfileButton(ActionEvent event) {}
     @FXML public void handleViewChannelButton(ActionEvent event) {}
     @FXML public void handleViewDetailsButton(ActionEvent event) {}

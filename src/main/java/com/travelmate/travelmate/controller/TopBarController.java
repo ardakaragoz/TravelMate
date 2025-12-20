@@ -85,7 +85,10 @@ public class TopBarController {
     }
 
     @FXML
-    public void handleHomeButton(ActionEvent event) {
+    public void handleProfileClick(MouseEvent event) {
+        switchPage(event, "Profile");
+    }
+    private void switchPage(Object eventSource, String fxmlName) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/Home.fxml"));
             Scene scene = new Scene(loader.load());
