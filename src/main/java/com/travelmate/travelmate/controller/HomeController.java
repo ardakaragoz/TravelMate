@@ -215,7 +215,7 @@ public class HomeController {
 
         Button viewProfileBtn = createStyledButton("View Profile", 13);
 
-        viewProfileBtn.setOnAction(e -> openProfilePopup(username, userImg, lvl));
+        viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, username, userImg, lvl));
 
         topRow.getChildren().addAll(profilePic, nameBox, r1, viewProfileBtn);
 
@@ -366,6 +366,20 @@ public class HomeController {
     @FXML public void closeHelpPopup() {
         if (mainContainer != null) mainContainer.setEffect(null);
         if (helpPopup != null) helpPopup.setVisible(false);
+    }
+    private void switchToOtherProfile(javafx.event.ActionEvent event, String username, String imgName, int lvl) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
+            javafx.scene.Parent root = loader.load();
+            OtherProfileController controller = loader.getController();
+            javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
+            controller.setProfileData(currentScene, username, username, lvl, imgName);
+            javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
+            stage.getScene().setRoot(root);
+
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
     }
     @FXML public void handleHomeButton(ActionEvent event) {  }
     @FXML public void handleViewProfileButton(ActionEvent event) {}

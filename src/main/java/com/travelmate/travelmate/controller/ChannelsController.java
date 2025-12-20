@@ -127,7 +127,7 @@ public class ChannelsController {
         Region r = new Region(); HBox.setHgrow(r, Priority.ALWAYS);
         Button viewProfileBtn = new Button("View Profile");
         viewProfileBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-cursor: hand;");
-        viewProfileBtn.setOnAction(e -> openProfilePopup(username, userImg, lvl));
+        viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, username, userImg, lvl));
 
         topRow.getChildren().addAll(profilePic, nameBox, r, viewProfileBtn);
 
@@ -172,5 +172,19 @@ public class ChannelsController {
                 targetCircle.setFill(new ImagePattern(new Image(getClass().getResourceAsStream(path))));
             }
         } catch (Exception e) {}
+    }
+    private void switchToOtherProfile(javafx.event.ActionEvent event, String username, String imgName, int lvl) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
+            javafx.scene.Parent root = loader.load();
+            OtherProfileController controller = loader.getController();
+            javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
+            controller.setProfileData(currentScene, username, username, lvl, imgName);
+            javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
+            stage.getScene().setRoot(root);
+
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
     }
 }

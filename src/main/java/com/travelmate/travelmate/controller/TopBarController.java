@@ -20,7 +20,14 @@ public class TopBarController {
     @FXML private Label userLevelLabel;
 
     public void initialize() {
-        //
+        User currentUser = UserSession.getCurrentUser();
+        if (currentUser != null) {
+            userNameLabel.setText(currentUser.getName());
+            userLevelLabel.setText("Lvl. " + currentUser.getLevel());
+        } else {
+            userNameLabel.setText("Guest User");
+            userLevelLabel.setText("Lvl. 0");
+        }
     }
     @FXML
     public void handleHomeButton(ActionEvent event) {
@@ -28,7 +35,6 @@ public class TopBarController {
     }
     @FXML
     public void handleProfileClick(MouseEvent event) {
-        System.out.println("Profile gidiliyor...");
         switchPage(event, "Profile");
     }
     private void switchPage(Object eventSource, String fxmlName) {
