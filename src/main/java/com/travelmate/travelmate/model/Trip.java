@@ -4,6 +4,7 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.session.CityList;
+import com.travelmate.travelmate.session.UserList;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -80,7 +81,7 @@ public class Trip {
             this.endDate = data.getDate("endDate");
 
             if (data.getString("user") != null) {
-                this.user = new User(data.getString("user"));
+                this.user = UserList.getUser(data.getString("user"));
             }
 
             this.joinedMates = (ArrayList<String>) data.get("joinedMates");

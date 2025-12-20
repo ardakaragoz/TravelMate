@@ -3,6 +3,7 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.UserList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,8 +64,8 @@ public class Review {
         this.budgetPoint = (int) data.get("budgetPoint");
         this.helpfulnessPoint = (int) data.get("helpfulnessPoint");
         this.comments = data.get("comments").toString();
-        this.evaluatedUser = new User(data.get("evaluatedUser").toString());
-        this.evaluatorUser = new User(data.get("evaluatorUser").toString());
+        this.evaluatedUser = UserList.getUser(data.get("evaluatedUser").toString());
+        this.evaluatorUser = UserList.getUser(data.get("evaluatorUser").toString());
         this.trip = new Trip(data.get("trip").toString());
         calculateOverall();
     }

@@ -2,9 +2,7 @@ package com.travelmate.travelmate;
 
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.*;
-import com.travelmate.travelmate.session.CityList;
-import com.travelmate.travelmate.session.HobbyList;
-import com.travelmate.travelmate.session.TripTypeList;
+import com.travelmate.travelmate.session.*;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -21,6 +19,9 @@ public class Main extends Application {
         CityList.listAllCities();
         HobbyList.listAllHobbies();
         TripTypeList.listAllTripTypes();
+        ChannelList.loadAllChannels();
+        ChannelChatList.loadAllChannels();
+        UserList.loadAllUsers();
         Parent root = FXMLLoader.load(getClass().getResource("/view/sign-in-page.fxml"));        //StackPane root = new StackPane();
         Scene scene = new Scene(root);
         stage.setTitle("TravelMate");

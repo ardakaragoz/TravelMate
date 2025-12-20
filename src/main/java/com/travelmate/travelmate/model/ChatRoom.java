@@ -4,6 +4,7 @@ import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.UserList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,17 +20,15 @@ public class ChatRoom {
     public ChatRoom(String id, String type) throws ExecutionException, InterruptedException {
         this.id = id;
         Firestore db = FirebaseService.getFirestore();
-
         DocumentSnapshot doc = db.collection("chatrooms")
                 .document(id)
                 .get()
                 .get();
-
+        System.out.println(doc.exists());
         if (doc.exists()) {
             this.messages = (ArrayList<String>) doc.get("messages");
             this.activeUsers = (ArrayList<String>) doc.get("activeUsers");
             this.type = (String) doc.get("type");
-            updateChatRoom();
         } else {
             this.type = type;
             this.messages = new ArrayList<>();
@@ -39,12 +38,19 @@ public class ChatRoom {
 
     }
 
+    public ChatRoom(String id, String type, ArrayList<String> messages, ArrayList<String> activeUsers) throws ExecutionException, InterruptedException {
+        this.id = id;
+        this.type = type;
+        this.messages = messages;
+        this.activeUsers = activeUsers;
+    }
+
     public void updateChatRoom() throws ExecutionException, InterruptedException {
         Firestore db = FirebaseService.getFirestore();
         DocumentReference docRef = db.collection("chatrooms").document(id);
         Map<String, Object>  data = new HashMap<>();
         for (String userID : activeUsers) {
-            User user = new User(userID);
+            User user = UserList.getUser(userID);
             user.addChatRoom(this);
         }
         data.put("messages", messages);

@@ -3,6 +3,7 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.UserList;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -24,7 +25,7 @@ public class LevelCommit {
         Firestore db = FirebaseService.getFirestore();
         DocumentSnapshot data = db.collection("levelCommits").document(id).get().get();
         if (data.exists()){
-            this.author = new User(data.get("author").toString());
+            this.author = UserList.getUser(data.get("author").toString());
             this.point = (int) data.get("point");
             this.date = (Date) data.get("date");
         } else {
