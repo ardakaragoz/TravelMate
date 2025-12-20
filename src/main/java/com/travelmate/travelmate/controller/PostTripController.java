@@ -1,5 +1,7 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.Trip;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -7,6 +9,7 @@ import javafx.util.StringConverter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ExecutionException;
 
 public class PostTripController {
 
@@ -30,7 +33,7 @@ public class PostTripController {
     }
 
     @FXML
-    public void handleSubmit(ActionEvent event) {
+    public void handleSubmit(ActionEvent event) throws ExecutionException, InterruptedException {
         String dest = destinationField.getText();
         Integer days = daysSpinner.getValue();
         String from = departureField.getText();
@@ -45,17 +48,6 @@ public class PostTripController {
             return;
         }
 
-        System.out.println("=== YENİ GEZİ OLUŞTURULDU ===");
-        System.out.println("Nereye: " + dest);
-        System.out.println("Süre: " + days + " Gün");
-        System.out.println("Nereden: " + from);
-        System.out.println("Bütçe: " + budget);
-        System.out.println("Kişi: " + mates);
-        System.out.println("Tarih: " + date);
-        System.out.println("Notlar: " + notes);
-        System.out.println("Rota: " + itinerary);
-
-        // TODO: Buradan sonra veritabanına kayıt işlemi yapılacak
-        // veya ana sayfaya yönlendirilecek.
+        Trip trip = new Trip("" + System.currentTimeMillis(), destinationField.getText(), departureField.getText(), days, Integer.parseInt(budgetField.getText()), currencyChoiceBox.getValue(), datePicker.getValue(), datePicker.getValue().plusDays(4), UserSession.getCurrentUser(), itinerary);
     }
 }

@@ -4,6 +4,8 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,20 +31,31 @@ public class Trip {
     private Firestore db = FirebaseService.getFirestore();
 
     public Trip(String id, String destination, String departureLocation, int days,
-                int averageBudget, String currency, Date departureDate, Date endDate, User user) throws ExecutionException, InterruptedException {
+                int averageBudget, String currency, LocalDate departureDate, LocalDate endDate, User user, String itinerary) throws ExecutionException, InterruptedException {
         this.id = id;
         this.destination = destination;
         this.departureLocation = departureLocation;
         this.days = days;
         this.averageBudget = averageBudget;
         this.currency = currency;
-        this.departureDate = departureDate;
-        this.endDate = endDate;
+        Date date1 = Date.from(
+                departureDate
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+        );
+        Date date2 = Date.from(
+                endDate
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+        );
+        this.departureDate = date1;
+        this.endDate = date2;
         this.user = user;
         this.joinedMates = new ArrayList<>();
         this.pendingMates = new ArrayList<>();
         this.mateCount = 0;
         this.tripChat = new TripChat(id, this);
+        this.itinerary = "";
         Map<String, Object> data = new HashMap<>();
         data.put("id", id);
         data.put("destination", destination);
@@ -50,13 +63,15 @@ public class Trip {
         data.put("days", days);
         data.put("averageBudget", averageBudget);
         data.put("currency", currency);
-        data.put("departureDate", departureDate);
-        data.put("endDate", endDate);
-        data.put("user", user);
+        data.put("departureDate", date1);
+        data.put("endDate", date2);
+        data.put("user", user.getId());
         data.put("joinedMates", joinedMates);
         data.put("pendingMates", pendingMates);
         data.put("mateCount", mateCount);
         data.put("tripChat", tripChat.getId());
+        data.put("itinerary", itinerary);
+        user.addCurrentTrip(id);
         db.collection("trips").document(id).set(data).get();
     }
 
