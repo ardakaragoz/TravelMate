@@ -117,17 +117,56 @@ public class ChannelsController {
         if (channelDetailView != null) channelDetailView.setVisible(false);
         if (citySelectionView != null) citySelectionView.setVisible(true);
     }
-
-    private void loadTripsForCity(String city) throws ExecutionException, InterruptedException {
+    public void openSpecificChannel(String cityName) throws ExecutionException, InterruptedException {
+        if (citySelectionView != null) citySelectionView.setVisible(false);
+        if (channelDetailView != null) channelDetailView.setVisible(true);
+        if (channelTitleLabel != null) {
+            channelTitleLabel.setText(cityName);
+        }
+        if (channelTripsContainer != null) {
+            channelTripsContainer.getChildren().clear();
+            loadTripsForCity(cityName);
+        }
+    }
+    private void loadTripsForCity(String city) {
         if (channelTripsContainer == null) return;
-        channelTripsContainer.getChildren().clear();
+        channelTripsContainer.getChildren().clear(); // Önce temizle
 
-        Channel speChannel = ChannelList.getChannel(city);
-        ArrayList<String> reqs = speChannel.getTripRequests();
-        for (String req : reqs) {
-            Trip t = TripList.getTrip(req);
-            User u = UserList.getUser(t.getUser());
-            addTripCard(u.getUsername(), u.getLevel(), u.getProfile().getProfilePictureUrl(), t.getDepartureLocation(), t.getDepartureDate().toString(), t.getDays(), t.getJoinedMates().size(), t.getMateCount(), 50, u.getId());
+        try {
+            Channel speChannel = ChannelList.getChannel(city);
+            if (speChannel == null && city != null && city.length() > 1) {
+                String formattedName = city.substring(0, 1).toUpperCase() + city.substring(1).toLowerCase();
+                speChannel = ChannelList.getChannel(formattedName);
+            }
+            if (speChannel == null) {
+                System.out.println("UYARI: " + city + " kanalı bulunamadı veya henüz yüklenmedi.");
+                Label emptyLbl = new Label("No trips found for this city yet.");
+                emptyLbl.setStyle("-fx-text-fill: #1E3A5F; -fx-font-size: 16px; -fx-font-weight: bold;");
+                channelTripsContainer.getChildren().add(emptyLbl);
+                return;
+            }
+            ArrayList<String> reqs = speChannel.getTripRequests();
+            if (reqs != null && !reqs.isEmpty()) {
+                for (String req : reqs) {
+                    Trip t = TripList.getTrip(req);
+                    if (t != null) {
+                        User u = UserList.getUser(t.getUser());
+                        if (u != null) {
+                            addTripCard(u.getUsername(), u.getLevel(),
+                                    (u.getProfile() != null ? u.getProfile().getProfilePictureUrl() : null),
+                                    t.getDepartureLocation(), t.getDepartureDate().toString(),
+                                    t.getDays(), t.getJoinedMates().size(), t.getMateCount(), 50, u.getId());
+                        }
+                    }
+                }
+            } else {
+                Label emptyLbl = new Label("No trips active in this channel.");
+                emptyLbl.setStyle("-fx-text-fill: #555; -fx-font-size: 14px;");
+                channelTripsContainer.getChildren().add(emptyLbl);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Veri yüklenirken hata oluştu: " + e.getMessage());
         }
     }
 
@@ -215,13 +254,18 @@ public class ChannelsController {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
             javafx.scene.Parent root = loader.load();
             OtherProfileController controller = loader.getController();
-            javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
+            javafx.scene.Node source = (javafx.scene.Node) event.getSource();
+            javafx.scene.Scene currentScene = source.getScene();
             controller.setProfileData(currentScene, userID);
             javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
-            stage.getScene().setRoot(root);
-
+            stage.setScene(new javafx.scene.Scene(root));
         } catch (java.io.IOException e) {
             e.printStackTrace();
+        }
+    }
+    public void searchAndSelectCity(String cityName) {
+        if (searchField != null) {
+            searchField.setText(cityName);
         }
     }
 }
