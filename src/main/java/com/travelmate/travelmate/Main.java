@@ -22,7 +22,7 @@ public class Main extends Application {
         ChannelList.loadAllChannels();
         ChatList.loadAllChats();
         TripList.loadAllTrips();
-        Parent root = FXMLLoader.load(getClass().getResource("/view/MyTrips.fxml"));        //StackPane root = new StackPane();
+        Parent root = FXMLLoader.load(getClass().getResource("/view/sign-in-page.fxml"));        //StackPane root = new StackPane();
         Scene scene = new Scene(root);
         stage.setTitle("TravelMate");
         stage.setScene(scene);
