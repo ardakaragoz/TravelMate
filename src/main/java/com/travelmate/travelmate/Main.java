@@ -16,8 +16,8 @@ public class Main extends Application {
     public void start(Stage stage) throws IOException, ExecutionException, InterruptedException {
         FirebaseService.initialize();
         UserList.loadAllUsers();
-        CityList.listAllCities();
-        HobbyList.listAllHobbies();
+        CityList.loadAllCities();
+        HobbyList.loadAllHobbies();
         TripTypeList.listAllTripTypes();
         ChannelList.loadAllChannels();
         ChatList.loadAllChats();

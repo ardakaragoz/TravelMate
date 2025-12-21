@@ -96,7 +96,7 @@ public class HomeController {
 
         // --- SLAYT VERİLERİNİ HAZIRLA ---
         promotedCities.add(CityList.getCity("Amsterdam"));
-        promotedCities.add(CityList.getCity("Berlin"));
+        promotedCities.add(CityList.getCity("Dubai"));
         promotedCities.add(CityList.getCity("Barcelona"));
         promotedCities.add(CityList.getCity("Prague"));
         promotedCities.add(CityList.getCity("London"));

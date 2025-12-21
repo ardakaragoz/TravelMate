@@ -2,14 +2,11 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.DropShadow?>
-<?import javafx.scene.effect.GaussianBlur?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
@@ -17,8 +14,67 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<StackPane fx:id="rootStackPane" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.MyTripsController">
+<StackPane fx:id="rootStackPane" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.MyTripsController">
     <children>
+
+        <VBox fx:id="detailsPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="500.0" spacing="20.0" style="-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 3; -fx-border-radius: 20;" visible="false">
+            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+            <children>
+                <Label text="Trip Details" textFill="#253A63" underline="true">
+                    <font><Font name="League Spartan Black" size="28.0" /></font>
+                </Label>
+                <VBox alignment="CENTER_LEFT" spacing="10.0">
+                    <Label fx:id="detailDestination" font="$x1" text="Destination: Paris" textFill="#253A63"><font><Font size="18.0" fx:id="x1" /></font></Label>
+                    <Label fx:id="detailDate" font="$x1" text="Date: 12 Nov - 20 Nov" textFill="#253A63" />
+                    <Label fx:id="detailBudget" font="$x1" text="Budget: 500 €" textFill="#253A63" />
+                    <Label font="$x1" text="Itinerary / Notes:" textFill="#253A63" />
+                    <Label fx:id="detailNotes" text="We will visit the Eiffel Tower..." textFill="#253A63" wrapText="true" />
+                </VBox>
+                <Button onAction="#closePopups" prefWidth="100" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-cursor: hand;" text="Close" />
+            </children>
+            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
+        </VBox>
+
+        <VBox fx:id="requestsPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="500.0" prefWidth="500.0" spacing="20.0" style="-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 3; -fx-border-radius: 20;" visible="false">
+            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+            <children>
+                <Label text="Join Requests" textFill="#253A63" underline="true">
+                    <font><Font name="System Bold" size="28.0" /></font>
+                </Label>
+                <ScrollPane fitToWidth="true" style="-fx-background: #FFE7C2; -fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+                    <content>
+                        <VBox fx:id="requestsListContainer" spacing="10.0" style="-fx-background-color: #FFE7C2;" />
+                    </content>
+                </ScrollPane>
+                <Button onAction="#closePopups" prefWidth="100" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-cursor: hand;" text="Close" />
+            </children>
+            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
+        </VBox>
+
+        <VBox fx:id="editPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="500.0" spacing="15.0" style="-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 3; -fx-border-radius: 20;" visible="false">
+            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+            <children>
+                <Label text="Edit Trip" textFill="#253A63" underline="true">
+                    <font><Font name="League Spartan ExtraBold" size="28.0" /></font>
+                </Label>
+
+                <VBox spacing="5.0">
+                    <Label text="Budget" textFill="#253A63"><font><Font name="System Bold" size="14.0" /></font></Label>
+                    <TextField fx:id="editBudgetField" style="-fx-background-radius: 10; -fx-border-color: #253A63; -fx-border-radius: 10;" />
+                </VBox>
+
+                <VBox spacing="5.0">
+                    <Label text="Notes / Itinerary" textFill="#253A63"><font><Font name="System Bold" size="14.0" /></font></Label>
+                    <TextArea fx:id="editNotesArea" prefHeight="100.0" style="-fx-background-radius: 10; -fx-border-color: #253A63; -fx-border-radius: 10;" wrapText="true" />
+                </VBox>
+
+                <HBox alignment="CENTER" spacing="20.0">
+                    <Button onAction="#saveTripEdit" prefHeight="40" prefWidth="120" style="-fx-background-color: #28A745; -fx-background-radius: 20; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="Save Changes" />
+                    <Button onAction="#closePopups" prefHeight="40" prefWidth="100" style="-fx-background-color: #DC3545; -fx-background-radius: 20; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="Cancel" />
+                </HBox>
+            </children>
+            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
+        </VBox>
         <BorderPane fx:id="mainContent" style="-fx-background-color: #FFF7EA;">
 
             <top>
@@ -45,34 +101,26 @@
                             </padding>
                             <children>
 
-                                <Label text="My Trips" textFill="#253A63" underline="true">
-                                    <font>
-                                        <Font name="System Bold" size="36.0" />
-                                    </font>
-                                </Label>
-
                                 <VBox spacing="15.0">
                                     <children>
                                         <Label text="Current &amp; Upcoming" textFill="#253A63">
                                             <font>
-                                                <Font name="System Bold" size="24.0" />
+                                                <Font name="League Spartan Black" size="24.0" />
                                             </font>
                                         </Label>
 
-                                        <FlowPane fx:id="upcomingTripsContainer" hgap="30.0" vgap="30.0" prefWrapLength="900.0" style="-fx-background-color: transparent;" />
+                                        <FlowPane fx:id="upcomingTripsContainer" hgap="30.0" prefWrapLength="900.0" style="-fx-background-color: transparent;" vgap="30.0" />
                                     </children>
                                 </VBox>
-
-                                <Separator opacity="0.3" style="-fx-background-color: #253A63;" />
 
                                 <VBox spacing="15.0">
                                     <children>
                                         <Label text="Travel History" textFill="#253A63">
                                             <font>
-                                                <Font name="System Bold" size="24.0" />
+                                                <Font name="League Spartan ExtraBold" size="24.0" />
                                             </font>
                                         </Label>
-                                        <FlowPane fx:id="pastTripsContainer" hgap="30.0" vgap="30.0" prefWrapLength="900.0" style="-fx-background-color: transparent;" />
+                                        <FlowPane fx:id="pastTripsContainer" hgap="30.0" prefWrapLength="900.0" style="-fx-background-color: transparent;" vgap="30.0" />
                                     </children>
                                 </VBox>
 
@@ -82,65 +130,6 @@
                 </ScrollPane>
             </center>
         </BorderPane>
-
-        <VBox fx:id="detailsPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="500.0" spacing="20.0" style="-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 3; -fx-border-radius: 20;" visible="false">
-            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
-            <children>
-                <Label text="Trip Details" textFill="#253A63" underline="true">
-                    <font><Font name="System Bold" size="28.0" /></font>
-                </Label>
-                <VBox alignment="CENTER_LEFT" spacing="10.0">
-                    <Label fx:id="detailDestination" text="Destination: Paris" textFill="#253A63" font="$x1"><font><Font size="18.0" fx:id="x1"/></font></Label>
-                    <Label fx:id="detailDate" text="Date: 12 Nov - 20 Nov" textFill="#253A63" font="$x1"/>
-                    <Label fx:id="detailBudget" text="Budget: 500 €" textFill="#253A63" font="$x1"/>
-                    <Label text="Itinerary / Notes:" textFill="#253A63" font="$x1"/>
-                    <Label fx:id="detailNotes" text="We will visit the Eiffel Tower..." textFill="#253A63" wrapText="true" />
-                </VBox>
-                <Button onAction="#closePopups" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-cursor: hand;" text="Close" prefWidth="100"/>
-            </children>
-            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
-        </VBox>
-
-        <VBox fx:id="requestsPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="500.0" prefWidth="500.0" spacing="20.0" style="-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 3; -fx-border-radius: 20;" visible="false">
-            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
-            <children>
-                <Label text="Join Requests" textFill="#253A63" underline="true">
-                    <font><Font name="System Bold" size="28.0" /></font>
-                </Label>
-                <ScrollPane fitToWidth="true" style="-fx-background: #FFE7C2; -fx-background-color: transparent;" VBox.vgrow="ALWAYS">
-                    <content>
-                        <VBox fx:id="requestsListContainer" spacing="10.0" style="-fx-background-color: #FFE7C2;" />
-                    </content>
-                </ScrollPane>
-                <Button onAction="#closePopups" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-cursor: hand;" text="Close" prefWidth="100"/>
-            </children>
-            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
-        </VBox>
-
-        <VBox fx:id="editPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="500.0" spacing="15.0" style="-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 3; -fx-border-radius: 20;" visible="false">
-            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
-            <children>
-                <Label text="Edit Trip" textFill="#253A63" underline="true">
-                    <font><Font name="System Bold" size="28.0" /></font>
-                </Label>
-
-                <VBox spacing="5.0">
-                    <Label text="Budget" textFill="#253A63"><font><Font name="System Bold" size="14.0"/></font></Label>
-                    <TextField fx:id="editBudgetField" style="-fx-background-radius: 10; -fx-border-color: #253A63; -fx-border-radius: 10;" />
-                </VBox>
-
-                <VBox spacing="5.0">
-                    <Label text="Notes / Itinerary" textFill="#253A63"><font><Font name="System Bold" size="14.0"/></font></Label>
-                    <TextArea fx:id="editNotesArea" prefHeight="100.0" wrapText="true" style="-fx-background-radius: 10; -fx-border-color: #253A63; -fx-border-radius: 10;" />
-                </VBox>
-
-                <HBox alignment="CENTER" spacing="20.0">
-                    <Button onAction="#saveTripEdit" style="-fx-background-color: #28A745; -fx-background-radius: 20; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="Save Changes" prefWidth="120" prefHeight="40"/>
-                    <Button onAction="#closePopups" style="-fx-background-color: #DC3545; -fx-background-radius: 20; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" text="Cancel" prefWidth="100" prefHeight="40"/>
-                </HBox>
-            </children>
-            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
-        </VBox>
 
     </children>
 </StackPane>

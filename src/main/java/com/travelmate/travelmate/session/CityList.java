@@ -1,16 +1,17 @@
 package com.travelmate.travelmate.session;
 
-import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutureCallback;
-import com.google.api.core.ApiFutures;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QuerySnapshot;
-import com.travelmate.travelmate.firebase.FirebaseService;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.travelmate.travelmate.model.City;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
 
 public class CityList {
     public static HashMap<String, City> cities = new HashMap<>();
@@ -23,37 +24,53 @@ public class CityList {
         return cities.get(name);
     }
 
-    public static void listAllCities(){
-        Firestore db = FirebaseService.getFirestore();
-        ApiFuture<QuerySnapshot> future = db.collection("cities").get();
-
-        ApiFutures.addCallback(future, new ApiFutureCallback<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot snapshots) {
-                cities.clear();
-                for (QueryDocumentSnapshot doc : snapshots) {
-                    City city = null;
-                    try {
-                        int[] compatabilityScores = new int[3];
-                        compatabilityScores[0] = doc.getLong("funPoint").intValue();
-                        compatabilityScores[1] = doc.getLong("culturePoint").intValue();
-                        compatabilityScores[2] = doc.getLong("chillPoint").intValue();
-                        city = new City(doc.getId(), doc.getId(), doc.getId(), compatabilityScores);
-                    } catch (ExecutionException e) {
-                        throw new RuntimeException(e);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    addCity(city);
-                }
-                System.out.println("Başarılı! Toplam " + cities.size() + " şehir hafızaya alındı.");
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                System.err.println("Şehirler yüklenirken hata oluştu: " + t.getMessage());
-            }
-        }, Runnable::run);
-    }
+    // JSON'daki yapıyı karşılayacak ara sınıf (Gson bunun içini dolduracak)
+    public static class CityJson {
+        public String name;
+        public int funPoint;
+        public int culturePoint;
+        public int chillPoint;
     }
 
+    // ARTIK BU METODU KULLANACAKSIN
+    public static void loadAllCities() {
+        try {
+            // 1. Dosyayı Resources/data klasöründen oku
+            // Dosyanın tam yolu: src/main/resources/data/cities.json olmalı
+            InputStream is = CityList.class.getResourceAsStream("/data/cities.json");
+
+            if (is == null) {
+                System.err.println("HATA: cities.json dosyası '/data/' klasöründe bulunamadı!");
+                return;
+            }
+
+            Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+
+            // 2. Gson ile JSON'ı listeye çevir
+            Gson gson = new Gson();
+            Type listType = new TypeToken<ArrayList<CityJson>>(){}.getType();
+            List<CityJson> jsonList = gson.fromJson(reader, listType);
+
+            // 3. Okunan verileri senin City modeline çevirip HashMap'e at
+            cities.clear();
+            for (CityJson cj : jsonList) {
+                int[] scores = new int[3];
+                scores[0] = cj.funPoint;
+                scores[1] = cj.culturePoint;
+                scores[2] = cj.chillPoint;
+
+                // Senin City constructor'ın: City(String id, String name, String desc, int[] scores)
+                // ID ve Name aynı olabilir.
+                City city = new City(cj.name, cj.name, "", scores);
+
+                addCity(city);
+            }
+
+            System.out.println("Başarılı! JSON'dan " + cities.size() + " şehir RAM'e yüklendi.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Şehirler JSON'dan yüklenirken hata oluştu.");
+        }
+    }
+}
