@@ -1,15 +1,18 @@
 package com.travelmate.travelmate.controller;
 
-import com.travelmate.travelmate.model.ChatRoom;
-import com.travelmate.travelmate.model.DirectMessage;
-import com.travelmate.travelmate.model.Message;
-import com.travelmate.travelmate.model.User;
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.model.*;
 import com.travelmate.travelmate.session.ChatList;
+import com.travelmate.travelmate.session.UserList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -18,309 +21,318 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
-public class ChatController implements Initializable {
+public class ChatController {
 
-    @FXML private VBox chatListContainer;
-    @FXML private VBox messageBubbleContainer;
-    @FXML private ScrollPane messageScrollPane;
-    @FXML private Label currentChatNameLabel;
-    @FXML private TextField messageInput;
-    @FXML private Label headerUsernameLabel;
-    @FXML private ImageView headerProfileImage;
     @FXML private SidebarController sidebarController;
+    @FXML private VBox chatListContainer;
 
-    // Use a cached thread pool for better performance with network tasks
-    private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
+    @FXML private Label currentChatNameLabel;
+    @FXML private ImageView currentChatImage;
 
+    @FXML private VBox messageBubbleContainer;
+    @FXML private TextField messageInput;
+    @FXML private ScrollPane messageScrollPane;
+
+    // --- STATE ---
+    private List<HBox> chatItemNodes = new ArrayList<>();
+    private ChatRoom currentChatRoom = null;
     private User currentUser;
-    private ChatRoom activeChatRoom;
+    private User activeChatUser;
 
-    private final List<ChatRoom> myChats = new CopyOnWriteArrayList<>();
-    private final Map<String, User> chatFriends = new ConcurrentHashMap<>();
+    private static Image defaultUserImage;
+    private Map<String, List<Message>> localMessageCache = new HashMap<>();
 
-    private static final String DEFAULT_STYLE = "-fx-background-color: white; -fx-background-radius: 15; -fx-cursor: hand; -fx-border-color: black; -fx-border-radius: 15; -fx-border-width: 2px;";
-    private static final String SELECTED_STYLE = "-fx-background-color: #e0f7fa; -fx-background-radius: 15; -fx-cursor: hand; -fx-border-color: #1E2A47; -fx-border-radius: 15; -fx-border-width: 3px;";
+    public void initialize() {
+        if(sidebarController != null) sidebarController.setActivePage("Chat");
 
-    private HBox selectedRow = null;
+        try {
+            InputStream is = getClass().getResourceAsStream("/images/user_icon.png");
+            if (is != null) defaultUserImage = new Image(is);
+        } catch (Exception e) { e.printStackTrace(); }
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        if (sidebarController != null) {
-            sidebarController.setActivePage("Chat");
-        }
-        // Load User in Background
-        CompletableFuture.runAsync(() -> {
-            try {
+        messageScrollPane.setFitToHeight(true);
+        messageBubbleContainer.setAlignment(Pos.BOTTOM_CENTER);
 
-                currentUser = UserSession.getCurrentUser();
-                if (currentUser == null) {
-                    System.out.println("DEBUG: UserSession is null. Using Test ID.");
-                    currentUser = new User("HuZUKiHoRQg7XRkRx5gq");
-                }
-
-                Platform.runLater(() -> {
-                    if (headerUsernameLabel != null && currentUser.getUsername() != null) {
-                        headerUsernameLabel.setText(currentUser.getUsername());
-                    }
-                    setProfileImage(headerProfileImage, currentUser);
-                    loadChatRoomsFast();
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, networkExecutor);
-    }
-
-    private void loadChatRoomsFast() {
-        myChats.clear();
-        chatFriends.clear();
-
-        ArrayList<String> chatIds = currentUser.getChatRooms();
-        if (chatIds == null || chatIds.isEmpty()) return;
-
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
-
-        for (String chatId : chatIds) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                try {
-                    // Fetch ChatRoom
-                    DirectMessage room = (DirectMessage) ChatList.getChat(chatId);
-                    myChats.add(room);
-
-                    // Fetch Friend
-                    String friendId = getOtherUserId(room);
-                    if (!chatFriends.containsKey(friendId)) {
-                        User friendUser = new User(friendId);
-                        chatFriends.put(chatId, friendUser);
-                    }
-                } catch (Exception e) {
-                    System.err.println("Error loading chat: " + chatId);
-                }
-            }, networkExecutor);
-            futures.add(future);
-        }
-
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenRun(() -> Platform.runLater(this::renderChatList));
-    }
-
-    private void renderChatList() {
-        chatListContainer.getChildren().clear();
-
-        for (ChatRoom room : myChats) {
-            User friend = chatFriends.get(room.getId());
-            String displayName = (friend != null) ? friend.getUsername() : "Unknown";
-
-            HBox row = new HBox(10);
-            row.setAlignment(Pos.CENTER_LEFT);
-            row.setPadding(new Insets(10));
-            row.setPrefHeight(60);
-            row.setStyle(DEFAULT_STYLE);
-
-            ImageView avatar = new ImageView();
-            avatar.setFitWidth(40);
-            avatar.setFitHeight(40);
-            setProfileImage(avatar, friend);
-
-            Label nameLabel = new Label(displayName);
-            nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1E2A47;");
-
-            HBox spacer = new HBox();
-            HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
-            Label arrow = new Label(">");
-            arrow.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-
-            row.getChildren().addAll(avatar, nameLabel, spacer, arrow);
-
-            row.setOnMouseClicked(e -> selectChat(room, row));
-            chatListContainer.getChildren().add(row);
-        }
-    }
-
-    private void selectChat(ChatRoom room, HBox clickedRow) {
-        this.activeChatRoom = room;
-
-        if (selectedRow != null) selectedRow.setStyle(DEFAULT_STYLE);
-        selectedRow = clickedRow;
-        if (selectedRow != null) selectedRow.setStyle(SELECTED_STYLE);
-
-        User friend = chatFriends.get(room.getId());
-        if (currentChatNameLabel != null && friend != null) {
-            currentChatNameLabel.setText(friend.getUsername());
-        }
-
-        loadMessages(room);
-    }
-
-    private void loadMessages(ChatRoom room) {
-        Platform.runLater(() -> {
-            messageBubbleContainer.getChildren().clear();
-            Label loading = new Label("Loading...");
-            loading.setStyle("-fx-text-fill: gray; -fx-padding: 10;");
-            messageBubbleContainer.getChildren().add(loading);
+        // Auto-scroll
+        messageBubbleContainer.heightProperty().addListener((observable, oldValue, newValue) -> {
+            messageScrollPane.setVvalue(1.0);
         });
 
-        // Fetch ALL messages in Parallel
-        CompletableFuture.supplyAsync(() -> {
-            List<Message> loadedMessages = new ArrayList<>();
-            if (room.getMessages() != null && !room.getMessages().isEmpty()) {
+        currentUser = UserSession.getCurrentUser();
+        if (currentUser == null) return;
 
-                List<CompletableFuture<Message>> msgFutures = new ArrayList<>();
-                for (String msgId : room.getMessages()) {
-                    msgFutures.add(CompletableFuture.supplyAsync(() -> {
-                        try {
-                            // This blocks, but it runs on a separate thread in the pool
-                            return new Message(msgId);
-                        } catch (Exception e) {
-                            return null;
-                        }
-                    }, networkExecutor));
+        loadChatsFromDatabase();
+    }
+
+    private void loadChatsFromDatabase() {
+        chatListContainer.getChildren().clear();
+        chatItemNodes.clear();
+
+        List<String> chatIds = currentUser.getChatRooms();
+        if (chatIds == null || chatIds.isEmpty()) return;
+
+        boolean isFirst = true;
+
+        for (String chatId : chatIds) {
+            ChatRoom room = ChatList.getChat(chatId);
+            if (room != null) {
+                User otherUser = findOtherUser(room);
+                String displayName = (otherUser != null) ? otherUser.getName() : "Unknown Chat";
+                String lastMsg = "Click to view";
+
+                addChatToSidebar(displayName, lastMsg, "", isFirst, room, otherUser);
+
+                if (isFirst) {
+                    handleChatClick(chatItemNodes.get(0), displayName, room, otherUser);
+                    isFirst = false;
+                }
+            }
+        }
+    }
+
+    private User findOtherUser(ChatRoom room) {
+        for (String userId : room.getActiveUsers()) {
+            if (!userId.equals(currentUser.getId())) {
+                return UserList.getUser(userId);
+            }
+        }
+        return null;
+    }
+
+    private void addChatToSidebar(String name, String lastMsg, String time, boolean isActive, ChatRoom room, User otherUser) {
+        HBox chatItem = new HBox(15);
+        chatItem.setAlignment(Pos.CENTER_LEFT);
+        chatItem.setCursor(javafx.scene.Cursor.HAND);
+        chatItem.setOnMouseClicked(e -> handleChatClick(chatItem, name, room, otherUser));
+
+        Circle clip = new Circle(27.5, 27.5, 27.5);
+        ImageView profilePic = new ImageView();
+        if (defaultUserImage != null) profilePic.setImage(defaultUserImage);
+        profilePic.setFitWidth(55); profilePic.setFitHeight(55); profilePic.setClip(clip);
+
+        VBox content = new VBox(4);
+        Label nameLabel = new Label(name);
+        nameLabel.setFont(Font.font("League Spartan Bold", 18));
+        nameLabel.setTextFill(Color.web("#1e2a47"));
+
+        Label msgLabel = new Label(lastMsg);
+        msgLabel.setFont(Font.font("League Spartan", 15));
+        msgLabel.setTextFill(Color.web("#7c7c7c"));
+        content.getChildren().addAll(nameLabel, msgLabel);
+
+        VBox rightSide = new VBox();
+        rightSide.setAlignment(Pos.TOP_RIGHT);
+        Label timeLabel = new Label(time);
+        timeLabel.setFont(Font.font("League Spartan Bold", 13));
+        timeLabel.setTextFill(Color.web("#a0a0a0"));
+        rightSide.getChildren().add(timeLabel);
+
+        HBox.setHgrow(content, Priority.ALWAYS);
+        chatItem.getChildren().addAll(profilePic, content, rightSide);
+
+        updateChatItemStyle(chatItem, isActive);
+        chatListContainer.getChildren().add(chatItem);
+        chatItemNodes.add(chatItem);
+    }
+
+    private void handleChatClick(HBox clickedItem, String name, ChatRoom room, User otherUser) {
+        for (HBox item : chatItemNodes) updateChatItemStyle(item, false);
+        updateChatItemStyle(clickedItem, true);
+
+        if (currentChatNameLabel != null) currentChatNameLabel.setText(name);
+        if (currentChatImage != null && defaultUserImage != null) currentChatImage.setImage(defaultUserImage);
+
+        this.currentChatRoom = room;
+        this.activeChatUser = otherUser;
+
+        if (localMessageCache.containsKey(room.getId())) {
+            renderMessages(localMessageCache.get(room.getId()));
+        } else {
+            loadMessagesForChat(room);
+        }
+    }
+
+    private void loadMessagesForChat(ChatRoom room) {
+        messageBubbleContainer.getChildren().clear();
+        if (room == null || room.getMessages() == null) return;
+
+        Task<List<Message>> loadMessagesTask = new Task<>() {
+            @Override
+            protected List<Message> call() throws Exception {
+                List<String> messageIds = room.getMessages();
+                if (messageIds.isEmpty()) return new ArrayList<>();
+
+                int total = messageIds.size();
+                int limit = 25;
+                int start = Math.max(0, total - limit);
+                List<String> recentIds = messageIds.subList(start, total);
+
+                List<DocumentReference> refs = new ArrayList<>();
+                for (String msgId : recentIds) {
+                    if (msgId != null && !msgId.trim().isEmpty()) {
+                        refs.add(FirebaseService.getFirestore().collection("messages").document(msgId));
+                    }
+                }
+                if (refs.isEmpty()) return new ArrayList<>();
+
+                ApiFuture<List<DocumentSnapshot>> future = FirebaseService.getFirestore().getAll(refs.toArray(new DocumentReference[0]));
+                List<DocumentSnapshot> snapshots = future.get();
+
+                List<Message> loadedMessages = new ArrayList<>();
+                for (DocumentSnapshot doc : snapshots) {
+                    if (doc.exists()) {
+                        loadedMessages.add(new Message(doc));
+                    }
                 }
 
-                // Join all threads and collect results
-                loadedMessages = msgFutures.stream()
-                        .map(CompletableFuture::join)
-                        .filter(m -> m != null)
-                        .sorted((m1, m2) -> {
-                            if (m1.getCreatedAt() == null || m2.getCreatedAt() == null) return 0;
-                            return m1.getCreatedAt().compareTo(m2.getCreatedAt());
-                        })
-                        .collect(Collectors.toList());
+                loadedMessages.sort(Comparator.comparing(m -> m.getCreatedAt() != null ? m.getCreatedAt() : new Date(0)));
+                return loadedMessages;
             }
-            return loadedMessages;
-        }, networkExecutor).thenAccept(messages ->
-                Platform.runLater(() -> renderMessages(messages))
-        );
+        };
+
+        loadMessagesTask.setOnSucceeded(event -> {
+            List<Message> messages = loadMessagesTask.getValue();
+            localMessageCache.put(room.getId(), messages);
+            renderMessages(messages);
+        });
+
+        loadMessagesTask.setOnFailed(e -> {
+            System.err.println("Safe load failed");
+        });
+
+        new Thread(loadMessagesTask).start();
     }
 
     private void renderMessages(List<Message> messages) {
         messageBubbleContainer.getChildren().clear();
         for (Message msg : messages) {
-            renderSingleBubble(msg);
+            boolean isSentByMe = false;
+            if (msg.getSender() != null && currentUser != null) {
+                isSentByMe = msg.getSender().getId().equals(currentUser.getId());
+            }
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+            String time = (msg.getCreatedAt() != null) ? sdf.format(msg.getCreatedAt()) : "";
+            addMessageBubble(msg.getMessage(), time, isSentByMe);
         }
-        scrollToBottom();
-    }
-
-    private void renderSingleBubble(Message msg) {
-        HBox bubbleRow = new HBox();
-        Label text = new Label(msg.getMessage());
-        text.setWrapText(true);
-        text.setMaxWidth(350);
-        text.setPadding(new Insets(10));
-
-        boolean isMe = msg.getSender() != null && currentUser != null && msg.getSender().getId().equals(currentUser.getId());
-
-        if (isMe) {
-            bubbleRow.setAlignment(Pos.CENTER_RIGHT);
-            text.setStyle("-fx-background-color: #1E2A47; -fx-text-fill: white; -fx-background-radius: 15 15 0 15; -fx-font-size: 14px;");
-        } else {
-            bubbleRow.setAlignment(Pos.CENTER_LEFT);
-            text.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-background-radius: 15 15 15 0; -fx-border-color: #ccc; -fx-border-radius: 15 15 15 0; -fx-font-size: 14px;");
-        }
-        bubbleRow.getChildren().add(text);
-        messageBubbleContainer.getChildren().add(bubbleRow);
-    }
-
-    private void scrollToBottom() {
-        messageScrollPane.applyCss();
         messageScrollPane.layout();
         messageScrollPane.setVvalue(1.0);
     }
 
     @FXML
-    private void handleSendMessage() {
+    private void handleSendMessage(ActionEvent event) {
         String text = messageInput.getText().trim();
-        if (text.isEmpty() || activeChatRoom == null) return;
+        if (!text.isEmpty() && currentChatRoom != null) {
 
-        messageInput.clear();
+            // 1. UI UPDATE FIRST
+            messageInput.clear();
+            addMessageBubble(text, "Just now", true);
+            messageScrollPane.layout();
+            messageScrollPane.setVvalue(1.0);
 
-        // --- OPTIMIZATION: Optimistic UI Update ---
-        // 1. Create message locally
-        String tempId = "msg_" + System.currentTimeMillis();
-        // Use the fast constructor which saves to DB in background
-        Message newMessage = new Message(tempId, text, currentUser);
+            // 2. BACKGROUND PROCESSING
+            String chatId = currentChatRoom.getId();
+            User sender = currentUser;
 
-        // 2. Add to UI immediately
-        renderSingleBubble(newMessage);
-        scrollToBottom();
-
-        // 3. Update ChatRoom and User objects in background
-        new Thread(() -> {
-            try {
-                activeChatRoom.addMessage(newMessage);
-                currentUser.addMessage(newMessage);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-    }
-
-    // --- Helper Methods ---
-
-    private void setProfileImage(ImageView imageView, User user) {
-        if (imageView == null) return;
-        Image image = null;
-        try {
-            var resource = getClass().getResourceAsStream("/images/user_icon.png");
-            if (resource == null) resource = getClass().getResourceAsStream("/images/logoBlue.png");
-            if (resource != null) image = new Image(resource);
-        } catch (Exception e) { }
-
-        if (user != null && user.getProfile() != null) {
-            String url = user.getProfile().getProfilePictureUrl();
-            if (url != null && !url.isEmpty() && url.startsWith("http")) {
+            new Thread(() -> {
                 try {
-                    image = new Image(url, true); // true = load in background
-                } catch (Exception e) { }
-            }
+                    String msgId = UUID.randomUUID().toString();
+                    Message newMessage = new Message(msgId, text, sender);
+                    currentChatRoom.addMessage(newMessage);
+
+                    Platform.runLater(() -> {
+                        if (localMessageCache.containsKey(chatId)) {
+                            localMessageCache.get(chatId).add(newMessage);
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
-        if (image != null) {
-            imageView.setImage(image);
-            double radius = Math.min(imageView.getFitWidth(), imageView.getFitHeight()) / 2;
-            imageView.setClip(new Circle(radius, radius, radius));
+    }
+
+    private void addMessageBubble(String text, String time, boolean isSentByMe) {
+        HBox bubbleContainer = new HBox();
+        bubbleContainer.setAlignment(isSentByMe ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+
+        VBox bubble = new VBox(6);
+        bubble.setMaxWidth(450);
+        bubble.setPadding(new Insets(15, 20, 15, 20));
+
+        if (isSentByMe) {
+            bubble.setStyle("-fx-background-color: #cbd45b; -fx-background-radius: 25 25 0 25;");
+        } else {
+            bubble.setStyle("-fx-background-color: #cbd45b; -fx-background-radius: 25 25 25 0;");
+        }
+        bubble.setEffect(new DropShadow(5, Color.rgb(0,0,0,0.1)));
+
+        Label messageLabel = new Label(text);
+        messageLabel.setFont(Font.font("League Spartan", 16));
+        messageLabel.setTextFill(Color.BLACK);
+
+        // --- TEXT WRAPPING FIX ---
+        messageLabel.setWrapText(true);
+        messageLabel.setMaxWidth(350); // Ensure this is smaller than bubble max width
+        messageLabel.setMinHeight(Region.USE_PREF_SIZE); // Ensure it grows
+
+        Label timeLabel = new Label(time);
+        timeLabel.setMaxWidth(Double.MAX_VALUE);
+        timeLabel.setAlignment(isSentByMe ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        timeLabel.setFont(Font.font("League Spartan", 12));
+        timeLabel.setTextFill(Color.web("#333333"));
+
+        bubble.getChildren().addAll(messageLabel, timeLabel);
+        bubbleContainer.getChildren().add(bubble);
+        messageBubbleContainer.getChildren().add(bubbleContainer);
+    }
+
+    @FXML
+    private void handleViewProfile(ActionEvent event) {
+        if (activeChatUser == null) return;
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
+            Parent root = loader.load();
+            OtherProfileController controller = loader.getController();
+            Scene currentScene = ((Node) event.getSource()).getScene();
+            controller.setProfileData(currentScene, activeChatUser.getId());
+            Stage stage = (Stage) currentScene.getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    private String getOtherUserId(ChatRoom room) {
-        if (room.getActiveUsers() == null) return "Unknown";
-        return room.getActiveUsers().stream()
-                .filter(id -> !id.equals(currentUser.getId()))
-                .findFirst()
-                .orElse("Unknown");
-    }
-
-    @FXML private void goToProfile(MouseEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("/view/Profile.fxml"));
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(root));
-        stage.show();
-    }
-
-    @FXML private void goToHome(javafx.event.ActionEvent event) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("/view/Home.fxml"));
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        stage.setScene(new Scene(root));
-        stage.show();
+    private void updateChatItemStyle(HBox item, boolean isActive) {
+        if (isActive) {
+            item.setStyle("-fx-background-color: #FFCB7B; -fx-background-radius: 30 0 0 30;");
+            item.setPadding(new Insets(15, 20, 15, 20));
+            VBox.setMargin(item, new Insets(0, 0, 0, 0));
+            DropShadow ds = new DropShadow(10, Color.rgb(0,0,0,0.1));
+            ds.setOffsetX(-2); ds.setOffsetY(2);
+            item.setEffect(ds);
+        } else {
+            item.setStyle("-fx-background-color: #FFE7C2; -fx-background-radius: 30;");
+            item.setPadding(new Insets(15, 20, 15, 20));
+            VBox.setMargin(item, new Insets(0, 15, 0, 0));
+            item.setEffect(null);
+        }
     }
 }

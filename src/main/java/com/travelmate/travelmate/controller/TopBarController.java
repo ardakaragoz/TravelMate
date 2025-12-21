@@ -9,7 +9,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.ImagePattern;
@@ -38,6 +40,36 @@ public class TopBarController {
         } else {
             userNameLabel.setText("Guest");
             userLevelLabel.setText("");
+        }
+    }
+    @FXML
+    private void handleMousePressed(MouseEvent event) {
+        if (event.getSource() instanceof Button) {
+            Button btn = (Button) event.getSource();
+
+            // 1. Move Button Down (Simulate Push)
+            btn.setTranslateY(4);
+
+            // 2. Shrink Shadow (Simulate getting closer to surface)
+            if (btn.getEffect() instanceof DropShadow) {
+                DropShadow shadow = (DropShadow) btn.getEffect();
+                shadow.setOffsetY(2.0); // Shadow gets shorter
+            }
+        }
+    }
+    @FXML
+    private void handleMouseReleased(MouseEvent event) {
+        if (event.getSource() instanceof Button) {
+            Button btn = (Button) event.getSource();
+
+            // 1. Reset Position
+            btn.setTranslateY(0);
+
+            // 2. Reset Shadow
+            if (btn.getEffect() instanceof DropShadow) {
+                DropShadow shadow = (DropShadow) btn.getEffect();
+                shadow.setOffsetY(7.0); // Shadow returns to normal height
+            }
         }
     }
 

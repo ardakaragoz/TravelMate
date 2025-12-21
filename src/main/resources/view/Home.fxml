@@ -5,7 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.ImageView?>
@@ -14,47 +14,41 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.HomeController">
+<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.HomeController">
     <children>
-
         <BorderPane fx:id="mainContainer" style="-fx-background-color: #FFF7EA;">
-
             <top>
                 <fx:include source="TopBar.fxml" />
             </top>
-
             <left>
                 <VBox prefHeight="640.0" prefWidth="300.0" spacing="10.0" BorderPane.alignment="CENTER">
                     <padding><Insets bottom="20.0" left="20.0" right="20.0" top="30.0" /></padding>
                     <children>
-
                         <fx:include fx:id="sidebar" source="Sidebar.fxml" />
-
                         <VBox prefHeight="240.0" prefWidth="100.0" spacing="10.0" style="-fx-background-color: #FFE7C2; -fx-border-color: #253A63; -fx-border-width: 2; -fx-background-radius: 15; -fx-border-radius: 15;">
                             <children>
                                 <HBox alignment="CENTER" spacing="10.0">
                                     <children>
-                                        <Label text="Leaderboard" underline="true" textFill="#253A63">
-                                            <font><Font name="System Bold" size="20.0" /></font>
+                                        <Label text="Leaderboard" textFill="#253A63">
+                                            <font><Font name="League Spartan Bold" size="20.0" /></font>
                                         </Label>
                                         <Button mnemonicParsing="false" onAction="#handleHelpButton" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 30px; -fx-text-fill: #253A63;" text="?">
-                                            <font><Font name="System Bold" size="14.0" /></font>
+                                            <font><Font name="League Spartan Bold" size="14.0" /></font>
                                             <effect><DropShadow color="#00000020" offsetX="2.0" offsetY="2.0" /></effect>
                                         </Button>
                                     </children>
                                 </HBox>
-
                                 <HBox alignment="CENTER" spacing="10.0">
                                     <children>
                                         <Button mnemonicParsing="false" style="-fx-background-color: #CCFF00; -fx-background-radius: 10; -fx-text-fill: #253A63;" text="All-time">
-                                            <font><Font name="System Bold" size="12.0" /></font>
+                                            <font><Font name="League Spartan Bold" size="12.0" /></font>
                                         </Button>
                                     </children>
                                 </HBox>
-
                                 <VBox fx:id="leaderboardContainer" spacing="5.0" />
                             </children>
                             <padding><Insets bottom="10.0" left="15.0" right="15.0" top="10.0" /></padding>
@@ -64,49 +58,45 @@
                     </children>
                 </VBox>
             </left>
-
             <center>
-                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: #FFF7EA; -fx-border-color: transparent;" BorderPane.alignment="CENTER">
-                    <content>
-                        <VBox spacing="25.0" style="-fx-background-color: #FFF7EA;">
+                <ScrollPane fitToWidth="true" style="-fx-background-color: #FFF7EA; -fx-background: #FFF7EA; -fx-border-color: transparent;" BorderPane.alignment="CENTER">                    <content>
+                        <VBox prefHeight="481.0" prefWidth="976.0" spacing="25.0" style="-fx-background-color: #FFF7EA;">
                             <padding><Insets bottom="30.0" right="30.0" top="30.0" /></padding>
                             <children>
-
-                                <Label text="Promoted Cities" textFill="#253A63"><font><Font name="System Bold" size="20.0" /></font></Label>
-
-                                <HBox alignment="CENTER" spacing="10.0">
+                                <Label text="Promoted Cities" textFill="#253A63"><font><Font name="League Spartan Black" size="20.0" /></font></Label>
+                                <HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="220.0" prefWidth="781.0" spacing="10.0">
                                     <children>
-                                        <Button onAction="#handlePrevPromoted" mnemonicParsing="false" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 40px; -fx-min-height: 40px; -fx-text-fill: #253A63;" text="&lt;">
-                                            <font><Font name="System Bold" size="20.0" /></font>
+                                        <Button mnemonicParsing="false" onAction="#handlePrevPromoted" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 40px; -fx-min-height: 40px; -fx-text-fill: #253A63;" text="&lt;">
+                                            <font><Font name="League Spartan Bold" size="20.0" /></font>
                                             <effect><DropShadow color="#00000020" offsetX="2.0" offsetY="2.0" radius="0.0" /></effect>
                                         </Button>
-
-                                        <HBox alignment="CENTER_LEFT" prefHeight="220.0" prefWidth="800.0" style="-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 2; -fx-border-radius: 20;" HBox.hgrow="ALWAYS">
+                                        <HBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="220.0" prefWidth="736.0" style="-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253a63; -fx-border-width: 10; -fx-border-radius: 20;" HBox.hgrow="ALWAYS">
                                             <children>
-                                                <VBox alignment="CENTER_LEFT" spacing="15.0" HBox.hgrow="ALWAYS">
+                                                <VBox alignment="CENTER_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="200.0" prefWidth="366.0" spacing="15.0" HBox.hgrow="ALWAYS">
                                                     <children>
-                                                        <Label fx:id="promotedCityNameLabel" style="-fx-background-color: #253A63; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #CCFF00;" text="ROME">
-                                                            <font><Font name="System Italic" size="40.0" /></font>
+                                                        <Label fx:id="promotedCityNameLabel" style="-fx-background-color: #253A63; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #CCFF00;" text="ROME" textAlignment="CENTER">
+                                                            <font><Font name="League Spartan ExtraBold" size="40.0" /></font>
                                                         </Label>
                                                         <Label fx:id="averageBudgetLabel" text="Average Budget: 800$" textFill="#253A63">
-                                                            <font><Font name="System Bold Italic" size="18.0" /></font>
+                                                            <font><Font name="League Spartan Bold" size="18.0" /></font>
                                                         </Label>
-                                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                                        <HBox alignment="CENTER_LEFT" prefHeight="19.0" prefWidth="257.0" spacing="10.0">
                                                             <children>
                                                                 <Label text="Compatibility Score:" textFill="#253A63">
-                                                                    <font><Font name="System Bold" size="14.0" /></font>
+                                                                    <font>
+                                                      <Font name="League Spartan Bold" size="14.0" />
+                                                   </font>
                                                                 </Label>
-                                                                <ProgressBar fx:id="compatibilityScoreBar" prefWidth="150.0" progress="0.7" style="-fx-accent: #253A63; -fx-control-inner-background: #FFF;" />
-                                                                <Label fx:id="compalibilityScoreLabel" text="\%70" textFill="#253A63"><font><Font name="System Bold" size="14.0" /></font></Label>
+                                                                <ProgressBar fx:id="compatibilityScoreBar" prefWidth="150.0" progress="0.7" style="-fx-accent: #253A63; -fx-control-inner-background: #FFFFFF;" />
+                                                                <Label fx:id="compalibilityScoreLabel" text="\%70" textFill="#253A63"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
                                                             </children>
                                                         </HBox>
                                                     </children>
                                                     <padding><Insets left="30.0" /></padding>
                                                 </VBox>
-
                                                 <StackPane alignment="CENTER" maxHeight="200.0" maxWidth="280.0" minHeight="200.0" minWidth="280.0" style="-fx-background-color: #FFF7EA; -fx-background-radius: 20;">
                                                     <children>
-                                                        <ImageView fx:id="promotedCitiesCityImage" fitHeight="300.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true" />
+                                                        <ImageView fx:id="promotedCitiesCityImage" fitHeight="273.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true" />
                                                     </children>
                                                     <clip>
                                                         <Rectangle arcHeight="30.0" arcWidth="30.0" height="200.0" width="280.0" />
@@ -116,55 +106,56 @@
                                             </children>
                                             <effect><DropShadow color="#00000015" offsetX="5.0" offsetY="5.0" radius="0.0" /></effect>
                                         </HBox>
-
-                                        <Button onAction="#handleNextPromoted" mnemonicParsing="false" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 40px; -fx-min-height: 40px; -fx-text-fill: #253A63;" text="&gt;">
-                                            <font><Font name="System Bold" size="20.0" /></font>
-                                            <effect><DropShadow color="#00000020" offsetX="2.0" offsetY="2.0" radius="0.0" /></effect>
+                                        <Button mnemonicParsing="false" onAction="#handleNextPromoted" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 40px; -fx-min-height: 40px; -fx-text-fill: #253A63;" text="&gt;">
+                                            <font>
+                                    <Font name="League Spartan Bold" size="20.0" />
+                                 </font>
+                                            <effect>
+                                    <DropShadow color="#00000020" offsetX="2.0" offsetY="2.0" radius="0.0" />
+                                 </effect>
                                         </Button>
                                     </children>
                                 </HBox>
-
                                 <HBox alignment="CENTER_LEFT" spacing="15.0">
                                     <children>
-                                        <TextField fx:id="searchField" promptText="Search city, date, budget..." style="-fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-radius: 20; -fx-border-width: 2; -fx-text-fill: #253A63;" HBox.hgrow="ALWAYS">
-                                            <font><Font size="18.0" /></font>
+                              <Label text="      " />
+                              <Label />
+                                        <TextField fx:id="searchField" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="51.0" prefWidth="619.0" promptText="Search city, date, budget..." style="-fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-radius: 20; -fx-border-width: 2; -fx-text-fill: #253A63;" HBox.hgrow="ALWAYS">
+                                            <font><Font name="League Spartan" size="18.0" /></font>
                                             <padding><Insets bottom="10.0" left="20.0" right="20.0" top="10.0" /></padding>
                                         </TextField>
                                         <Button mnemonicParsing="false" style="-fx-background-color: transparent; -fx-text-fill: #253A63;" text="🔍">
-                                            <font><Font name="System Bold" size="24.0" /></font>
+                                            <font><Font name="League Spartan Black" size="24.0" /></font>
                                         </Button>
                                     </children>
                                 </HBox>
-
-                                <Label text="Available Trips" textFill="#253A63"><font><Font name="System Bold" size="22.0" /></font></Label>
-
+                                <Label text="Available Trips" textFill="#253A63"><font><Font name="League Spartan Bold" size="29.0" /></font>
+                           <VBox.margin>
+                              <Insets left="52.0" />
+                           </VBox.margin></Label>
                                 <VBox fx:id="tripsContainer" spacing="20.0" />
-
                             </children>
                         </VBox>
                     </content>
                 </ScrollPane>
             </center>
-
         </BorderPane>
 
         <VBox fx:id="helpPopup" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="450.0" prefWidth="550.0" spacing="20.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
             <children>
                 <Label text="How to Earn Points?" textFill="#1e3a5f" underline="true">
-                    <font><Font name="System Bold" size="28.0" /></font>
+                    <font><Font name="League Spartan ExtraBold" size="28.0" /></font>
                 </Label>
-
                 <VBox alignment="CENTER_LEFT" maxWidth="450.0" spacing="10.0">
                     <children>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Completing a trip with a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+50" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Completing biography &amp; hobbies:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+25" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Receiving a 4-5 star review:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+20" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Writing a review for a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+15" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="• Posting a trip request:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="+10" textFill="#2ecc71" /></HBox>
+                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Completing a trip with a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+50" textFill="#2ecc71" /></HBox>
+                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Completing biography &amp; hobbies:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+25" textFill="#2ecc71" /></HBox>
+                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Receiving a 4-5 star review:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+20" textFill="#2ecc71" /></HBox>
+                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Writing a review for a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+15" textFill="#2ecc71" /></HBox>
+                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Posting a trip request:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+10" textFill="#2ecc71" /></HBox>
                     </children>
                 </VBox>
-
-                <Button onAction="#closeHelpPopup" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px; -fx-cursor: hand;" text="Close">
+                <Button onAction="#closeHelpPopup" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px; -fx-cursor: hand;" text="Close">
                     <padding><Insets bottom="10.0" left="40.0" right="40.0" top="10.0" /></padding>
                     <effect><DropShadow color="#00000040" offsetX="3.0" offsetY="3.0" radius="0.0" /></effect>
                 </Button>
@@ -179,7 +170,7 @@
                 <HBox alignment="CENTER_RIGHT">
                     <children>
                         <Button onAction="#closeDetailsPopup" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20;" text="X" textFill="WHITE">
-                            <font><Font name="System Bold" size="14.0" /></font>
+                            <font><Font name="League Spartan Bold" size="14.0" /></font>
                             <effect><DropShadow color="#00000033" offsetX="2.0" offsetY="2.0" /></effect>
                         </Button>
                     </children>
@@ -195,10 +186,10 @@
                         <VBox alignment="CENTER_LEFT">
                             <children>
                                 <Label fx:id="detailsOwnerName" text="Username" textFill="#1e3a5f">
-                                    <font><Font name="System Bold" size="24.0" /></font>
+                                    <font><Font name="League Spartan Bold" size="24.0" /></font>
                                 </Label>
                                 <Label text="Trip Organizer" textFill="#5e5e5e">
-                                    <font><Font size="14.0" /></font>
+                                    <font><Font name="League Spartan" size="14.0" /></font>
                                 </Label>
                             </children>
                         </VBox>
@@ -206,29 +197,30 @@
                 </HBox>
                 <VBox spacing="5.0" style="-fx-background-color: #FFE6CC; -fx-background-radius: 15; -fx-padding: 15;">
                     <children>
-                        <Label text="Trip Description:" underline="true" textFill="#1e3a5f">
-                            <font><Font name="System Bold" size="14.0" /></font>
+                        <Label text="Trip Description:" textFill="#1e3a5f" underline="true">
+                            <font><Font name="League Spartan Bold" size="14.0" /></font>
                         </Label>
-                        <Label fx:id="detailsDescription" text="Description goes here..." wrapText="true" textFill="#253A63">
-                            <font><Font size="14.0" /></font>
+                        <Label fx:id="detailsDescription" text="Description goes here..." textFill="#253A63" wrapText="true">
+                            <font><Font name="League Spartan" size="14.0" /></font>
                         </Label>
                     </children>
                 </VBox>
                 <VBox spacing="10.0" VBox.vgrow="ALWAYS">
                     <children>
                         <Label text="Send a Message:" textFill="#1e3a5f">
-                            <font><Font name="System Bold" size="16.0" /></font>
+                            <font><Font name="League Spartan Bold" size="16.0" /></font>
                         </Label>
-                        <javafx.scene.control.TextArea fx:id="messageInputArea" promptText="Hi! I'm interested in your trip..." wrapText="true" style="-fx-background-color: transparent; -fx-border-color: #1E3A5F; -fx-border-radius: 10;" prefRowCount="3"/>
+                        <javafx.scene.control.TextArea fx:id="messageInputArea" prefRowCount="3" promptText="Hi! I'm interested in your trip..." style="-fx-background-color: transparent; -fx-border-color: #1E3A5F; -fx-border-radius: 10;" wrapText="true">
+                            <font><Font name="League Spartan" size="14.0" /></font>
+                        </javafx.scene.control.TextArea>
                     </children>
                 </VBox>
                 <Button onAction="#handleSendRequestButton" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Send Request">
-                    <font><Font name="System Bold" size="16.0" /></font>
+                    <font><Font name="League Spartan Bold" size="16.0" /></font>
                     <padding><Insets bottom="10.0" left="30.0" right="30.0" top="10.0" /></padding>
                     <effect><DropShadow color="#00000020" offsetX="3.0" offsetY="3.0" /></effect>
                 </Button>
             </children>
         </VBox>
-
     </children>
 </StackPane>
