@@ -24,7 +24,6 @@ public class Channel {
         this.tripRequests = tripRequests;
         this.recommendations = recommendations;
         this.channelChat = channelChatID;
-        updateChannel();
     }
 
 

@@ -53,7 +53,7 @@ public class ChannelList {
                     }
                     addChannel(channel);
                 }
-                System.out.println("Başarılı! Toplam " + channels.size() + " şehir hafızaya alındı.");
+                System.out.println("Başarılı! Toplam " + channels.size() + " kanal hafızaya alındı.");
             }
 
             @Override

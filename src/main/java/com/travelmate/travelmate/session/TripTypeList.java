@@ -48,7 +48,7 @@ public class TripTypeList {
                     }
                     addTripType(triptype);
                 }
-                System.out.println("Başarılı! Toplam " + triptypes.size() + " hobi hafızaya alındı.");
+                System.out.println("Başarılı! Toplam " + triptypes.size() + " trip type hafızaya alındı.");
             }
 
             @Override

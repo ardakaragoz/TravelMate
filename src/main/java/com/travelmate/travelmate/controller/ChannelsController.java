@@ -1,5 +1,9 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.Channel;
+import com.travelmate.travelmate.model.Trip;
+import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.ChannelList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -19,6 +23,9 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+
+import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 public class ChannelsController {
 
@@ -79,7 +86,15 @@ public class ChannelsController {
             btn.setFont(Font.font("System", FontWeight.BOLD, 18));
             btn.setTextFill(Color.web("#1E3A5F"));
 
-            btn.setOnAction(e -> openChannel(city));
+            btn.setOnAction(e -> {
+                try {
+                    openChannel(city);
+                } catch (ExecutionException ex) {
+                    throw new RuntimeException(ex);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
 
             if (cityGrid != null) {
                 cityGrid.getChildren().add(btn);
@@ -87,7 +102,7 @@ public class ChannelsController {
         }
     }
 
-    public void openChannel(String cityName) {
+    public void openChannel(String cityName) throws ExecutionException, InterruptedException {
         if (citySelectionView != null) citySelectionView.setVisible(false);
         if (channelDetailView != null) channelDetailView.setVisible(true);
         if (channelTitleLabel != null) channelTitleLabel.setText("Travel Mate " + cityName);
@@ -101,15 +116,16 @@ public class ChannelsController {
         if (citySelectionView != null) citySelectionView.setVisible(true);
     }
 
-    private void loadTripsForCity(String city) {
+    private void loadTripsForCity(String city) throws ExecutionException, InterruptedException {
         if (channelTripsContainer == null) return;
         channelTripsContainer.getChildren().clear();
 
-        if (city.equals("London")) {
-            addTripCard("Ahmet Arda Karagöz", 38, "user1", "Kayseri", "12-16 Nov 2025", 4, 0, 2, 68);
-            addTripCard("Atakan Polat", 44, "user1", "Kigali", "1-4 July 2026", 4, 1, 2, 38);
-        } else {
-            addTripCard("User for " + city, 20, "user1", "Istanbul", "10-20 Aug 2025", 10, 1, 3, 85);
+        Channel speChannel = ChannelList.getChannel(city);
+        ArrayList<String> reqs = speChannel.getTripRequests();
+        for (String req : reqs) {
+            Trip t = new Trip(req);
+            User u = t.getUser();
+            addTripCard(u.getUsername(), u.getLevel(), u.getProfile().getProfilePictureUrl(), t.getDepartureLocation(), t.getDepartureDate().toString(), t.getDays(), t.getJoinedMates().size(), t.getMateCount(), 50);
         }
     }
 

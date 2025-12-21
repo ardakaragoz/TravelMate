@@ -61,7 +61,7 @@ public class Trip {
         this.additionalNotes = additionalNotes;
 
         // This is safe to keep here as it's part of your creation logic
-        user.addCurrentTrip(id);
+        user.addTripRequest(this);
         updateTrip();
     }
 

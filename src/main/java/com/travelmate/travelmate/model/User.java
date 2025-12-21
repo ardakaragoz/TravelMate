@@ -3,6 +3,7 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.ChannelList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -203,6 +204,7 @@ public class User {
 
     public void addTripRequest(Trip trip) throws ExecutionException, InterruptedException {
         this.currentTrips.add(trip.getId());
+        ChannelList.getChannel(trip.getDestinationName()).addTripRequest(trip);
         updateUser();
     }
 
