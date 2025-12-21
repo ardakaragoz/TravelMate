@@ -3,6 +3,7 @@ package com.travelmate.travelmate.controller;
 import com.travelmate.travelmate.model.Trip;
 import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.session.TripList;
+import com.travelmate.travelmate.session.UserList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -71,7 +72,7 @@ public class MyTripsController implements Initializable {
         Label loading = new Label("Loading trips...");
         loading.setStyle("-fx-text-fill: #253A63; -fx-font-size: 16px;");
         upcomingTripsContainer.getChildren().add(loading);
-
+        currentUser = UserList.getUser(currentUser.getId());
         ArrayList<String> currentIds = currentUser.getCurrentTrips();
         ArrayList<String> pastIds = currentUser.getPastTrips();
 
