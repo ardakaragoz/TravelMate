@@ -109,8 +109,32 @@ public class HomeController {
         if (tripsContainer != null) {
             loadRandomTrips();
         }
+        promotedCityNameLabel.setOnMouseClicked(event -> {
+            String city = promotedCityNameLabel.getText();
+            if (city != null && !city.isEmpty()) {
+                openChannelPage(event, city);
+            }
+        });
+        promotedCityNameLabel.setStyle("-fx-cursor: hand; -fx-background-color: #253A63; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #CCFF00;");
     }
+    private void openChannelDirectly(javafx.scene.input.MouseEvent event, String cityName) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Channels.fxml"));
+            javafx.scene.Parent root = loader.load();
+            ChannelsController controller = loader.getController();
+            controller.openSpecificChannel(cityName);
+            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.show();
 
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
     private void loadRandomTrips() {
         // Run in background thread
         CompletableFuture.runAsync(() -> {
@@ -307,14 +331,20 @@ public class HomeController {
         scoreRow.getChildren().addAll(new Label("Compatibility Score: %" + score), pBar);
 
         HBox bottomRow = new HBox(15); bottomRow.setAlignment(Pos.CENTER);
-        Button channelBtn = createStyledButton("View Channel", 14);
+
+        Button viewChannelBtn = createStyledButton("View Channel", 14);
+        viewChannelBtn.setOnAction(e -> {
+            if (destCity != null && !destCity.isEmpty()) {
+                openChannelPage(e, destCity);
+            }
+        });
         Label cityLbl = createBoldLabel(destCity.toUpperCase(), 28); cityLbl.setTextFill(Color.web("#1e3a5f"));
         Button detailsBtn = createStyledButton("View Details", 14);
         detailsBtn.setOnAction(e -> openDetailsPopup(username, userImg, description));
 
         Region s1 = new Region(); HBox.setHgrow(s1, Priority.ALWAYS);
         Region s2 = new Region(); HBox.setHgrow(s2, Priority.ALWAYS);
-        bottomRow.getChildren().addAll(channelBtn, s1, cityLbl, s2, detailsBtn);
+        bottomRow.getChildren().addAll(viewChannelBtn, s1, cityLbl, s2, detailsBtn);
 
         infoBox.getChildren().addAll(topRow, infoLbl, midRow, scoreRow, bottomRow);
 
@@ -444,10 +474,35 @@ public class HomeController {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
             javafx.scene.Parent root = loader.load();
             OtherProfileController controller = loader.getController();
-            javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
+            javafx.scene.Node source = (javafx.scene.Node) event.getSource();
+            javafx.scene.Scene currentScene = source.getScene();
             controller.setProfileData(currentScene, userID);
             javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
-            stage.getScene().setRoot(root);
+            stage.setScene(new javafx.scene.Scene(root));
+
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void openChannelPage(javafx.event.Event event, String cityName) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Channels.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            ChannelsController controller = loader.getController();
+            String fixedName = cityName;
+            if (cityName != null && cityName.length() > 1) {
+                fixedName = cityName.substring(0, 1).toUpperCase() + cityName.substring(1).toLowerCase();
+            }
+            try {
+                controller.openChannel(fixedName);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.show();
 
         } catch (java.io.IOException e) {
             e.printStackTrace();

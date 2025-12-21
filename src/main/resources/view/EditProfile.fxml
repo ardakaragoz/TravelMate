@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
@@ -9,7 +10,6 @@
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
@@ -50,7 +50,7 @@
                                         </children>
                                         <effect><DropShadow color="#00000033" offsetX="3.0" offsetY="3.0" /></effect>
                                     </StackPane>
-                                    <Button onAction="#handleChangePhoto" style="-fx-background-color: WHITE; -fx-border-color: #1E3A5F; -fx-border-radius: 10; -fx-background-radius: 10;" text="Change Photo">
+                                    <Button style="-fx-background-color: WHITE; -fx-border-color: #1E3A5F; -fx-border-radius: 10; -fx-background-radius: 10;" text="Change Photo">
                                         <font><Font name="System Bold" size="14.0" /></font>
                                     </Button>
                                 </children>
@@ -61,14 +61,14 @@
 
                                     <VBox spacing="5.0">
                                         <Label text="Full Name"><font><Font name="System Bold" size="16.0" /></font></Label>
-                                        <TextField fx:id="fullNameField" promptText="Berken Keni" style="-fx-background-radius: 10; -fx-border-color: black; -fx-border-radius: 10;">
+                                        <TextField fx:id="fullNameField" promptText="Enter full name" style="-fx-background-radius: 10; -fx-border-color: black; -fx-border-radius: 10;">
                                             <font><Font size="14.0" /></font>
                                         </TextField>
                                     </VBox>
 
                                     <VBox spacing="5.0">
                                         <Label text="Username"><font><Font name="System Bold" size="16.0" /></font></Label>
-                                        <TextField fx:id="usernameField" promptText="\@berkenkenny" style="-fx-background-radius: 10; -fx-border-color: black; -fx-border-radius: 10;">
+                                        <TextField fx:id="usernameField" promptText="Enter username" style="-fx-background-radius: 10; -fx-border-color: black; -fx-border-radius: 10;">
                                             <font><Font size="14.0" /></font>
                                         </TextField>
                                     </VBox>
@@ -81,17 +81,13 @@
                                     </VBox>
 
                                     <VBox spacing="5.0">
-                                        <Label text="Hobbies (Separate with comma)"><font><Font name="System Bold" size="16.0" /></font></Label>
-                                        <TextField fx:id="hobbiesField" promptText="Parties, Festivals, Fine Dining" style="-fx-background-radius: 10; -fx-border-color: black; -fx-border-radius: 10;">
-                                            <font><Font size="14.0" /></font>
-                                        </TextField>
+                                        <Label text="Select Your Main Hobby"><font><Font name="System Bold" size="16.0" /></font></Label>
+                                        <ComboBox fx:id="hobbyComboBox" maxWidth="Infinity" promptText="Choose a hobby..." style="-fx-background-color: white; -fx-border-color: black; -fx-border-radius: 10; -fx-background-radius: 10; -fx-font-size: 14px;" />
                                     </VBox>
 
                                     <VBox spacing="5.0">
-                                        <Label text="Favorite Trip Types (Separate with comma)"><font><Font name="System Bold" size="16.0" /></font></Label>
-                                        <TextField fx:id="tripTypesField" promptText="Cruise, Beach, Cultural" style="-fx-background-radius: 10; -fx-border-color: black; -fx-border-radius: 10;">
-                                            <font><Font size="14.0" /></font>
-                                        </TextField>
+                                        <Label text="Favorite Trip Type"><font><Font name="System Bold" size="16.0" /></font></Label>
+                                        <ComboBox fx:id="tripTypeComboBox" maxWidth="Infinity" promptText="Choose a trip type..." style="-fx-background-color: white; -fx-border-color: black; -fx-border-radius: 10; -fx-background-radius: 10; -fx-font-size: 14px;" />
                                     </VBox>
 
                                 </children>
