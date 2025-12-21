@@ -42,6 +42,14 @@ public class ChannelsController {
 
     @FXML private BorderPane mainContainer;
 
+    @FXML private VBox tripDetailsPopup;
+    @FXML private Label detailDestinationLabel;
+    @FXML private Label detailDateLabel;
+    @FXML private Label detailDescLabel;
+    @FXML private Label detailBudgetLabel;
+    @FXML private Label detailMatesLabel;
+    @FXML private Button popupJoinButton;
+
     @FXML private VBox citySelectionView;
     @FXML private FlowPane cityGrid;
     @FXML private TextField searchField;
@@ -58,7 +66,25 @@ public class ChannelsController {
 
         loadCityButtons();
     }
+    private void openTripDetailsPopup(Trip trip) {
+        if (tripDetailsPopup == null) return;
 
+        if (detailDestinationLabel != null) detailDestinationLabel.setText(trip.getDestinationName());
+        if (detailDateLabel != null) detailDateLabel.setText(trip.getDepartureDate() != null ? trip.getDepartureDate().toString() : "TBD");
+        if (detailBudgetLabel != null) detailBudgetLabel.setText(trip.getAverageBudget() + " $");
+        if (detailDescLabel != null) detailDescLabel.setText(trip.getAdditionalNotes() != null ? trip.getAdditionalNotes() : "No description.");
+        int currentMates = trip.getJoinedMates() != null ? trip.getJoinedMates().size() : 0;
+        if (detailMatesLabel != null) detailMatesLabel.setText(currentMates + "/" + trip.getMateCount());
+        if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
+        tripDetailsPopup.setVisible(true);
+        tripDetailsPopup.toFront();
+    }
+
+    @FXML
+    public void closeTripDetailsPopup() {
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (tripDetailsPopup != null) tripDetailsPopup.setVisible(false);
+    }
     private void openProfilePopup(String username, String imgName, int lvl) {
         if (profilePopup == null) return;
 
@@ -152,13 +178,11 @@ public class ChannelsController {
                     if (t != null) {
                         User u = UserList.getUser(t.getUser());
                         if (u != null) {
-                            addTripCard(u.getUsername(), u.getLevel(),
-                                    (u.getProfile() != null ? u.getProfile().getProfilePictureUrl() : null),
-                                    t.getDepartureLocation(), t.getDepartureDate().toString(),
-                                    t.getDays(), t.getJoinedMates().size(), t.getMateCount(), 50, u.getId());
+                            addTripCard(t, u);
                         }
                     }
                 }
+                // ...
             } else {
                 Label emptyLbl = new Label("No trips active in this channel.");
                 emptyLbl.setStyle("-fx-text-fill: #555; -fx-font-size: 14px;");
@@ -170,9 +194,7 @@ public class ChannelsController {
         }
     }
 
-    private void addTripCard(String username, int lvl, String userImg, String from, String date, int days,
-                             int found, int totalMate, int score, String userID) {
-
+    private void addTripCard(Trip trip, User owner) {
         HBox card = new HBox();
         card.setPrefHeight(180);
         card.setPrefWidth(800);
@@ -183,56 +205,59 @@ public class ChannelsController {
         VBox infoBox = new VBox(10);
         HBox.setHgrow(infoBox, Priority.ALWAYS);
 
+        // --- Üst Kısım: Profil Resmi ve İsim ---
         HBox topRow = new HBox(10);
         topRow.setAlignment(Pos.CENTER_LEFT);
         Circle profilePic = new Circle(25, Color.LIGHTGRAY);
-        setCircleImage(profilePic, userImg);
+        setCircleImage(profilePic, owner.getProfile() != null ? owner.getProfile().getProfilePictureUrl() : null);
 
         VBox nameBox = new VBox();
-        Label nameLbl = new Label(username);
+        Label nameLbl = new Label(owner.getUsername());
         nameLbl.setFont(Font.font("System", FontWeight.BOLD, 16));
-        Label lvlLbl = new Label("Lvl. " + lvl);
+        Label lvlLbl = new Label("Lvl. " + owner.getLevel());
         lvlLbl.setTextFill(Color.GRAY);
         nameBox.getChildren().addAll(nameLbl, lvlLbl);
 
         Region r = new Region(); HBox.setHgrow(r, Priority.ALWAYS);
         Button viewProfileBtn = new Button("View Profile");
         viewProfileBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-cursor: hand;");
-        viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, userID));
+        viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, owner.getId()));
 
         topRow.getChildren().addAll(profilePic, nameBox, r, viewProfileBtn);
 
-        Label detailLbl = new Label("Departuring from: " + from + "\nDates: " + date);
+        // --- Orta Kısım: Detaylar ---
+        Label detailLbl = new Label("Departuring from: " + trip.getDepartureLocation() + "\nDates: " + trip.getDepartureDate());
         detailLbl.setFont(Font.font(14));
 
+        // --- Alt Kısım: Skor ve Butonlar ---
         HBox bottomRow = new HBox(20);
         bottomRow.setAlignment(Pos.CENTER_LEFT);
-        Label mateLbl = new Label(found + "/" + totalMate + " mate found");
+
+        int mateCount = trip.getJoinedMates() != null ? trip.getJoinedMates().size() : 0;
+        Label mateLbl = new Label(mateCount + "/" + trip.getMateCount() + " mates");
         mateLbl.setFont(Font.font("System", FontWeight.BOLD, 14));
 
         Region r2 = new Region(); HBox.setHgrow(r2, Priority.ALWAYS);
 
-        HBox scoreBox = new HBox(10);
-        scoreBox.setAlignment(Pos.CENTER_LEFT);
-        Label scoreTxt = new Label("Compatibility Score: %" + score);
-        ProgressBar pBar = new ProgressBar(score / 100.0);
-        pBar.setPrefWidth(100);
-        pBar.setStyle("-fx-accent: #1E3A5F;");
-        scoreBox.getChildren().addAll(scoreTxt, pBar);
-
-        bottomRow.getChildren().addAll(mateLbl, r2, scoreBox);
         HBox actionBox = new HBox(10);
         actionBox.setAlignment(Pos.CENTER_RIGHT);
-        Button joinBtn = new Button("Join");
-        joinBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-font-weight: bold;");
-        Button chatBtn = new Button("Chat");
-        chatBtn.setStyle("-fx-background-color: white; -fx-border-color: black; -fx-border-radius: 15; -fx-background-radius: 15;");
 
-        actionBox.getChildren().addAll(joinBtn, chatBtn);
+        // **YENİ: View Details Butonu** (Popup'ı açar)
+        Button detailsBtn = new Button("View Details");
+        detailsBtn.setStyle("-fx-background-color: white; -fx-border-color: #1E3A5F; -fx-border-radius: 15; -fx-background-radius: 15; -fx-cursor: hand;");
+        detailsBtn.setOnAction(e -> openTripDetailsPopup(trip));
+
+        // Join Butonu (Direkt katılmaz, popup açıp oradan katılmak daha mantıklı ama burada da kalabilir)
+        Button joinBtn = new Button("Join");
+        joinBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-font-weight: bold; -fx-cursor: hand;");
+        // joinBtn.setOnAction(...); // Join mantığı eklenebilir
+
+        actionBox.getChildren().addAll(detailsBtn, joinBtn);
 
         infoBox.getChildren().addAll(topRow, detailLbl, bottomRow, actionBox);
-        card.getChildren().add(infoBox);
+        bottomRow.getChildren().addAll(mateLbl, r2, actionBox); // Düzenleme: mateLbl ve butonlar aynı satırda olsun diye
 
+        card.getChildren().add(infoBox);
         channelTripsContainer.getChildren().add(card);
     }
 
