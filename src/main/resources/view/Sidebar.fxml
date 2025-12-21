@@ -10,92 +10,39 @@
 <VBox prefHeight="350.0" prefWidth="232.0" spacing="20.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.SidebarController">
     <children>
 
-        <Button fx:id="channelsButton"
-                focusTraversable="false"
-                maxWidth="Infinity"
-                mnemonicParsing="false"
-                onAction="#handleChannelsButton"
-                prefHeight="55.0"
-                prefWidth="232.0"
-                style="-fx-background-color: WHITE; -fx-background-insets: 0; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;"
-                text="Channels     &gt;"
-                textFill="#253a63">
-            <font>
-                <Font name="League Spartan Black" size="20.0" />
-            </font>
+        <Button fx:id="channelsButton" focusTraversable="false" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleChannelsButton" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="55.0" prefWidth="232.0" style="-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" text="Channels     &gt;" textFill="#253a63">
+            <font><Font name="League Spartan Black" size="20.0" /></font>
             <effect>
-                <DropShadow height="1.0" offsetX="10.0" offsetY="10.0" radius="0.0" width="0.0">
-                    <color>
-                        <Color red="0.14509804546833038" green="0.22745098173618317" blue="0.38823530077934265" />
-                    </color>
+                <DropShadow height="1.0" offsetY="7.0" radius="0.5" spread="0.1" width="0.0">
+                    <color><Color red="0.145" green="0.227" blue="0.388" /></color>
                 </DropShadow>
             </effect>
         </Button>
 
-        <Button fx:id="myTripsButton"
-                focusTraversable="false"
-                maxWidth="Infinity"
-                mnemonicParsing="false"
-                onAction="#handleMyTripsButton"
-                prefHeight="55.0"
-                prefWidth="232.0"
-                style="-fx-background-color: WHITE; -fx-background-insets: 0; -fx-border-color: #253A63; -fx-border-width: 4; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;"
-                text="My Trips      &gt;"
-                textFill="#253a63">
-            <font>
-                <Font name="League Spartan Black" size="20.0" />
-            </font>
+        <Button fx:id="myTripsButton" focusTraversable="false" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleMyTripsButton" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="55.0" prefWidth="232.0" style="-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" text="My Trips      &gt;" textFill="#253a63">
+            <font><Font name="League Spartan Black" size="20.0" /></font>
             <effect>
-                <DropShadow height="1.0" offsetX="10.0" offsetY="10.0" radius="0.0" width="0.0">
-                    <color>
-                        <Color red="0.14509804546833038" green="0.22745098173618317" blue="0.38823530077934265" />
-                    </color>
+                <DropShadow height="1.0" offsetY="7.0" radius="0.5" spread="0.1" width="0.0">
+                    <color><Color red="0.145" green="0.227" blue="0.388" /></color>
                 </DropShadow>
             </effect>
         </Button>
 
-        <Button fx:id="postTripButton"
-                focusTraversable="false"
-                maxWidth="Infinity"
-                mnemonicParsing="false"
-                onAction="#handlePostTripButton"
-                prefHeight="55.0"
-                prefWidth="231.0"
-                style="-fx-background-color: WHITE; -fx-background-insets: 0; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;"
-                text="Post Trip     &gt;"
-                textFill="#253a63">
-            <font>
-                <Font name="League Spartan Black" size="20.0" />
-            </font>
+        <Button fx:id="postTripButton" focusTraversable="false" maxWidth="Infinity" mnemonicParsing="false" onAction="#handlePostTripButton" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="55.0" prefWidth="231.0" style="-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" text="Post Trip     &gt;" textFill="#253a63">
+            <font><Font name="League Spartan Black" size="20.0" /></font>
             <effect>
-                <DropShadow height="1.0" offsetX="10.0" offsetY="10.0" radius="0.0" width="0.0">
-                    <color>
-                        <Color red="0.14509804546833038" green="0.22745098173618317" blue="0.38823530077934265" />
-                    </color>
+                <DropShadow height="1.0" offsetY="7.0" radius="0.5" spread="0.1" width="0.0">
+                    <color><Color red="0.145" green="0.227" blue="0.388" /></color>
                 </DropShadow>
             </effect>
         </Button>
 
-        <Button fx:id="chatButton"
-                focusTraversable="false"
-                maxWidth="300.0"
-                mnemonicParsing="false"
-                onAction="#handleChatButton"
-                prefHeight="55.0"
-                prefWidth="125.0"
-                style="-fx-background-color: WHITE; -fx-background-insets: 0; -fx-border-color: #253a63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;"
-                text="    Chat            &gt;">
-            <font>
-                <Font name="League Spartan Black" size="20.0" />
-            </font>
-            <padding>
-                <Insets left="30.0" />
-            </padding>
+        <Button fx:id="chatButton" focusTraversable="false" maxWidth="300.0" mnemonicParsing="false" onAction="#handleChatButton" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="55.0" prefWidth="125.0" style="-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" text="       Chat            &gt;" textFill="#253a63">
+            <font><Font name="League Spartan Black" size="20.0" /></font>
+            <padding><Insets left="30.0" /></padding>
             <effect>
-                <DropShadow height="1.0" offsetX="10.0" offsetY="10.0" radius="0.0" width="0.0">
-                    <color>
-                        <Color red="0.14509804546833038" green="0.22745098173618317" blue="0.38823530077934265" />
-                    </color>
+                <DropShadow height="1.0" offsetY="7.0" radius="0.5" spread="0.1" width="0.0">
+                    <color><Color red="0.145" green="0.227" blue="0.388" /></color>
                 </DropShadow>
             </effect>
         </Button>

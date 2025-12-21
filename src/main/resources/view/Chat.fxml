@@ -5,102 +5,107 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.ChatController">
+<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.ChatController">
     <children>
         <BorderPane style="-fx-background-color: #FFF7EA;">
-
             <top>
                 <fx:include source="TopBar.fxml" />
             </top>
-
             <left>
                 <VBox prefHeight="640.0" prefWidth="300.0" spacing="10.0" BorderPane.alignment="CENTER">
-                    <padding>
-                        <Insets bottom="20.0" left="20.0" right="20.0" top="30.0" />
-                    </padding>
+                    <padding><Insets bottom="20.0" left="20.0" right="20.0" top="30.0" /></padding>
                     <children>
                         <fx:include fx:id="sidebar" source="Sidebar.fxml" />
                     </children>
                 </VBox>
             </left>
-
             <center>
-                <HBox spacing="20.0" style="-fx-background-color: #FFF7EA;" BorderPane.alignment="CENTER">
-                    <padding>
-                        <Insets bottom="30.0" right="30.0" top="30.0" />
-                    </padding>
-                    <children>
+                <HBox style="-fx-background-color: #FFF7EA;" BorderPane.alignment="CENTER">
+                    <padding><Insets bottom="30.0" right="30.0" top="30.0" /></padding>
 
-                        <VBox prefWidth="300.0" spacing="10.0">
-                            <children>
-                                <Label text="Messages" textFill="#1e2a47">
-                                    <font>
-                                        <Font name="System Bold" size="20.0" />
-                                    </font>
-                                </Label>
-                                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
-                                    <content>
-                                        <VBox fx:id="chatListContainer" spacing="10.0" />
-                                    </content>
-                                </ScrollPane>
-                            </children>
-                        </VBox>
+                    <VBox prefWidth="380.0" spacing="20.0">
+                        <children>
+                            <Label text="Chats" textFill="#1e2a47">
+                                <font><Font name="League Spartan Bold" size="60.0" /></font>
+                                <VBox.margin><Insets left="10.0" /></VBox.margin>
+                            </Label>
+                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="531.0" prefWidth="380.0" style="-fx-background: #ffe7c2; -fx-background-color: #ffe7c2;" VBox.vgrow="ALWAYS">
+                                <content>
+                                    <VBox fx:id="chatListContainer" spacing="15.0" style="-fx-padding: 0 0 0 5;" />
+                                </content>
+                                <VBox.margin>
+                           <Insets right="-10.0" top="-16.0" />
+                        </VBox.margin>
+                            </ScrollPane>
+                        </children>
+                    </VBox>
 
-                        <VBox style="-fx-background-color: white; -fx-background-radius: 20; -fx-border-color: #1E2A47; -fx-border-width: 2; -fx-border-radius: 20;" HBox.hgrow="ALWAYS">
-                            <children>
+                    <VBox prefHeight="583.0" prefWidth="569.0" style="-fx-background-color: #FFCB7B; -fx-background-radius: 0 30 30 0;" HBox.hgrow="ALWAYS">
+                        <effect><DropShadow color="#00000010" offsetX="5.0" offsetY="5.0" /></effect>
+                        <children>
 
-                                <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="10.0" style="-fx-background-color: #eee; -fx-background-radius: 18 18 0 0; -fx-padding: 10;">
-                                    <children>
-                                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
-                                            <image>
-                                                <Image url="@../images/user_icon.png" />
-                                            </image>
-                                            <clip>
-                                                <Circle centerX="20.0" centerY="20.0" radius="20.0" />
-                                            </clip>
-                                        </ImageView>
-                                        <Label fx:id="currentChatNameLabel" text="Select a Chat" textFill="#1e2a47">
-                                            <font>
-                                                <Font name="System Bold" size="18.0" />
-                                            </font>
+                            <HBox alignment="CENTER_LEFT" prefHeight="90.0" spacing="15.0" style="-fx-padding: 20 30 20 30; -fx-border-color: #EBB666; -fx-border-width: 0 0 1 0;">
+                                <children>
+                                    <ImageView fx:id="currentChatImage" fitHeight="55.0" fitWidth="55.0" pickOnBounds="true" preserveRatio="true">
+                                        <image><Image url="@../images/user_icon.png" /></image>
+                                        <clip><Circle centerX="27.5" centerY="27.5" radius="27.5" /></clip>
+                                    </ImageView>
+                                    <VBox alignment="CENTER_LEFT">
+                                        <Label fx:id="currentChatNameLabel" text="Loading..." textFill="#1e2a47">
+                                            <font><Font name="League Spartan Bold" size="24.0" /></font>
                                         </Label>
-                                    </children>
-                                </HBox>
+                                        <Label opacity="0.7" text="Online" textFill="#1e2a47">
+                                            <font><Font name="League Spartan" size="14.0" /></font>
+                                        </Label>
+                                    </VBox>
+                                    <Region HBox.hgrow="ALWAYS" />
 
-                                <ScrollPane fx:id="messageScrollPane" fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
-                                    <content>
-                                        <VBox fx:id="messageBubbleContainer" spacing="15.0" style="-fx-padding: 20;" />
-                                    </content>
-                                </ScrollPane>
+                                    <Button onAction="#handleViewProfile" style="-fx-background-color: #1E2A47; -fx-background-radius: 20; -fx-cursor: hand;" text="View Profile" textFill="WHITE">
+                                        <font><Font name="League Spartan Bold" size="14.0" /></font>
+                                        <padding><Insets bottom="8.0" left="20.0" right="20.0" top="8.0" /></padding>
+                                        <effect><DropShadow color="#00000020" offsetY="3.0" /></effect>
+                                    </Button>
+                                </children>
+                            </HBox>
 
-                                <HBox alignment="CENTER" prefHeight="60.0" spacing="10.0" style="-fx-padding: 10; -fx-border-color: #ddd; -fx-border-width: 1 0 0 0;">
-                                    <children>
-                                        <TextField fx:id="messageInput" onAction="#handleSendMessage" prefHeight="40.0" promptText="Type a message..." style="-fx-background-radius: 20; -fx-background-color: #f5f5f5;" HBox.hgrow="ALWAYS">
-                                            <font>
-                                                <Font size="14.0" />
-                                            </font>
+                            <ScrollPane fx:id="messageScrollPane" fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
+                                <content>
+                                    <VBox fx:id="messageBubbleContainer" spacing="20.0" style="-fx-padding: 30;" />
+                                </content>
+                            </ScrollPane>
+
+                            <HBox alignment="CENTER" prefHeight="90.0" spacing="20.0" style="-fx-padding: 20 30 20 30;">
+                                <children>
+                                    <HBox alignment="CENTER_LEFT" style="-fx-background-color: WHITE; -fx-background-radius: 30; -fx-padding: 5 20 5 20;" HBox.hgrow="ALWAYS">
+                                        <TextField fx:id="messageInput" onAction="#handleSendMessage" promptText="Type a message..." style="-fx-background-color: transparent; -fx-text-fill: #1e2a47; -fx-prompt-text-fill: #9a9a9a;" HBox.hgrow="ALWAYS">
+                                            <font><Font name="League Spartan" size="18.0" /></font>
                                         </TextField>
-                                        <Button mnemonicParsing="false" onAction="#handleSendMessage" prefHeight="40.0" prefWidth="80.0" style="-fx-background-color: #1E2A47; -fx-background-radius: 20; -fx-cursor: hand;" text="Send" textFill="WHITE">
-                                            <font>
-                                                <Font name="System Bold" size="14.0" />
-                                            </font>
-                                        </Button>
-                                    </children>
-                                </HBox>
+                                    </HBox>
 
-                            </children>
-                        </VBox>
-
-                    </children>
+                                    <Button mnemonicParsing="false" onAction="#handleSendMessage" style="-fx-background-color: #1E2A47; -fx-background-radius: 50; -fx-min-width: 55px; -fx-min-height: 55px; -fx-cursor: hand;">
+                                        <graphic>
+                                            <Label style="-fx-font-size: 24; -fx-rotate: -45; -fx-padding: 0 0 3 3;" text="➤" textFill="WHITE" />
+                                        </graphic>
+                                        <effect><DropShadow color="#00000020" offsetY="3.0" /></effect>
+                                    </Button>
+                                </children>
+                            </HBox>
+                        </children>
+                        <HBox.margin>
+                            <Insets top="70.0" />
+                        </HBox.margin>
+                    </VBox>
                 </HBox>
             </center>
         </BorderPane>
