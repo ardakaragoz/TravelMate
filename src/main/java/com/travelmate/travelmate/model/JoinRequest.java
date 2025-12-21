@@ -3,6 +3,7 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.TripList;
 import com.travelmate.travelmate.session.UserList;
 
 import java.util.HashMap;
@@ -42,7 +43,7 @@ public class JoinRequest {
         this.tripOwner = UserList.getUser(data.get("tripOwner").toString());
         this.message = data.get("message").toString();
         this.status = data.get("status").toString();
-        this.trip = new Trip(data.get("trip").toString());
+        this.trip = TripList.getTrip(data.get("trip").toString());
     }
 
     // Getters and Setters

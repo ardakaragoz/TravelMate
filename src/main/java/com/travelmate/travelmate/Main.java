@@ -1,7 +1,6 @@
 package com.travelmate.travelmate;
 
 import com.travelmate.travelmate.firebase.FirebaseService;
-import com.travelmate.travelmate.model.*;
 import com.travelmate.travelmate.session.*;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -16,12 +15,13 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws IOException, ExecutionException, InterruptedException {
         FirebaseService.initialize();
+        UserList.loadAllUsers();
         CityList.listAllCities();
         HobbyList.listAllHobbies();
         TripTypeList.listAllTripTypes();
         ChannelList.loadAllChannels();
         ChannelChatList.loadAllChannels();
-        UserList.loadAllUsers();
+        TripList.loadAllTrips();
         Parent root = FXMLLoader.load(getClass().getResource("/view/sign-in-page.fxml"));        //StackPane root = new StackPane();
         Scene scene = new Scene(root);
         stage.setTitle("TravelMate");

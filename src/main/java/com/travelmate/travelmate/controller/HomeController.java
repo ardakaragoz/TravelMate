@@ -13,6 +13,7 @@ import com.travelmate.travelmate.model.City;
 import com.travelmate.travelmate.model.Trip;
 import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.session.CityList;
+import com.travelmate.travelmate.session.TripList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -114,21 +115,11 @@ public class HomeController {
         CompletableFuture.runAsync(() -> {
             try {
                 // 1. Fetch documents
-                List<QueryDocumentSnapshot> documents = FirestoreClient.getFirestore()
-                        .collection("trips")
-                        .limit(20) // Optimization: Limit query size
-                        .get().get().getDocuments();
 
                 List<Trip> allTrips = new ArrayList<>();
-                for (QueryDocumentSnapshot doc : documents) {
-                    try {
-                        Trip trip = new Trip(doc.getId());
-                        allTrips.add(trip);
-                    } catch (Exception e) {
-                        System.err.println("Skipping invalid trip: " + doc.getId());
-                    }
+                for (Trip triplisted : TripList.trips.values()){
+                    allTrips.add(triplisted);
                 }
-
                 Collections.shuffle(allTrips);
                 List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
 

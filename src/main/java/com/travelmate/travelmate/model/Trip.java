@@ -39,6 +39,26 @@ public class Trip {
     }
 
     public Trip(String id, String destination, String departureLocation, int days,
+                int averageBudget, String currency, Date departureDate, Date endDate, User user, String itinerary, int mateCount, String additionalNotes) throws ExecutionException, InterruptedException {
+        this.id = id;
+        this.destination = destination;
+        this.departureLocation = departureLocation;
+        this.days = days;
+        this.averageBudget = averageBudget;
+        this.currency = currency;
+
+        this.departureDate = departureDate;
+        this.endDate = endDate;
+        this.user = user;
+        this.joinedMates = new ArrayList<>();
+        this.pendingMates = new ArrayList<>();
+        this.mateCount = mateCount;
+        this.tripChat = new TripChat(id, this);
+        this.itinerary = itinerary;
+        this.additionalNotes = additionalNotes;
+    }
+
+    public Trip(String id, String destination, String departureLocation, int days,
                 int averageBudget, String currency, LocalDate departureDate, LocalDate endDate, User user, String itinerary, int mateCount, String additionalNotes) throws ExecutionException, InterruptedException {
         this.id = id;
         this.destination = destination;

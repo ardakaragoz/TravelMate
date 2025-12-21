@@ -4,6 +4,7 @@ import com.travelmate.travelmate.model.Channel;
 import com.travelmate.travelmate.model.Trip;
 import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.session.ChannelList;
+import com.travelmate.travelmate.session.TripList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -123,7 +124,7 @@ public class ChannelsController {
         Channel speChannel = ChannelList.getChannel(city);
         ArrayList<String> reqs = speChannel.getTripRequests();
         for (String req : reqs) {
-            Trip t = new Trip(req);
+            Trip t = TripList.getTrip(req);
             User u = t.getUser();
             addTripCard(u.getUsername(), u.getLevel(), u.getProfile().getProfilePictureUrl(), t.getDepartureLocation(), t.getDepartureDate().toString(), t.getDays(), t.getJoinedMates().size(), t.getMateCount(), 50);
         }

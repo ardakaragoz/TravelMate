@@ -3,12 +3,11 @@ package com.travelmate.travelmate.session;
 import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
-import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.*;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.Channel;
 import com.travelmate.travelmate.model.City;
+import javafx.application.Platform;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,12 +26,16 @@ public class ChannelList {
 
     public static void loadAllChannels() {
         Firestore db = FirebaseService.getFirestore();
-        ApiFuture<QuerySnapshot> future = db.collection("channels").get();
+        db.collection("channels").addSnapshotListener(new EventListener<QuerySnapshot>() {
+            public void onEvent(QuerySnapshot snapshots, FirestoreException e) {
+                if (e != null) {
+                    System.err.println("Channel dinlenirken hata oluştu: " + e.getMessage());
+                    return;
+                }
 
-        ApiFutures.addCallback(future, new ApiFutureCallback<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot snapshots) {
-
+                if (snapshots != null) {
+                    // JavaFX arayüzü ile çakışmaması için güncellemeyi JavaFX Thread'ine alıyoruz
+                    Platform.runLater(() -> {
                 channels.clear();
                 for (QueryDocumentSnapshot doc : snapshots) {
                     Channel channel = null;
@@ -44,23 +47,16 @@ public class ChannelList {
                         ArrayList<String> recommendations = (ArrayList<String>) doc.get("recommendations");
                         String channelChatID = doc.getString("channelChat");
                         channel = new Channel(id, name, members, tripRequests, recommendations, channelChatID);
-                    } catch (ExecutionException e) {
-                        throw new RuntimeException(e);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
                     }
+
                     addChannel(channel);
                 }
-                System.out.println("Başarılı! Toplam " + channels.size() + " kanal hafızaya alındı.");
+                System.out.println("Başarılı! Toplam " + channels.size() + " kanal hafızaya alındı/güncellendi.");
+                    });
+                }
             }
-
-            @Override
-            public void onFailure(Throwable t) {
-                System.err.println("Şehirler yüklenirken hata oluştu: " + t.getMessage());
-            }
-        }, Runnable::run);
-
+        });
     }
 }

@@ -3,12 +3,12 @@ package com.travelmate.travelmate.session;
 import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
-import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.EventListener;
+import com.google.cloud.firestore.*;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.ChannelChat;
 import com.travelmate.travelmate.model.User;
+import javafx.application.Platform;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,31 +26,35 @@ public class UserList {
 
     public static void loadAllUsers(){
         Firestore db = FirebaseService.getFirestore();
-        ApiFuture<QuerySnapshot> future = db.collection("users").get();
-
-        ApiFutures.addCallback(future, new ApiFutureCallback<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot snapshots) {
-
-                users.clear();
-                for (QueryDocumentSnapshot doc : snapshots) {
-                    User user = null;
-                    try {
-                        String id = doc.getId();
-                        user = new User(id, doc);
-                        System.out.println(user.getGender());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    if (user != null) addUser(user);
+        db.collection("users").addSnapshotListener(new EventListener<QuerySnapshot>() {
+            public void onEvent(QuerySnapshot snapshots, FirestoreException e) {
+                if (e != null) {
+                    System.err.println("UserList dinlenirken hata oluştu: " + e.getMessage());
+                    return;
                 }
-                System.out.println("Başarılı! Toplam " + users.size() + " user hafızaya alındı.");
-            }
 
-            @Override
-            public void onFailure(Throwable t) {
-                System.err.println("Şehirler yüklenirken hata oluştu: " + t.getMessage());
+                if (snapshots != null) {
+                    // JavaFX arayüzü ile çakışmaması için güncellemeyi JavaFX Thread'ine alıyoruz
+                    Platform.runLater(() -> {
+                        // Listeyi temizle (Silinenler gitsin, yeniler gelsin)
+                        users.clear();
+
+                        for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                            try {
+                                // User.java'daki 'public User(DocumentSnapshot doc)' constructor'ını kullanıyoruz
+                                User user = new User(doc.getId(), doc);
+
+                                // HashMap'e ekle
+                                addUser(user);
+
+                            } catch (Exception ex) {
+                                System.err.println("Kullanıcı yüklenirken hata (" + doc.getId() + "): " + ex.getMessage());
+                            }
+                        }
+                        System.out.println("UserList güncellendi! Anlık kullanıcı sayısı: " + users.size());
+                    });
+                }
             }
-        }, Runnable::run);
+        });
     }
 }
