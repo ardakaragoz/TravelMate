@@ -69,13 +69,23 @@ public class OtherProfileController {
         pastTripsLabel.setText("London, Paris, Berlin, Tokyo");
     }
 
-
     @FXML
     public void handleBackButton(ActionEvent event) {
-        if (previousScene != null) {
-
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(previousScene);
+        try {
+            if (previousScene != null) {
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(previousScene);
+            }
+            else {
+                System.out.println("Warning: previousScene is null. Defaulting to Home.");
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Home.fxml"));
+                javafx.scene.Parent root = loader.load();
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(new javafx.scene.Scene(root));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error navigating back.");
         }
     }
 

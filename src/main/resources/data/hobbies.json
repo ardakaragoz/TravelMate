@@ -1,0 +1,170 @@
+[
+  {
+    "name": "Architecture",
+    "funPoint": 2,
+    "culturePoint": 10,
+    "chillPoint": 5
+  },
+  {
+    "name": "Beach",
+    "funPoint": 6,
+    "culturePoint": 1,
+    "chillPoint": 10
+  },
+  {
+    "name": "Book",
+    "funPoint": 1,
+    "culturePoint": 7,
+    "chillPoint": 8
+  },
+  {
+    "name": "Botanic Parks",
+    "funPoint": 2,
+    "culturePoint": 5,
+    "chillPoint": 9
+  },
+  {
+    "name": "Camping",
+    "funPoint": 3,
+    "culturePoint": 1,
+    "chillPoint": 9
+  },
+  {
+    "name": "Climbing",
+    "funPoint": 5,
+    "culturePoint": 2,
+    "chillPoint": 8
+  },
+  {
+    "name": "Cycling",
+    "funPoint": 6,
+    "culturePoint": 6,
+    "chillPoint": 7
+  },
+  {
+    "name": "Extreme Sports",
+    "funPoint": 10,
+    "culturePoint": 1,
+    "chillPoint": 2
+  },
+  {
+    "name": "Festivals",
+    "funPoint": 10,
+    "culturePoint": 8,
+    "chillPoint": 2
+  },
+  {
+    "name": "Gaming",
+    "funPoint": 9,
+    "culturePoint": 2,
+    "chillPoint": 3
+  },
+  {
+    "name": "Gastronomy",
+    "funPoint": 7,
+    "culturePoint": 8,
+    "chillPoint": 7
+  },
+  {
+    "name": "Hiking",
+    "funPoint": 4,
+    "culturePoint": 3,
+    "chillPoint": 9
+  },
+  {
+    "name": "History",
+    "funPoint": 1,
+    "culturePoint": 10,
+    "chillPoint": 5
+  },
+  {
+    "name": "Honeymoon",
+    "funPoint": 5,
+    "culturePoint": 5,
+    "chillPoint": 10
+  },
+  {
+    "name": "Hunting",
+    "funPoint": 4,
+    "culturePoint": 8,
+    "chillPoint": 6
+  },
+  {
+    "name": "Museums",
+    "funPoint": 2,
+    "culturePoint": 10,
+    "chillPoint": 5
+  },
+  {
+    "name": "Music",
+    "funPoint": 10,
+    "culturePoint": 6,
+    "chillPoint": 4
+  },
+  {
+    "name": "Nightlife",
+    "funPoint": 10,
+    "culturePoint": 2,
+    "chillPoint": 1
+  },
+  {
+    "name": "Performing Arts",
+    "funPoint": 5,
+    "culturePoint": 10,
+    "chillPoint": 5
+  },
+  {
+    "name": "Photography",
+    "funPoint": 3,
+    "culturePoint": 9,
+    "chillPoint": 7
+  },
+  {
+    "name": "Sacred Sites",
+    "funPoint": 1,
+    "culturePoint": 10,
+    "chillPoint": 5
+  },
+  {
+    "name": "Sailing",
+    "funPoint": 8,
+    "culturePoint": 3,
+    "chillPoint": 9
+  },
+  {
+    "name": "Spa",
+    "funPoint": 2,
+    "culturePoint": 1,
+    "chillPoint": 10
+  },
+  {
+    "name": "Street Food",
+    "funPoint": 8,
+    "culturePoint": 7,
+    "chillPoint": 5
+  },
+  {
+    "name": "Theme Parks",
+    "funPoint": 10,
+    "culturePoint": 2,
+    "chillPoint": 1
+  },
+  {
+    "name": "Water Sports",
+    "funPoint": 9,
+    "culturePoint": 1,
+    "chillPoint": 8
+  },
+  {
+    "name": "Wine",
+    "funPoint": 6,
+    "culturePoint": 7,
+    "chillPoint": 8
+  },
+  {
+    "name": "Yoga",
+    "funPoint": 1,
+    "culturePoint": 2,
+    "chillPoint": 10
+  }
+]

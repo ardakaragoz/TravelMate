@@ -9,14 +9,14 @@ module com.travelmate.travelmate {
     requires google.cloud.firestore;
     requires google.cloud.core;
     requires com.google.api.apicommon;
-    requires java.sql;
     requires javafx.graphics;
     requires java.desktop;
     requires com.google.gson;
 
     opens com.travelmate.travelmate.model to google.cloud.firestore;
-    opens com.travelmate.travelmate to javafx.fxml, javafx.graphics;
+    opens com.travelmate.travelmate to javafx.fxml, javafx.graphics, com.google.gson;
     opens com.travelmate.travelmate.controller to javafx.fxml;
+    opens com.travelmate.travelmate.session to com.google.gson;
 
     exports com.travelmate.travelmate;
 }
