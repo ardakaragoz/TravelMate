@@ -270,7 +270,6 @@ public class HomeController {
 
     private void addTripCard(String username, int lvl, String userImg, String from, String date, int days,
                              int found, int totalMate, int budget, int score, String destCity, String description) {
-
         HBox card = new HBox();
         card.setPrefHeight(220); card.setPrefWidth(800);
         card.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 3; -fx-border-radius: 20;");

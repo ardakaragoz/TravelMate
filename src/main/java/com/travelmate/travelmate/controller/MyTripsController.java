@@ -2,6 +2,7 @@ package com.travelmate.travelmate.controller;
 
 import com.travelmate.travelmate.model.Trip;
 import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.TripList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -85,7 +86,7 @@ public class MyTripsController implements Initializable {
         for (String tripId : tripIds) {
             if (tripId == null || tripId.isEmpty()) continue;
             futures.add(CompletableFuture.supplyAsync(() -> {
-                try { return new Trip(tripId); } catch (Exception e) { return null; }
+                try { return TripList.getTrip(tripId); } catch (Exception e) { return null; }
             }, networkExecutor));
         }
 

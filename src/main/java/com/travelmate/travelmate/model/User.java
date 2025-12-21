@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutionException;
 
 public class User {
     private String id, username, name, nationality, email, password, gender;
-    private int age, level, allPoints, monthlyPoints;
+    private int age, levelPoint, monthlyPoints;
     private Profile profile;
 
     // Initialize lists immediately to avoid NullPointerException
@@ -26,12 +26,9 @@ public class User {
     private ArrayList<String> messages = new ArrayList<>();
     private ArrayList<String> tripRequests = new ArrayList<>();
     private ArrayList<String> chatRooms = new ArrayList<>();
-    private ArrayList<String> commitIDs = new ArrayList<>();
-    private ArrayList<LevelCommit> levelCommits = new ArrayList<>();
 
     private int reviewCount;
     private int reviewPoints;
-    private int levelPoint;
 
     // --- CRITICAL FIX: Empty Constructor for Firestore ---
     public User() {
@@ -49,13 +46,10 @@ public class User {
         this.password = password;
         this.gender = gender;
         this.age = age;
-        this.level = 1;
-        this.allPoints = 0;
+        this.levelPoint = 0;
         this.monthlyPoints = 0;
         this.reviewCount = 0;
         this.reviewPoints = 0;
-        this.levelPoint = 0;
-
         // For new users, create profile immediately (one-time cost)
         this.profile = new Profile(id);
 
@@ -89,12 +83,10 @@ public class User {
 
         // Safe unboxing for numbers
         if (doc.getLong("age") != null) this.age = doc.getLong("age").intValue();
-        if (doc.getLong("level") != null) this.level = doc.getLong("level").intValue();
-        if (doc.getLong("allPoints") != null) this.allPoints = doc.getLong("allPoints").intValue();
+        if (doc.getLong("levelPoint") != null) this.levelPoint = doc.getLong("levelPoint").intValue();
         if (doc.getLong("monthlyPoints") != null) this.monthlyPoints = doc.getLong("monthlyPoints").intValue();
         if (doc.getLong("reviewCount") != null) this.reviewCount = doc.getLong("reviewCount").intValue();
         if (doc.getLong("reviewPoints") != null) this.reviewPoints = doc.getLong("reviewPoints").intValue();
-        if (doc.getLong("levelPoint") != null) this.levelPoint = doc.getLong("levelPoint").intValue();
 
         // Load Lists Safely
         if (doc.get("currentTrips") != null) this.currentTrips = (ArrayList<String>) doc.get("currentTrips");
@@ -106,7 +98,6 @@ public class User {
         if (doc.get("tripRequests") != null) this.tripRequests = (ArrayList<String>) doc.get("tripRequests");
         if (doc.get("chatRooms") != null) this.chatRooms = (ArrayList<String>) doc.get("chatRooms");
         if (doc.get("pastTrips") != null) this.pastTrips = (ArrayList<String>) doc.get("pastTrips");
-        if (doc.get("commitIDs") != null) this.commitIDs = (ArrayList<String>) doc.get("commitIDs");
 
         // --- SPEED FIX: PROFILE LOADING REMOVED ---
         // We do NOT load 'new Profile(id)' here because it freezes the login.
@@ -123,13 +114,12 @@ public class User {
         Map<String, Object> data = new HashMap<>();
         data.put("admin", isAdmin());
         data.put("age", age);
-        data.put("allPoints", allPoints);
+        data.put("levelPoint", levelPoint);
         data.put("channels", channels);
         data.put("gender", gender);
         data.put("currentTrips", currentTrips);
         data.put("pastTrips", pastTrips);
         data.put("email", email);
-        data.put("level", level);
         data.put("monthlyPoints", monthlyPoints);
         data.put("name", name);
         if (profile != null) data.put("profile", profile.getId());
@@ -144,8 +134,6 @@ public class User {
         data.put("tripRequests", tripRequests);
         data.put("chatRooms", chatRooms);
         data.put("joinRequests", joinRequests);
-        data.put("levelPoint", levelPoint);
-        data.put("commitIDs", commitIDs);
 
         Firestore db = FirebaseService.getFirestore();
         // Optimization: removed .get() to avoid blocking if just saving
@@ -173,11 +161,7 @@ public class User {
     }
 
     public void increaseLevel(int point) throws ExecutionException, InterruptedException {
-        Random rand = new Random();
-        String levelID = "" + rand.nextInt(100000000);
-        this.level += point;
-        this.levelCommits.add(new LevelCommit(levelID, this, point));
-        this.commitIDs.add(levelID);
+        this.levelPoint += point;
         updateUser();
     }
 
@@ -366,8 +350,8 @@ public class User {
     public String getPassword() { return password; }
     public String getGender() { return gender; }
     public int getAge() { return age; }
-    public int getLevel() { return level; }
-    public int getAllPoints() { return allPoints; }
+    public int getLevel() { return  1 + levelPoint / 10; }
+    public int getLevelPoint() { return levelPoint; }
     public int getMonthlyPoints() { return monthlyPoints; }
     // Note: getProfile is defined above as a lazy loader
     public ArrayList<String> getPastTrips() { return pastTrips; }
@@ -383,8 +367,7 @@ public class User {
     public ArrayList<String> getChatRooms() { return chatRooms; }
 
     public void setProfile(Profile profile) { this.profile = profile; }
-    public void setLevel(int level) { this.level = level; }
-    public void setAllPoints(int allPoints) { this.allPoints = allPoints; }
+    public void setLevelPoint(int allPoints) { this.levelPoint = allPoints; }
     public void setMonthlyPoints(int monthlyPoints) { this.monthlyPoints = monthlyPoints; }
     public void setReviewCount(int reviewCount) { this.reviewCount = reviewCount; }
     public void setReviewPoints(int reviewPoints) { this.reviewPoints = reviewPoints; }

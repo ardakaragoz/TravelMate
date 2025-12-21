@@ -1,5 +1,10 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.Hobby;
+import com.travelmate.travelmate.model.Profile;
+import com.travelmate.travelmate.model.TripTypes;
+import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
@@ -15,6 +20,7 @@ import javafx.scene.image.Image;
 import javafx.scene.effect.GaussianBlur;
 import javafx.event.ActionEvent;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 public class ProfileController {
 
@@ -31,30 +37,33 @@ public class ProfileController {
     @FXML private Label pastTripsLabel;
     @FXML private VBox helpPopup;
 
-    public void initialize() {
+    public void initialize() throws ExecutionException, InterruptedException {
         loadUserData();
     }
 
-    private void loadUserData() {
-        fullNameLabel.setText("Berken Keni");
-        usernameLabel.setText("@berkenkenny, 20");
-        levelLabel.setText("Level 35");
+    private void loadUserData() throws ExecutionException, InterruptedException {
+        User user = UserSession.getCurrentUser();
+        Profile profile = user.getProfile();
+        fullNameLabel.setText(user.getName());
+        usernameLabel.setText("@" + user.getUsername() + ", " + user.getAge());
+        levelLabel.setText("Level " + user.getLevel());
         if (levelProgressBar != null) {
-            levelProgressBar.setProgress(0.75);
+            double progress = 0.1 * (user.getLevelPoint() % 10);
+            levelProgressBar.setProgress(progress);
         }
 
         reviewScoreLabel.setText("Review Score: (9)");
-        bioLabel.setText("Hi, I want to travel all around the world with new friends!");
+        bioLabel.setText(profile.getBiography());
         pastTripsLabel.setText("Budapest, Rome, Maldives, New York");
         setProfileImage("user1");
 
-        addTag(hobbiesContainer, "Parties", "#CCFF00");
-        addTag(hobbiesContainer, "Festivals", "#CCFF00");
-        addTag(hobbiesContainer, "Fine Dining", "#CCFF00");
+        for (Hobby hobby : profile.getHobbies()){
+            addTag(hobbiesContainer, hobby.getName(), "#CCFF00");
+        }
 
-        addTag(tripTypesContainer, "Cruise", "#a4c2f2");
-        addTag(tripTypesContainer, "Beach", "#a4c2f2");
-        addTag(tripTypesContainer, "Cultural", "#a4c2f2");
+        for (TripTypes triptype : profile.getFavoriteTripTypes()) {
+            addTag(tripTypesContainer, "Cruise", "#a4c2f2");
+        }
     }
 
     @FXML
