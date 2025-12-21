@@ -51,7 +51,7 @@ public class TripList {
                                 String itinerary = (String) doc.get("itinerary");
                                 String departureLocation = (String) doc.get("departureLocation");
                                 Date endDate = doc.getDate("endDate");
-                                trip = new Trip(id, destination, departureLocation, days, averageBudget, currency, departureDate, endDate, UserList.getUser(user), itinerary, mateCount, additionalNotes);
+                                trip = new Trip(id, destination, departureLocation, days, averageBudget, currency, departureDate, endDate, user, itinerary, mateCount, additionalNotes);
                             } catch (Exception ex) {
                                 throw new RuntimeException(ex);
                             }

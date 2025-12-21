@@ -5,6 +5,7 @@ import com.travelmate.travelmate.model.Trip;
 import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.session.ChannelList;
 import com.travelmate.travelmate.session.TripList;
+import com.travelmate.travelmate.session.UserList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -125,13 +126,13 @@ public class ChannelsController {
         ArrayList<String> reqs = speChannel.getTripRequests();
         for (String req : reqs) {
             Trip t = TripList.getTrip(req);
-            User u = t.getUser();
-            addTripCard(u.getUsername(), u.getLevel(), u.getProfile().getProfilePictureUrl(), t.getDepartureLocation(), t.getDepartureDate().toString(), t.getDays(), t.getJoinedMates().size(), t.getMateCount(), 50);
+            User u = UserList.getUser(t.getUser());
+            addTripCard(u.getUsername(), u.getLevel(), u.getProfile().getProfilePictureUrl(), t.getDepartureLocation(), t.getDepartureDate().toString(), t.getDays(), t.getJoinedMates().size(), t.getMateCount(), 50, u.getId());
         }
     }
 
     private void addTripCard(String username, int lvl, String userImg, String from, String date, int days,
-                             int found, int totalMate, int score) {
+                             int found, int totalMate, int score, String userID) {
 
         HBox card = new HBox();
         card.setPrefHeight(180);
@@ -158,7 +159,7 @@ public class ChannelsController {
         Region r = new Region(); HBox.setHgrow(r, Priority.ALWAYS);
         Button viewProfileBtn = new Button("View Profile");
         viewProfileBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-cursor: hand;");
-        viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, username, userImg, lvl));
+        viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, userID));
 
         topRow.getChildren().addAll(profilePic, nameBox, r, viewProfileBtn);
 
@@ -209,13 +210,13 @@ public class ChannelsController {
             }
         } catch (Exception e) {}
     }
-    private void switchToOtherProfile(javafx.event.ActionEvent event, String username, String imgName, int lvl) {
+    private void switchToOtherProfile(javafx.event.ActionEvent event, String userID) {
         try {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
             javafx.scene.Parent root = loader.load();
             OtherProfileController controller = loader.getController();
             javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
-            controller.setProfileData(currentScene, username, username, lvl, imgName);
+            controller.setProfileData(currentScene, userID);
             javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
             stage.getScene().setRoot(root);
 

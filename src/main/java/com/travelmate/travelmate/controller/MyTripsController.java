@@ -147,7 +147,7 @@ public class MyTripsController implements Initializable {
         Button editBtn = createActionButton("Edit Trip", "#CCFF00");
         editBtn.setOnAction(e -> openEditPopup(trip));
 
-        boolean isOrganizer = currentUser.getId().equals(trip.getUser() != null ? trip.getUser().getId() : "");
+        boolean isOrganizer = currentUser.getId().equals(trip.getUser() != null ? trip.getUser() : "");
 
         buttonBox.getChildren().add(detailsBtn);
         if (isOrganizer) {

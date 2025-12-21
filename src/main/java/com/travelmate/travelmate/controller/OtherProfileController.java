@@ -1,5 +1,8 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.Profile;
+import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -31,22 +34,22 @@ public class OtherProfileController {
 
     private Scene previousScene;
 
-    public void setProfileData(Scene prevScene, String fullName, String username, int level, String imgName) {
+    public void setProfileData(Scene prevScene, String userID) {
         this.previousScene = prevScene;
 
-
-        fullNameLabel.setText(fullName);
-        usernameLabel.setText("@" + username);
-        levelLabel.setText("Level " + level);
-        levelProgressBar.setProgress((level % 10) / 10.0);
-
+        User user = UserList.getUser(userID);
+        fullNameLabel.setText(user.getName());
+        usernameLabel.setText("@" + user.getUsername() + ", " + user.getAge());
+        levelLabel.setText("Level " + user.getLevel());
+        levelProgressBar.setProgress((user.getLevelPoint() % 10) / 10.0);
+        Profile userProfile = user.getProfile();
 
         reviewScoreLabel.setText("Review Score: (9) ★★★★★");
-        bioLabel.setText("Hi! I am " + fullName + ". I love exploring new cultures!");
+        bioLabel.setText(userProfile.getBiography());
 
 
         try {
-            String cleanName = imgName.toLowerCase().replaceAll("\\s+", "");
+            String cleanName = userProfile.getId().toLowerCase().replaceAll("\\s+", "");
             String path = "/images/" + cleanName + ".jpg";
             if (getClass().getResource(path) == null) {
                 path = "/images/" + cleanName + ".png";
@@ -57,7 +60,7 @@ public class OtherProfileController {
                 profileImageCircle.setFill(Color.LIGHTGRAY);
             }
         } catch (Exception e) {
-            System.out.println("Resim yüklenemedi: " + imgName);
+            System.out.println("Resim yüklenemedi: " + "");
         }
 
 

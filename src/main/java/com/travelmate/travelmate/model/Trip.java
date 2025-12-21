@@ -26,7 +26,7 @@ public class Trip {
     private String itinerary;
     private Date departureDate;
     private Date endDate;
-    private User user;
+    private String user;
     private ArrayList<String> joinedMates;
     private ArrayList<String> pendingMates;
     private TripChat tripChat;
@@ -39,7 +39,7 @@ public class Trip {
     }
 
     public Trip(String id, String destination, String departureLocation, int days,
-                int averageBudget, String currency, Date departureDate, Date endDate, User user, String itinerary, int mateCount, String additionalNotes) throws ExecutionException, InterruptedException {
+                int averageBudget, String currency, Date departureDate, Date endDate, String user, String itinerary, int mateCount, String additionalNotes) throws ExecutionException, InterruptedException {
         this.id = id;
         this.destination = destination;
         this.departureLocation = departureLocation;
@@ -59,7 +59,7 @@ public class Trip {
     }
 
     public Trip(String id, String destination, String departureLocation, int days,
-                int averageBudget, String currency, LocalDate departureDate, LocalDate endDate, User user, String itinerary, int mateCount, String additionalNotes) throws ExecutionException, InterruptedException {
+                int averageBudget, String currency, LocalDate departureDate, LocalDate endDate, String user, String itinerary, int mateCount, String additionalNotes) throws ExecutionException, InterruptedException {
         this.id = id;
         this.destination = destination;
         this.departureLocation = departureLocation;
@@ -81,7 +81,7 @@ public class Trip {
         this.additionalNotes = additionalNotes;
 
         // This is safe to keep here as it's part of your creation logic
-        user.addTripRequest(this);
+        UserList.getUser(user).addTripRequest(this);
         updateTrip();
     }
 
@@ -101,7 +101,7 @@ public class Trip {
             this.endDate = data.getDate("endDate");
 
             if (data.getString("user") != null) {
-                this.user = UserList.getUser(data.getString("user"));
+                this.user = data.getString("user");
             }
 
             this.joinedMates = (ArrayList<String>) data.get("joinedMates");
@@ -127,7 +127,7 @@ public class Trip {
         data.put("currency", currency);
         data.put("departureDate", departureDate);
         data.put("endDate", endDate);
-        data.put("user", user != null ? user.getId() : null); // Store ID, not full object
+        data.put("user", user != null ? user : null); // Store ID, not full object
         data.put("joinedMates", joinedMates);
         data.put("pendingMates", pendingMates);
         data.put("mateCount", mateCount);
@@ -184,7 +184,7 @@ public class Trip {
     public String getItinerary() { return itinerary; }
     public Date getDepartureDate() { return departureDate; }
     public Date getEndDate() { return endDate; }
-    public User getUser() { return user; }
+    public String getUser() { return user; }
     public ArrayList<String> getJoinedMates() { return joinedMates; }
     public ArrayList<String> getPendingMates() { return pendingMates; }
 

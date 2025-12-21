@@ -4,6 +4,7 @@ import com.travelmate.travelmate.model.ChatRoom;
 import com.travelmate.travelmate.model.DirectMessage;
 import com.travelmate.travelmate.model.Message;
 import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.ChatList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -104,7 +105,7 @@ public class ChatController implements Initializable {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
                     // Fetch ChatRoom
-                    DirectMessage room = new DirectMessage(chatId);
+                    DirectMessage room = (DirectMessage) ChatList.getChat(chatId);
                     myChats.add(room);
 
                     // Fetch Friend

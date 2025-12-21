@@ -20,7 +20,7 @@ public class Main extends Application {
         HobbyList.listAllHobbies();
         TripTypeList.listAllTripTypes();
         ChannelList.loadAllChannels();
-        ChannelChatList.loadAllChannels();
+        ChatList.loadAllChats();
         TripList.loadAllTrips();
         Parent root = FXMLLoader.load(getClass().getResource("/view/sign-in-page.fxml"));        //StackPane root = new StackPane();
         Scene scene = new Scene(root);

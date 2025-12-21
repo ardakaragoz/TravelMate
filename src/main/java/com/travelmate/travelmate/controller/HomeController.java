@@ -14,6 +14,7 @@ import com.travelmate.travelmate.model.Trip;
 import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.session.CityList;
 import com.travelmate.travelmate.session.TripList;
+import com.travelmate.travelmate.session.UserList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -126,7 +127,7 @@ public class HomeController {
                 for (Trip trip : randomTrips) {
                     // Pre-fetch owner data in background
                     User owner = null;
-                    try { owner = trip.getUser(); } catch (Exception e) { continue; }
+                    try { owner = UserList.getUser(trip.getUser()); } catch (Exception e) { continue; }
 
                     final User finalOwner = owner;
 
@@ -146,7 +147,8 @@ public class HomeController {
                                 trip.getAverageBudget(),
                                 50, // Default compatibility to avoid blocking
                                 trip.getDestinationName(),
-                                trip.getAdditionalNotes()
+                                trip.getAdditionalNotes(),
+                                finalOwner.getId()
                         );
                     });
                 }
@@ -269,7 +271,7 @@ public class HomeController {
     }
 
     private void addTripCard(String username, int lvl, String userImg, String from, String date, int days,
-                             int found, int totalMate, int budget, int score, String destCity, String description) {
+                             int found, int totalMate, int budget, int score, String destCity, String description, String ownerID) {
         HBox card = new HBox();
         card.setPrefHeight(220); card.setPrefWidth(800);
         card.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 3; -fx-border-radius: 20;");
@@ -289,7 +291,7 @@ public class HomeController {
         Region r1 = new Region(); HBox.setHgrow(r1, Priority.ALWAYS);
         Button viewProfileBtn = createStyledButton("View Profile", 13);
 
-        viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, username, userImg, lvl));
+        viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, ownerID));
 
         topRow.getChildren().addAll(profilePic, nameBox, r1, viewProfileBtn);
 
@@ -437,13 +439,13 @@ public class HomeController {
         if (mainContainer != null) mainContainer.setEffect(null);
         if (helpPopup != null) helpPopup.setVisible(false);
     }
-    private void switchToOtherProfile(javafx.event.ActionEvent event, String username, String imgName, int lvl) {
+    private void switchToOtherProfile(javafx.event.ActionEvent event, String userID) {
         try {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
             javafx.scene.Parent root = loader.load();
             OtherProfileController controller = loader.getController();
             javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
-            controller.setProfileData(currentScene, username, username, lvl, imgName);
+            controller.setProfileData(currentScene, userID);
             javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
             stage.getScene().setRoot(root);
 
