@@ -14,15 +14,15 @@ import java.util.concurrent.ExecutionException;
 public class Main extends Application {
     @Override
     public void start(Stage stage) throws IOException, ExecutionException, InterruptedException {
-        FirebaseService.initialize();
-        UserList.loadAllUsers();
-        CityList.listAllCities();
-        HobbyList.listAllHobbies();
-        TripTypeList.listAllTripTypes();
-        ChannelList.loadAllChannels();
-        ChatList.loadAllChats();
-        TripList.loadAllTrips();
-        Parent root = FXMLLoader.load(getClass().getResource("/view/sign-in-page.fxml"));        //StackPane root = new StackPane();
+        //FirebaseService.initialize();
+        //UserList.loadAllUsers();
+        //CityList.listAllCities();
+        //HobbyList.listAllHobbies();
+        //TripTypeList.listAllTripTypes();
+        //ChannelList.loadAllChannels();
+        //ChatList.loadAllChats();
+        //TripList.loadAllTrips();
+        Parent root = FXMLLoader.load(getClass().getResource("/view/MyTrips.fxml"));        //StackPane root = new StackPane();
         Scene scene = new Scene(root);
         stage.setTitle("TravelMate");
         stage.setScene(scene);
