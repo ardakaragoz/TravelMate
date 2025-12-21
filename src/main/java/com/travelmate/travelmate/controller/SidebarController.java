@@ -22,9 +22,11 @@ public class SidebarController {
     public void setActivePage(String pageName) {
         resetStyles();
 
-        // Green Background, Navy Border, Navy Text
-        String activeStyle = "-fx-background-color: #CCFF00; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px;";
-        String activeChatStyle = "-fx-background-color: #CCFF00; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px;";
+        // Active Style (Green) - With Transparent Focus Fix
+        String activeStyle = "-fx-background-color: #CCFF00; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
+
+        // Active Chat Style - With Transparent Focus Fix
+        String activeChatStyle = "-fx-background-color: #CCFF00; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 
         switch (pageName) {
             case "Home": if (homeButton != null) homeButton.setStyle(activeStyle); break;
@@ -37,9 +39,11 @@ public class SidebarController {
     }
 
     private void resetStyles() {
-        // White Background, Navy Border, Navy Text
-        String defaultStyle = "-fx-background-color: WHITE; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px;";
-        String defaultChatStyle = "-fx-background-color: WHITE; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px;";
+        // Default Style (White) - With Transparent Focus Fix
+        String defaultStyle = "-fx-background-color: WHITE; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
+
+        // Default Chat Style - With Transparent Focus Fix
+        String defaultChatStyle = "-fx-background-color: WHITE; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 
         if (homeButton != null) homeButton.setStyle(defaultStyle);
         if (myTripsButton != null) myTripsButton.setStyle(defaultStyle);
