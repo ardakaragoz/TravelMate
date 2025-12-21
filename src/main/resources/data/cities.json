@@ -1,0 +1,218 @@
+[
+  {
+    "name": "Amsterdam",
+    "funPoint": 10,
+    "culturePoint": 9,
+    "chillPoint": 6
+  },
+  {
+    "name": "Athens",
+    "funPoint": 8,
+    "culturePoint": 10,
+    "chillPoint": 6
+  },
+  {
+    "name": "Bangkok",
+    "funPoint": 10,
+    "culturePoint": 8,
+    "chillPoint": 5
+  },
+  {
+    "name": "Barcelona",
+    "funPoint": 10,
+    "culturePoint": 10,
+    "chillPoint": 6
+  },
+  {
+    "name": "Belgrade",
+    "funPoint": 9,
+    "culturePoint": 7,
+    "chillPoint": 5
+  },
+  {
+    "name": "Brussels",
+    "funPoint": 7,
+    "culturePoint": 9,
+    "chillPoint": 6
+  },
+  {
+    "name": "Budapest",
+    "funPoint": 9,
+    "culturePoint": 9,
+    "chillPoint": 6
+  },
+  {
+    "name": "Cairo",
+    "funPoint": 7,
+    "culturePoint": 10,
+    "chillPoint": 2
+  },
+  {
+    "name": "Copenhagen",
+    "funPoint": 8,
+    "culturePoint": 8,
+    "chillPoint": 8
+  },
+  {
+    "name": "Dubai",
+    "funPoint": 9,
+    "culturePoint": 4,
+    "chillPoint": 7
+  },
+  {
+    "name": "Dublin",
+    "funPoint": 9,
+    "culturePoint": 8,
+    "chillPoint": 6
+  },
+  {
+    "name": "Edinburgh",
+    "funPoint": 8,
+    "culturePoint": 10,
+    "chillPoint": 8
+  },
+  {
+    "name": "Florence",
+    "funPoint": 5,
+    "culturePoint": 10,
+    "chillPoint": 7
+  },
+  {
+    "name": "Gaziantep",
+    "funPoint": 4,
+    "culturePoint": 10,
+    "chillPoint": 5
+  },
+  {
+    "name": "Helsinki",
+    "funPoint": 6,
+    "culturePoint": 7,
+    "chillPoint": 8
+  },
+  {
+    "name": "Ibiza",
+    "funPoint": 10,
+    "culturePoint": 2,
+    "chillPoint": 6
+  },
+  {
+    "name": "Istanbul",
+    "funPoint": 10,
+    "culturePoint": 10,
+    "chillPoint": 3
+  },
+  {
+    "name": "Izmir",
+    "funPoint": 9,
+    "culturePoint": 8,
+    "chillPoint": 8
+  },
+  {
+    "name": "Kayseri",
+    "funPoint": 2,
+    "culturePoint": 7,
+    "chillPoint": 6
+  },
+  {
+    "name": "Kigali",
+    "funPoint": 5,
+    "culturePoint": 6,
+    "chillPoint": 7
+  },
+  {
+    "name": "Lisbon",
+    "funPoint": 8,
+    "culturePoint": 8,
+    "chillPoint": 7
+  },
+  {
+    "name": "London",
+    "funPoint": 10,
+    "culturePoint": 10,
+    "chillPoint": 4
+  },
+  {
+    "name": "Miami",
+    "funPoint": 10,
+    "culturePoint": 5,
+    "chillPoint": 7
+  },
+  {
+    "name": "Milano",
+    "funPoint": 9,
+    "culturePoint": 9,
+    "chillPoint": 5
+  },
+  {
+    "name": "Munich",
+    "funPoint": 9,
+    "culturePoint": 8,
+    "chillPoint": 7
+  },
+  {
+    "name": "Oslo",
+    "funPoint": 6,
+    "culturePoint": 8,
+    "chillPoint": 8
+  },
+  {
+    "name": "Paris",
+    "funPoint": 10,
+    "culturePoint": 10,
+    "chillPoint": 5
+  },
+  {
+    "name": "Phuket",
+    "funPoint": 10,
+    "culturePoint": 6,
+    "chillPoint": 8
+  },
+  {
+    "name": "Prague",
+    "funPoint": 9,
+    "culturePoint": 9,
+    "chillPoint": 7
+  },
+  {
+    "name": "Rome",
+    "funPoint": 8,
+    "culturePoint": 10,
+    "chillPoint": 6
+  },
+  {
+    "name": "Seoul",
+    "funPoint": 10,
+    "culturePoint": 9,
+    "chillPoint": 6
+  },
+  {
+    "name": "Stockholm",
+    "funPoint": 7,
+    "culturePoint": 8,
+    "chillPoint": 8
+  },
+  {
+    "name": "Tokyo",
+    "funPoint": 9,
+    "culturePoint": 10,
+    "chillPoint": 6
+  },
+  {
+    "name": "Venice",
+    "funPoint": 6,
+    "culturePoint": 10,
+    "chillPoint": 5
+  },
+  {
+    "name": "Warsaw",
+    "funPoint": 8,
+    "culturePoint": 8,
+    "chillPoint": 6
+  },
+  {
+    "name": "Wien",
+    "funPoint": 7,
+    "culturePoint": 10,
+    "chillPoint": 7
+  }
+]

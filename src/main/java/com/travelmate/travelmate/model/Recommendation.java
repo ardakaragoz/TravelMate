@@ -17,19 +17,23 @@ public class Recommendation {
     private Channel channel;
     private Date createdAt;
     private String status;
+    private String link;
     private Firestore db = FirebaseService.getFirestore();
 
-    public Recommendation(String id, String message, User sender, Channel channel) {
+    public Recommendation(String id, String message, User sender, Channel channel, String link) {
         this.id = id;
         this.message = message;
         this.sender = sender;
         this.channel = channel;
         this.createdAt = new Date();
         this.status = "PENDING";
+        this.link = link;
         Map<String, Object> recoMap = new HashMap<>();
         recoMap.put("message", message);
         recoMap.put("sender", sender);
         recoMap.put("createdAt", (long) createdAt.getTime());
+        recoMap.put("status", status);
+        recoMap.put("link", link);
         db.collection("recommendations").document(id).set(recoMap);
     }
 
@@ -39,6 +43,8 @@ public class Recommendation {
         this.message = data.getString("message");
         this.sender = UserList.getUser(data.getString("sender"));
         this.createdAt = new Date(data.getLong("createdAt"));
+        this.status = data.getString("status");
+        this.link = data.getString("link");
     }
 
 
@@ -51,6 +57,10 @@ public class Recommendation {
     public Channel getChannel() { return channel; }
     public Date getCreatedAt() { return createdAt; }
     public String getStatus() { return status; }
+
+    public String getLink() {
+        return link;
+    }
 
     // Setters
     public void setStatus(String status) {

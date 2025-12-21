@@ -1,18 +1,17 @@
 package com.travelmate.travelmate.session;
 
-import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutureCallback;
-import com.google.api.core.ApiFutures;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QuerySnapshot;
-import com.travelmate.travelmate.firebase.FirebaseService;
-import com.travelmate.travelmate.model.City;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
-import com.travelmate.travelmate.model.Hobby;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.travelmate.travelmate.model.TripTypes;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
 
 public class TripTypeList {
     public static HashMap<String, TripTypes> triptypes = new HashMap<>();
@@ -25,37 +24,48 @@ public class TripTypeList {
         return triptypes.get(name);
     }
 
-    public static void listAllTripTypes(){
-        Firestore db = FirebaseService.getFirestore();
-        ApiFuture<QuerySnapshot> future = db.collection("trip_types").get();
+    // JSON Karşılığı Ara Sınıf
+    public static class TripTypeJson {
+        public String name;
+        public int funPoint;
+        public int culturePoint;
+        public int chillPoint;
+    }
 
-        ApiFutures.addCallback(future, new ApiFutureCallback<QuerySnapshot>() {
-            @Override
-            public void onSuccess(QuerySnapshot snapshots) {
-                triptypes.clear();
-                for (QueryDocumentSnapshot doc : snapshots) {
-                    TripTypes triptype = null;
-                    try {
-                        int[] compatabilityScores = new int[3];
-                        compatabilityScores[0] = doc.getLong("funPoint").intValue();
-                        compatabilityScores[1] = doc.getLong("culturePoint").intValue();
-                        compatabilityScores[2] = doc.getLong("chillPoint").intValue();
-                        triptype = new TripTypes(doc.getId(), doc.getId(), compatabilityScores);
-                    } catch (ExecutionException e) {
-                        throw new RuntimeException(e);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    addTripType(triptype);
-                }
-                System.out.println("Başarılı! Toplam " + triptypes.size() + " trip type hafızaya alındı.");
+    public static void listAllTripTypes() {
+        try {
+            // Dosyayı resources/data klasöründen oku
+            InputStream is = TripTypeList.class.getResourceAsStream("/data/trip_types.json");
+
+            if (is == null) {
+                System.err.println("HATA: trip_types.json dosyası '/data/' klasöründe bulunamadı!");
+                return;
             }
 
-            @Override
-            public void onFailure(Throwable t) {
-                System.err.println("Hobiler yüklenirken hata oluştu: " + t.getMessage());
+            Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+
+            Gson gson = new Gson();
+            Type listType = new TypeToken<ArrayList<TripTypeJson>>(){}.getType();
+            List<TripTypeJson> jsonList = gson.fromJson(reader, listType);
+
+            triptypes.clear();
+            for (TripTypeJson item : jsonList) {
+                int[] scores = new int[3];
+                scores[0] = item.funPoint;
+                scores[1] = item.culturePoint;
+                scores[2] = item.chillPoint;
+
+                // TripTypes constructor yapına göre: (id, name, scores)
+                TripTypes tripType = new TripTypes(item.name, item.name, scores);
+
+                addTripType(tripType);
             }
-        }, Runnable::run);
+
+            System.out.println("Başarılı! JSON'dan " + triptypes.size() + " trip type yüklendi.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("TripTypes JSON'dan yüklenirken hata oluştu.");
+        }
     }
 }
-

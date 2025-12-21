@@ -1,0 +1,104 @@
+[
+  {
+    "name": "Adrenaline Rush",
+    "funPoint": 10,
+    "culturePoint": 2,
+    "chillPoint": 4
+  },
+  {
+    "name": "Backpacking",
+    "funPoint": 8,
+    "culturePoint": 8,
+    "chillPoint": 3
+  },
+  {
+    "name": "Business Trip",
+    "funPoint": 3,
+    "culturePoint": 6,
+    "chillPoint": 5
+  },
+  {
+    "name": "Cultural Immersion",
+    "funPoint": 3,
+    "culturePoint": 10,
+    "chillPoint": 5
+  },
+  {
+    "name": "Family Holiday",
+    "funPoint": 7,
+    "culturePoint": 7,
+    "chillPoint": 8
+  },
+  {
+    "name": "Festivals",
+    "funPoint": 10,
+    "culturePoint": 8,
+    "chillPoint": 2
+  },
+  {
+    "name": "Gastronomy",
+    "funPoint": 7,
+    "culturePoint": 9,
+    "chillPoint": 6
+  },
+  {
+    "name": "History Buff",
+    "funPoint": 2,
+    "culturePoint": 10,
+    "chillPoint": 6
+  },
+  {
+    "name": "Luxury Travel",
+    "funPoint": 8,
+    "culturePoint": 5,
+    "chillPoint": 9
+  },
+  {
+    "name": "Nightlife",
+    "funPoint": 10,
+    "culturePoint": 2,
+    "chillPoint": 1
+  },
+  {
+    "name": "Photography Expedition",
+    "funPoint": 4,
+    "culturePoint": 8,
+    "chillPoint": 7
+  },
+  {
+    "name": "Romantic Getaway",
+    "funPoint": 6,
+    "culturePoint": 7,
+    "chillPoint": 9
+  },
+  {
+    "name": "Shopping Spree",
+    "funPoint": 9,
+    "culturePoint": 4,
+    "chillPoint": 4
+  },
+  {
+    "name": "Solo Adventure",
+    "funPoint": 8,
+    "culturePoint": 7,
+    "chillPoint": 6
+  },
+  {
+    "name": "Spiritual Journey",
+    "funPoint": 2,
+    "culturePoint": 9,
+    "chillPoint": 9
+  },
+  {
+    "name": "Wellness Retreat",
+    "funPoint": 2,
+    "culturePoint": 2,
+    "chillPoint": 10
+  },
+  {
+    "name": "Workation",
+    "funPoint": 6,
+    "culturePoint": 6,
+    "chillPoint": 8
+  }
+]
