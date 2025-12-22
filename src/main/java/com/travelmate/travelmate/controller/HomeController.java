@@ -169,7 +169,7 @@ public class HomeController {
                 List<Trip> allTrips = new ArrayList<>();
                 for (String tripID : TripList.trips.keySet()){
                     Trip trip = TripList.getTrip(tripID);
-                    if (!trip.isFinished() && trip.getUser().equals(currentUser.getId())){
+                    if (!trip.isFinished() && !trip.getUser().equals(currentUser.getId())){
                         boolean pass = maxBudget == 0 || trip.getAverageBudget() <= maxBudget;
                         System.out.println(pass);
                         if (pass && days != 0 && trip.getDays() != days) pass = false;
@@ -217,7 +217,7 @@ public class HomeController {
             try {
                 List<Trip> allTrips = new ArrayList<>();
                 for (String tripID : TripList.trips.keySet()){
-                    if (!TripList.getTrip(tripID).isFinished()) allTrips.add(TripList.getTrip(tripID));
+                    if (!TripList.getTrip(tripID).isFinished() && !TripList.getTrip(tripID).getUser().equals(currentUser.getId())) allTrips.add(TripList.getTrip(tripID));
                 }
                 Collections.shuffle(allTrips);
                 List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
