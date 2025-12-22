@@ -38,6 +38,12 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -71,6 +77,9 @@ public class HomeController {
     @FXML private ProgressBar compatibilityScoreBar;
     @FXML private Label compalibilityScoreLabel;
 
+
+
+    // --- DETAILS POPUP ---
     @FXML private VBox detailsPopup;
     @FXML private Circle detailsProfilePic;
     @FXML private Label detailsOwnerName;
@@ -205,6 +214,34 @@ public class HomeController {
         }, networkExecutor);
     }
 
+
+    private void loadRandomTrips() {
+        CompletableFuture.runAsync(() -> {
+            List<Trip> allTrips = new ArrayList<>(TripList.trips.values());
+            Collections.shuffle(allTrips);
+            // Limit to 10 for performance
+            List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
+
+            for (Trip trip : randomTrips) {
+                User owner = null;
+                try { owner = UserList.getUser(trip.getUser()); } catch (Exception e) { continue; }
+                final User finalOwner = owner;
+                Platform.runLater(() -> { if (finalOwner != null) addTripCard(trip, finalOwner); });
+            }
+        }, networkExecutor);
+    }
+    private String formatToHttps(String gsUrl) {
+        if (gsUrl == null || gsUrl.isEmpty()) return null;
+        if (gsUrl.startsWith("http")) return gsUrl;
+        try {
+            if (gsUrl.startsWith("gs://")) {
+                String cleanPath = gsUrl.substring(5);
+                int bucketSeparator = cleanPath.indexOf('/');
+                if (bucketSeparator != -1) {
+                    String bucket = cleanPath.substring(0, bucketSeparator);
+                    String path = cleanPath.substring(bucketSeparator + 1);
+                    String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                    return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
     public LocalDate convertToLocalDateViaInstant(Date dateToConvert) {
         return dateToConvert.toInstant()
                 .atZone(ZoneId.systemDefault())
@@ -219,22 +256,39 @@ public class HomeController {
                 for (String tripID : TripList.trips.keySet()){
                     if (!TripList.getTrip(tripID).isFinished() && !TripList.getTrip(tripID).getUser().equals(currentUser.getId())) allTrips.add(TripList.getTrip(tripID));
                 }
-                Collections.shuffle(allTrips);
-                List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
 
-                for (Trip trip : randomTrips) {
-                    User owner = null;
-                    try { owner = UserList.getUser(trip.getUser()); } catch (Exception e) { continue; }
-                    final User finalOwner = owner;
+    private void setProfileImage(Circle targetCircle, User user) {
+        if (targetCircle == null) return;
 
-                    Platform.runLater(() -> {
-                        if (finalOwner != null) addTripCard(trip, finalOwner);
-                    });
+        targetCircle.setFill(Color.LIGHTGRAY); // Placeholder
+
+        new Thread(() -> {
+            Image imageToSet = null;
+            try {
+                if (user.getProfile() != null) {
+                    String rawUrl = user.getProfile().getProfilePictureUrl();
+                    String secureUrl = formatToHttps(rawUrl);
+                    if (secureUrl != null && !secureUrl.isEmpty()) {
+                        imageToSet = new Image(secureUrl, false);
+                    }
+                }
+                if (imageToSet == null || imageToSet.isError()) {
+                    var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
+                    if (resource != null) imageToSet = new Image(resource);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Home Image Error: " + e.getMessage());
             }
-        }, networkExecutor);
+
+            if (imageToSet != null) {
+                final Image finalImg = imageToSet;
+                Platform.runLater(() -> targetCircle.setFill(new ImagePattern(finalImg)));
+            }
+        }).start();
     }
 
     private void addTripCard(Trip trip, User owner) {
@@ -250,6 +304,7 @@ public class HomeController {
         HBox topRow = new HBox(10); topRow.setAlignment(Pos.CENTER_LEFT);
         Circle profilePic = new Circle(22, Color.LIGHTGRAY); profilePic.setStroke(Color.BLACK);
         setCircleImage(profilePic, owner.getUsername());
+        setProfileImage(profilePic, owner);
 
         VBox nameBox = new VBox();
         nameBox.getChildren().addAll(createBoldLabel(owner.getUsername(), 16), createGrayLabel("Lvl. " + owner.getLevel(), 14));
