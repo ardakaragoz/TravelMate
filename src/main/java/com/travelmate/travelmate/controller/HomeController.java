@@ -109,7 +109,7 @@ public class HomeController {
             try {
                 List<Trip> allTrips = new ArrayList<>();
                 for (String tripID : TripList.trips.keySet()){
-                    if (!TripList.getTrip(tripID).isFinished()) allTrips.add(TripList.getTrip(tripID));
+                    if (!TripList.getTrip(tripID).isFinished() && !TripList.getTrip(tripID).getUser().equals(currentUser.getId())) allTrips.add(TripList.getTrip(tripID));
                 }
                 Collections.shuffle(allTrips);
                 List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
