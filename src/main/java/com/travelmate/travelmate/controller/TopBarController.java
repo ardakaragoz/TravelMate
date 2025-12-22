@@ -17,7 +17,10 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
+
 
 public class TopBarController {
 
@@ -42,33 +45,26 @@ public class TopBarController {
             userLevelLabel.setText("");
         }
     }
+
+    // --- BUTTON ANIMATIONS ---
     @FXML
     private void handleMousePressed(MouseEvent event) {
         if (event.getSource() instanceof Button) {
             Button btn = (Button) event.getSource();
-
-            // 1. Move Button Down (Simulate Push)
             btn.setTranslateY(4);
-
-            // 2. Shrink Shadow (Simulate getting closer to surface)
             if (btn.getEffect() instanceof DropShadow) {
-                DropShadow shadow = (DropShadow) btn.getEffect();
-                shadow.setOffsetY(2.0); // Shadow gets shorter
+                ((DropShadow) btn.getEffect()).setOffsetY(2.0);
             }
         }
     }
+
     @FXML
     private void handleMouseReleased(MouseEvent event) {
         if (event.getSource() instanceof Button) {
             Button btn = (Button) event.getSource();
-
-            // 1. Reset Position
             btn.setTranslateY(0);
-
-            // 2. Reset Shadow
             if (btn.getEffect() instanceof DropShadow) {
-                DropShadow shadow = (DropShadow) btn.getEffect();
-                shadow.setOffsetY(7.0); // Shadow returns to normal height
+                ((DropShadow) btn.getEffect()).setOffsetY(7.0);
             }
         }
     }
@@ -80,18 +76,25 @@ public class TopBarController {
             Image imageToSet = null;
             try {
                 if (user.getProfile() != null) {
-                    String url = user.getProfile().getProfilePictureUrl();
-                    if (url != null && !url.isEmpty() && url.startsWith("http")) {
-                        imageToSet = new Image(url, true);
+                    String rawUrl = user.getProfile().getProfilePictureUrl();
+
+                    // CONVERSION STEP: Fix the gs:// link
+                    String secureUrl = formatToHttps(rawUrl);
+
+                    if (secureUrl != null && !secureUrl.isEmpty()) {
+                        // Load in background (false = synchronous in this thread)
+                        imageToSet = new Image(secureUrl, false);
                     }
                 }
-                if (imageToSet == null) {
-                    var resource = getClass().getResourceAsStream("/images/user_icon.png");
-                    if (resource == null) resource = getClass().getResourceAsStream("/images/logoBlue.png");
+
+                // Fallback to local default if URL failed
+                if (imageToSet == null || imageToSet.isError()) {
+                    // Using the file we know exists in your project
+                    var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
                     if (resource != null) imageToSet = new Image(resource);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("TopBar Image Error: " + e.getMessage());
             }
 
             if (imageToSet != null) {
@@ -101,6 +104,28 @@ public class TopBarController {
         }).start();
     }
 
+    // COPY THIS HELPER METHOD INTO THE CLASS
+    private String formatToHttps(String url) {
+        if (url == null || !url.startsWith("gs://")) return url;
+        try {
+            // Remove "gs://"
+            String temp = url.substring(5);
+            // Find the first slash separating bucket from path
+            int firstSlash = temp.indexOf("/");
+            if (firstSlash > 0) {
+                String bucket = temp.substring(0, firstSlash);
+                String path = temp.substring(firstSlash + 1);
+                // Encode the path (fixes spaces and @ symbols)
+                String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return url;
+    }
+
+    @FXML
     public void handleProfileClick(MouseEvent event) {
         switchPage(event, "/view/Profile.fxml");
     }
@@ -117,7 +142,6 @@ public class TopBarController {
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {
-            System.err.println("Sayfa açılamadı: " + fxmlPath);
             e.printStackTrace();
         }
     }

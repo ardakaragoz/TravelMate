@@ -5,10 +5,16 @@ import com.travelmate.travelmate.model.Profile;
 import com.travelmate.travelmate.model.TripTypes;
 import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.session.UserSession;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.effect.GaussianBlur;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
@@ -16,11 +22,15 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.image.Image;
-import javafx.scene.effect.GaussianBlur;
-import javafx.event.ActionEvent;
+import javafx.stage.Stage;
+import javafx.scene.Node;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
+
 
 public class ProfileController {
 
@@ -29,7 +39,7 @@ public class ProfileController {
     @FXML private Label fullNameLabel;
     @FXML private Label usernameLabel;
     @FXML private Label levelLabel;
-    @FXML private ProgressBar levelProgressBar; // YENİ EKLENDİ
+    @FXML private ProgressBar levelProgressBar;
     @FXML private Label reviewScoreLabel;
     @FXML private Label bioLabel;
     @FXML private FlowPane hobbiesContainer;
@@ -44,9 +54,11 @@ public class ProfileController {
     private void loadUserData() throws ExecutionException, InterruptedException {
         User user = UserSession.getCurrentUser();
         Profile profile = user.getProfile();
+
         fullNameLabel.setText(user.getName());
         usernameLabel.setText("@" + user.getUsername() + ", " + user.getAge());
         levelLabel.setText("Level " + user.getLevel());
+
         if (levelProgressBar != null) {
             double progress = 0.1 * (user.getLevelPoint() % 10);
             levelProgressBar.setProgress(progress);
@@ -55,7 +67,22 @@ public class ProfileController {
         reviewScoreLabel.setText("Review Score: (9)");
         bioLabel.setText(profile.getBiography());
         pastTripsLabel.setText("Budapest, Rome, Maldives, New York");
-        setProfileImage("user1");
+
+        String rawUrl = profile.getProfilePictureUrl();
+        String secureUrl = formatToHttps(rawUrl);
+
+        // 2. Load Image
+        if (secureUrl != null && !secureUrl.isEmpty()) {
+            try {
+                // 'true' allows background loading
+                Image img = new Image(secureUrl, true);
+                profileImageCircle.setFill(new ImagePattern(img));
+            } catch (Exception e) {
+                loadDefaultImage();
+            }
+        } else {
+            loadDefaultImage();
+        }
 
         for (Hobby hobby : profile.getHobbies()){
             addTag(hobbiesContainer, hobby.getName(), "#CCFF00");
@@ -64,6 +91,36 @@ public class ProfileController {
         for (TripTypes triptype : profile.getFavoriteTripTypes()) {
             addTag(tripTypesContainer, "Cruise", "#a4c2f2");
         }
+    }
+    private void loadDefaultImage() {
+        try {
+            InputStream stream = getClass().getResourceAsStream("/images/user_icons/img.png");
+            if (stream != null) {
+                profileImageCircle.setFill(new ImagePattern(new Image(stream)));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // --- NEW METHOD: Loads image in background to prevent crashes ---
+
+
+    private String formatToHttps(String url) {
+        if (url == null || !url.startsWith("gs://")) return url;
+        try {
+            String temp = url.substring(5);
+            int firstSlash = temp.indexOf("/");
+            if (firstSlash > 0) {
+                String bucket = temp.substring(0, firstSlash);
+                String path = temp.substring(firstSlash + 1);
+                String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return url;
     }
 
     @FXML
@@ -81,18 +138,19 @@ public class ProfileController {
     @FXML
     public void logoutButton(ActionEvent event) throws IOException {
         UserSession.setCurrentUser(null);
-        javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/sign-in-page.fxml"));
-        javafx.scene.Parent root = loader.load();
-        javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-        stage.getScene().setRoot(root);
+        changeScene(event, "/view/sign-in-page.fxml");
     }
 
     @FXML
     public void handleEditProfileButton(ActionEvent event) {
+        changeScene(event, "/view/EditProfile.fxml");
+    }
+
+    private void changeScene(ActionEvent event, String fxmlPath) {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/EditProfile.fxml"));
-            javafx.scene.Parent root = loader.load();
-            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.getScene().setRoot(root);
         } catch (IOException e) {
             e.printStackTrace();
@@ -104,15 +162,5 @@ public class ProfileController {
         tag.setStyle("-fx-background-color: " + colorHex + "; -fx-background-radius: 15; -fx-padding: 5 15 5 15; -fx-border-color: black; -fx-border-radius: 15;");
         tag.setFont(Font.font("System", FontWeight.BOLD, 14));
         container.getChildren().add(tag);
-    }
-
-    private void setProfileImage(String imageName) {
-        try {
-            String path = "/images/" + imageName + ".png";
-            if (getClass().getResource(path) != null) {
-                Image img = new Image(getClass().getResourceAsStream(path));
-                profileImageCircle.setFill(new ImagePattern(img));
-            }
-        } catch (Exception e) {}
     }
 }
