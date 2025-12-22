@@ -153,6 +153,18 @@ public class User {
         req.getTrip().removePendingMate(mate);
     }
 
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public void addRecommendation(Recommendation recommendation) throws ExecutionException, InterruptedException {
         this.recommendations.add(recommendation.getId());
         updateUser();
