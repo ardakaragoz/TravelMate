@@ -3,6 +3,7 @@ package com.travelmate.travelmate.model;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.session.ChannelList;
 import com.travelmate.travelmate.session.UserList;
 
 import java.util.Date;
@@ -30,10 +31,11 @@ public class Recommendation {
         this.link = link;
         Map<String, Object> recoMap = new HashMap<>();
         recoMap.put("message", message);
-        recoMap.put("sender", sender);
+        recoMap.put("sender", sender.getId());
         recoMap.put("createdAt", (long) createdAt.getTime());
         recoMap.put("status", status);
         recoMap.put("link", link);
+        recoMap.put("channel", channel.getId());
         db.collection("recommendations").document(id).set(recoMap);
     }
 
@@ -45,6 +47,7 @@ public class Recommendation {
         this.createdAt = new Date(data.getLong("createdAt"));
         this.status = data.getString("status");
         this.link = data.getString("link");
+        this.channel = ChannelList.getChannel(data.getString("channel"));
     }
 
 

@@ -44,6 +44,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -57,6 +60,16 @@ public class HomeController {
     @FXML private VBox tripsContainer;
     @FXML private SidebarController sidebarController;
     @FXML private TextField searchField;
+
+    @FXML private VBox filterPopup;
+    @FXML private Slider budgetSlider;
+    @FXML private Label budgetValueLabel;
+    @FXML private Spinner<Integer> daysSpinner;
+    @FXML private Spinner<Integer> mateCountSpinner;
+    @FXML private TextField filterDepartureField;
+    @FXML private TextField filterDestinationField;
+    @FXML private DatePicker filterStartDate;
+    @FXML private DatePicker filterEndDate;
 
     @FXML private ImageView promotedCitiesCityImage;
     @FXML private Label promotedCityNameLabel;
@@ -73,7 +86,6 @@ public class HomeController {
     @FXML private Label detailsDescription;
     @FXML private TextArea messageInputArea;
 
-    // --- NEW: Elements for handling own trip logic ---
     @FXML private Label ownTripLabel;
     @FXML private Button sendRequestBtn;
 
@@ -106,6 +118,100 @@ public class HomeController {
             if (city != null && !city.isEmpty()) openChannelPage(event, city);
         });
         promotedCityNameLabel.setStyle("-fx-cursor: hand; -fx-background-color: #253A63; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #CCFF00;");
+
+        setupFilterComponents();
+    }
+
+    private void setupFilterComponents() {
+        if (daysSpinner != null) {
+            SpinnerValueFactory<Integer> daysFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 30, 0);
+            daysSpinner.setValueFactory(daysFactory);
+        }
+        if (mateCountSpinner != null) {
+            SpinnerValueFactory<Integer> matesFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 10, 0);
+            mateCountSpinner.setValueFactory(matesFactory);
+        }
+        if (budgetSlider != null && budgetValueLabel != null) {
+            budgetSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+                budgetValueLabel.setText((int) newVal.doubleValue() + " $");
+            });
+        }
+    }
+
+    @FXML
+    public void handleOpenFilters() {
+        if (filterPopup != null) {
+            if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
+            filterPopup.setVisible(true);
+            filterPopup.toFront();
+        }
+    }
+
+    @FXML
+    public void closeFilterPopup() {
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (filterPopup != null) filterPopup.setVisible(false);
+    }
+
+    @FXML
+    public void applyFilters() {
+
+        double maxBudget = (budgetSlider != null) ? budgetSlider.getValue() : 0;
+        int days = (daysSpinner != null && daysSpinner.getValue() != null) ? daysSpinner.getValue() : 0;
+        int mateCount = (mateCountSpinner != null && mateCountSpinner.getValue() != null) ? mateCountSpinner.getValue() : 0;
+
+        String departure = (filterDepartureField != null) ? filterDepartureField.getText() : "";
+        String destination = (filterDestinationField != null) ? filterDestinationField.getText() : "";
+
+        LocalDate startDate = (filterStartDate != null) ? filterStartDate.getValue() : null;
+        LocalDate endDate = (filterEndDate != null) ? filterEndDate.getValue() : null;
+
+        closeFilterPopup();
+        tripsContainer.getChildren().clear();
+        loadRandomTrips((int) maxBudget, days, mateCount, departure, destination, startDate, endDate);
+
+    }
+
+    private void loadRandomTrips(int maxBudget, int days, int mateCount, String departure, String destination, LocalDate startDate, LocalDate endDate) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                List<Trip> allTrips = new ArrayList<>();
+                for (String tripID : TripList.trips.keySet()){
+                    Trip trip = TripList.getTrip(tripID);
+                    if (!trip.isFinished() && !trip.getUser().equals(currentUser.getId())){
+                        boolean pass = maxBudget == 0 || trip.getAverageBudget() <= maxBudget;
+                        System.out.println(pass);
+                        if (pass && days != 0 && trip.getDays() != days) pass = false;
+                        System.out.println(pass);
+                        if (pass && mateCount != 0 && trip.getMateCount() != mateCount) pass = false;
+                        System.out.println(pass);
+                        if (pass && departure.length() > 0 && !trip.getDepartureLocation().equalsIgnoreCase(departure)) pass = false;
+                        System.out.println(pass);
+                        if (pass && destination.length() > 0 && !trip.getDestination().equalsIgnoreCase(destination)) pass = false;
+                        System.out.println(pass);
+                        if (pass && startDate != null && !startDate.equals(convertToLocalDateViaInstant(trip.getDepartureDate()))) pass = false;
+                        System.out.println(pass);
+                        if (pass && endDate != null && !endDate.equals(convertToLocalDateViaInstant(trip.getEndDate()))) pass = false;
+                        System.out.println(pass);
+                        if (pass) allTrips.add(TripList.getTrip(tripID));
+                    }
+                }
+                Collections.shuffle(allTrips);
+                List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
+
+                for (Trip trip : randomTrips) {
+                    User owner = null;
+                    try { owner = UserList.getUser(trip.getUser()); } catch (Exception e) { continue; }
+                    final User finalOwner = owner;
+
+                    Platform.runLater(() -> {
+                        if (finalOwner != null) addTripCard(trip, finalOwner);
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, networkExecutor);
     }
 
 
@@ -136,6 +242,19 @@ public class HomeController {
                     String path = cleanPath.substring(bucketSeparator + 1);
                     String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
                     return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+    public LocalDate convertToLocalDateViaInstant(Date dateToConvert) {
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
+
+    private void loadRandomTrips() {
+        CompletableFuture.runAsync(() -> {
+            try {
+                List<Trip> allTrips = new ArrayList<>();
+                for (String tripID : TripList.trips.keySet()){
+                    if (!TripList.getTrip(tripID).isFinished() && !TripList.getTrip(tripID).getUser().equals(currentUser.getId())) allTrips.add(TripList.getTrip(tripID));
                 }
             }
         } catch (Exception e) { e.printStackTrace(); }
@@ -253,7 +372,6 @@ public class HomeController {
         if (detailsProfilePic != null) setCircleImage(detailsProfilePic, owner.getUsername());
         if (detailsDescription != null) detailsDescription.setText(trip.getAdditionalNotes());
 
-        // --- LOGIC: Check if it's my own trip ---
         boolean isMyTrip = currentUser != null && currentUser.getId().equals(owner.getId());
 
         if (sendRequestBtn != null) {
@@ -448,7 +566,7 @@ public class HomeController {
 
         button.setOnMousePressed(e -> {
             javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
-            st.setToX(0.90); // %90'a küçül
+            st.setToX(0.90);
             st.setToY(0.90);
             st.play();
         });

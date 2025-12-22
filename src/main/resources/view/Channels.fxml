@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.layout.BorderPane?>
@@ -11,6 +12,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
 <StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.ChannelsController">
@@ -65,7 +67,7 @@
                                         <Button fx:id="channelJoinButton" text="Join" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 100px; -fx-cursor: hand;"/>
                                         <Button fx:id="channelChatButton" text="Chat" onAction="#handleOpenChatPopup" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 100px; -fx-cursor: hand;"/>
                                     </HBox>
-                                    <Button fx:id="channelRecsButton" text="Recommendations" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 210px; -fx-cursor: hand;"/>
+                                    <Button fx:id="channelRecsButton" text="Recommendations" onAction="#handleOpenRecommendations" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 210px; -fx-cursor: hand;"/>
                                 </VBox>
                             </children>
                         </HBox>
@@ -82,22 +84,68 @@
 
         </BorderPane>
 
-        <VBox fx:id="tripDetailsPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="500.0" spacing="15.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
-            <padding><Insets bottom="20.0" left="30.0" right="30.0" top="20.0" /></padding>
+        <VBox fx:id="tripDetailsPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="500.0" prefWidth="600.0" spacing="15.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
+            <padding><Insets bottom="20.0" left="30.0" right="30.0" top="30.0" /></padding>
             <effect><DropShadow color="#00000080" radius="30.0" /></effect>
             <children>
                 <HBox alignment="CENTER_RIGHT">
-                    <Button onAction="#closeTripDetailsPopup" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20;" text="X" textFill="WHITE">
-                        <font><Font name="System Bold" size="14.0" /></font>
-                    </Button>
+                    <children>
+                        <Button onAction="#closeTripDetailsPopup" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20;" text="X" textFill="WHITE">
+                            <font><Font name="System Bold" size="14.0" /></font>
+                            <effect><DropShadow color="#00000033" offsetX="2.0" offsetY="2.0" /></effect>
+                        </Button>
+                    </children>
                 </HBox>
-                <Label fx:id="detailDestinationLabel" text="Trip Details" textFill="#1e3a5f"><font><Font name="System Bold" size="24.0" /></font></Label>
-                <Label fx:id="detailDescLabel" text="..." wrapText="true" textFill="#555"/>
-                <HBox alignment="CENTER" spacing="20.0">
-                    <Label fx:id="detailDateLabel" text="Date" style="-fx-font-weight: bold;"/>
-                    <Label fx:id="detailBudgetLabel" text="$$$" style="-fx-font-weight: bold;"/>
+                <HBox alignment="CENTER_LEFT" spacing="20.0">
+                    <children>
+                        <StackPane>
+                            <children>
+                                <Circle fx:id="detailsProfilePic" fill="DODGERBLUE" radius="40.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="2.0" />
+                            </children>
+                            <effect><DropShadow color="#00000033" offsetX="3.0" offsetY="3.0" /></effect>
+                        </StackPane>
+                        <VBox alignment="CENTER_LEFT">
+                            <children>
+                                <Label fx:id="detailsOwnerName" text="Username" textFill="#1e3a5f">
+                                    <font><Font name="System Bold" size="24.0" /></font>
+                                </Label>
+                                <Label text="Trip Organizer" textFill="#5e5e5e">
+                                    <font><Font size="14.0" /></font>
+                                </Label>
+                            </children>
+                        </VBox>
+                    </children>
                 </HBox>
-                <Button fx:id="popupJoinButton" text="Join Trip" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-font-weight: bold;"/>
+                <VBox spacing="5.0" style="-fx-background-color: #FFE6CC; -fx-background-radius: 15; -fx-padding: 15;">
+                    <children>
+                        <Label text="Trip Description:" textFill="#1e3a5f" underline="true">
+                            <font><Font name="System Bold" size="14.0" /></font>
+                        </Label>
+                        <Label fx:id="detailsDescription" text="Description goes here..." textFill="#253A63" wrapText="true">
+                            <font><Font size="14.0" /></font>
+                        </Label>
+                    </children>
+                </VBox>
+                <VBox spacing="10.0" VBox.vgrow="ALWAYS">
+                    <children>
+                        <Label text="Send a Message:" textFill="#1e3a5f">
+                            <font><Font name="System Bold" size="16.0" /></font>
+                        </Label>
+                        <TextArea fx:id="messageInputArea" prefRowCount="3" promptText="Hi! I'm interested in your trip..." style="-fx-background-color: transparent; -fx-border-color: #1E3A5F; -fx-border-radius: 10;" wrapText="true">
+                            <font><Font size="14.0" /></font>
+                        </TextArea>
+                    </children>
+                </VBox>
+
+                <Label fx:id="ownTripLabel" managed="false" text="You are the organizer of this trip." textFill="#FF4500" visible="false">
+                    <font><Font name="System Bold" size="16.0" /></font>
+                </Label>
+
+                <Button fx:id="sendRequestBtn" onAction="#handleSendRequestButton" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Send Request">
+                    <font><Font name="System Bold" size="16.0" /></font>
+                    <padding><Insets bottom="10.0" left="30.0" right="30.0" top="10.0" /></padding>
+                    <effect><DropShadow color="#00000020" offsetX="3.0" offsetY="3.0" /></effect>
+                </Button>
             </children>
         </VBox>
 
@@ -125,6 +173,70 @@
                 <HBox alignment="CENTER" spacing="10.0" style="-fx-padding: 15; -fx-background-color: #FFF0D1; -fx-background-radius: 0 0 20 20;">
                     <TextField fx:id="chatInputPopup" promptText="Type a message..." style="-fx-background-radius: 20; -fx-padding: 10;" HBox.hgrow="ALWAYS"/>
                     <Button onAction="#handleSendPopupMessage" text="➤" style="-fx-background-color: #1E2A47; -fx-text-fill: white; -fx-background-radius: 20; -fx-min-width: 40px; -fx-min-height: 40px; -fx-cursor: hand;"/>
+                </HBox>
+            </children>
+        </VBox>
+
+        <VBox fx:id="recommendationsPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="600.0" prefWidth="550.0" spacing="15.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
+            <padding><Insets bottom="20.0" left="30.0" right="30.0" top="20.0" /></padding>
+            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <Button onAction="#closeRecommendationsPopup" style="-fx-background-color: transparent; -fx-cursor: hand;" text="Back" textFill="#1e3a5f">
+                        <font><Font name="System Bold" size="14.0" /></font>
+                    </Button>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="recsTitleLabel" text="City Recommendations" textFill="#1e3a5f">
+                        <font><Font name="System Bold" size="20.0" /></font>
+                    </Label>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label text="Back" visible="false" />
+                </HBox>
+
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+                    <content>
+                        <VBox fx:id="recommendationsContainer" spacing="15.0">
+                        </VBox>
+                    </content>
+                </ScrollPane>
+
+                <Button onAction="#openAddRecPopup" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Send Recommendation">
+                    <font><Font name="System Bold" size="16.0" /></font>
+                    <padding><Insets bottom="10.0" left="30.0" right="30.0" top="10.0" /></padding>
+                    <effect><DropShadow color="#00000020" offsetX="3.0" offsetY="3.0" /></effect>
+                </Button>
+            </children>
+        </VBox>
+
+        <VBox fx:id="addRecPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="500.0" prefWidth="500.0" spacing="20.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
+            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="30.0" /></padding>
+            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
+            <children>
+                <Label text="New Recommendation" textFill="#1e3a5f">
+                    <font><Font name="System Bold" size="24.0" /></font>
+                </Label>
+
+                <VBox spacing="5.0" alignment="CENTER_LEFT">
+                    <Label text="Your Comments:" style="-fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                    <TextArea fx:id="recCommentArea" prefRowCount="4" promptText="Write your experience..." wrapText="true" style="-fx-background-color: transparent; -fx-border-color: #1E3A5F; -fx-border-radius: 10;"/>
+                </VBox>
+
+                <VBox spacing="5.0" alignment="CENTER_LEFT">
+                    <Label text="Google Maps Link:" style="-fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                    <TextField fx:id="recLinkField" promptText="http://maps.google.com/..." style="-fx-background-radius: 10; -fx-border-color: #1E3A5F; -fx-border-radius: 10;"/>
+                </VBox>
+
+                <Region VBox.vgrow="ALWAYS" />
+
+                <HBox spacing="20.0" alignment="CENTER">
+                    <Button onAction="#closeAddRecPopup" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20;" text="Back" textFill="WHITE">
+                        <font><Font name="System Bold" size="16.0" /></font>
+                        <padding><Insets bottom="10.0" left="30.0" right="30.0" top="10.0" /></padding>
+                    </Button>
+                    <Button fx:id="sendRecommendationButton" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Send Request">
+                        <font><Font name="System Bold" size="16.0" /></font>
+                        <padding><Insets bottom="10.0" left="30.0" right="30.0" top="10.0" /></padding>
+                    </Button>
                 </HBox>
             </children>
         </VBox>

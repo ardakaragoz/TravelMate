@@ -67,7 +67,7 @@ public class Channel {
 
     public void removeParticipant(User user) throws ExecutionException, InterruptedException {
         members.remove(user.getId());
-        user.getChannels().remove(this);
+        user.leaveChannel(this);
         updateChannel();
     }
 
