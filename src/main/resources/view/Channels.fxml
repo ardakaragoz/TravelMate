@@ -3,19 +3,14 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.DropShadow?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.Circle?>
-<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
 <StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.ChannelsController">
@@ -36,125 +31,103 @@
             </left>
 
             <center>
-                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: #FFF7EA; -fx-border-color: transparent;" BorderPane.alignment="CENTER">
-                    <content>
-                        <StackPane>
+                <HBox spacing="20.0" style="-fx-background-color: #FFF7EA;" BorderPane.alignment="CENTER">
+                    <padding><Insets bottom="30.0" right="30.0" top="30.0" /></padding>
+
+                    <VBox prefWidth="320.0" spacing="15.0">
+                        <children>
+                            <TextField fx:id="searchField" promptText="Search Channel" style="-fx-background-radius: 20; -fx-border-color: #FFF; -fx-background-color: #FFF; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);">
+                                <font><Font size="16.0" /></font>
+                                <padding><Insets bottom="10.0" left="20.0" right="20.0" top="10.0" /></padding>
+                            </TextField>
+
+                            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: #FFF7EA; -fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+                                <content>
+                                    <VBox fx:id="citySelectionView" spacing="10.0" style="-fx-background-color: #FFF7EA;">
+                                    </VBox>
+                                </content>
+                            </ScrollPane>
+                        </children>
+                    </VBox>
+
+                    <VBox fx:id="channelDetailView" HBox.hgrow="ALWAYS" spacing="15.0" visible="true">
+
+                        <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: #FFCB7B; -fx-background-radius: 20; -fx-padding: 15 30 15 30;">
+                            <effect><DropShadow color="#00000020" offsetX="5.0" offsetY="5.0" /></effect>
                             <children>
+                                <Label fx:id="channelTitleLabel" text="Select a City" textFill="#1e2a47">
+                                    <font><Font name="System Bold" size="28.0" /></font>
+                                </Label>
+                                <Region HBox.hgrow="ALWAYS" />
 
-                                <VBox fx:id="citySelectionView" spacing="20.0" style="-fx-background-color: #FFF7EA;">
-                                    <padding><Insets bottom="30.0" left="40.0" right="40.0" top="30.0" /></padding>
-                                    <children>
-                                        <Label text="Search Channel" textFill="#1e3a5f">
-                                            <font><Font name="System Bold" size="28.0" /></font>
-                                        </Label>
-
-                                        <HBox alignment="CENTER_LEFT" spacing="15.0">
-                                            <children>
-                                                <TextField fx:id="searchField" promptText="Type a city name..." style="-fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-radius: 20; -fx-border-width: 2;" HBox.hgrow="ALWAYS">
-                                                    <font><Font size="18.0" /></font>
-                                                    <padding><Insets bottom="10.0" left="20.0" right="20.0" top="10.0" /></padding>
-                                                </TextField>
-                                                <Button mnemonicParsing="false" style="-fx-background-color: transparent;" text="🔍">
-                                                    <font><Font name="System Bold" size="24.0" /></font>
-                                                </Button>
-                                            </children>
-                                        </HBox>
-
-                                        <Label text="Popular Channels" textFill="#1e3a5f" underline="true">
-                                            <font><Font name="System Bold" size="22.0" /></font>
-                                        </Label>
-
-                                        <FlowPane fx:id="cityGrid" hgap="20.0" vgap="20.0" />
-                                    </children>
+                                <VBox spacing="10.0" alignment="CENTER_RIGHT">
+                                    <HBox spacing="10.0">
+                                        <Button fx:id="channelJoinButton" text="Join" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 100px; -fx-cursor: hand;"/>
+                                        <Button fx:id="channelChatButton" text="Chat" onAction="#handleOpenChatPopup" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 100px; -fx-cursor: hand;"/>
+                                    </HBox>
+                                    <Button fx:id="channelRecsButton" text="Recommendations" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 210px; -fx-cursor: hand;"/>
                                 </VBox>
-
-                                <VBox fx:id="channelDetailView" spacing="20.0" style="-fx-background-color: #FFF7EA;" visible="false">
-                                    <padding><Insets bottom="30.0" left="40.0" right="40.0" top="30.0" /></padding>
-                                    <children>
-
-                                        <HBox alignment="CENTER_LEFT" spacing="20.0">
-                                            <children>
-                                                <Button onAction="#handleBackToSelection" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20;" text="&lt; Back">
-                                                    <font><Font name="System Bold" size="14.0" /></font>
-                                                    <padding><Insets bottom="8.0" left="15.0" right="15.0" top="8.0" /></padding>
-                                                    <effect><DropShadow color="#00000033" offsetX="2.0" offsetY="2.0" /></effect>
-                                                </Button>
-                                                <Label fx:id="channelTitleLabel" text="Travel Mate London" textFill="#1e3a5f">
-                                                    <font><Font name="System Bold" size="28.0" /></font>
-                                                </Label>
-                                                <Region HBox.hgrow="ALWAYS" />
-                                                <Button style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Join Channel">
-                                                    <font><Font name="System Bold" size="14.0" /></font>
-                                                    <padding><Insets bottom="8.0" left="20.0" right="20.0" top="8.0" /></padding>
-                                                </Button>
-                                            </children>
-                                        </HBox>
-
-                                        <VBox fx:id="channelTripsContainer" spacing="20.0" />
-
-                                    </children>
-                                </VBox>
-
                             </children>
-                        </StackPane>
-                    </content>
-                </ScrollPane>
+                        </HBox>
+
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+                            <content>
+                                <VBox fx:id="channelTripsContainer" spacing="20.0" style="-fx-padding: 10;">
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                    </VBox>
+                </HBox>
             </center>
 
         </BorderPane>
+
+        <VBox fx:id="tripDetailsPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="500.0" spacing="15.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
+            <padding><Insets bottom="20.0" left="30.0" right="30.0" top="20.0" /></padding>
+            <effect><DropShadow color="#00000080" radius="30.0" /></effect>
+            <children>
+                <HBox alignment="CENTER_RIGHT">
+                    <Button onAction="#closeTripDetailsPopup" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20;" text="X" textFill="WHITE">
+                        <font><Font name="System Bold" size="14.0" /></font>
+                    </Button>
+                </HBox>
+                <Label fx:id="detailDestinationLabel" text="Trip Details" textFill="#1e3a5f"><font><Font name="System Bold" size="24.0" /></font></Label>
+                <Label fx:id="detailDescLabel" text="..." wrapText="true" textFill="#555"/>
+                <HBox alignment="CENTER" spacing="20.0">
+                    <Label fx:id="detailDateLabel" text="Date" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="detailBudgetLabel" text="$$$" style="-fx-font-weight: bold;"/>
+                </HBox>
+                <Button fx:id="popupJoinButton" text="Join Trip" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-font-weight: bold;"/>
+            </children>
+        </VBox>
+
+        <VBox fx:id="channelChatPopup" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="500.0" prefWidth="650.0" style="-fx-background-color: #FFF7EA; -fx-background-radius: 20; -fx-border-color: #FFF; -fx-border-width: 2;" visible="false">
+            <effect><DropShadow color="#00000050" radius="50.0" /></effect>
+            <children>
+                <HBox alignment="CENTER" style="-fx-background-color: #FFCB7B; -fx-background-radius: 20 20 0 0; -fx-padding: 15;">
+                    <children>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="chatPopupTitle" text="London Chat" textFill="#1e2a47">
+                            <font><Font name="System Bold" size="20.0" /></font>
+                        </Label>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button text="Back" onAction="#closeChatPopup" style="-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                    </children>
+                </HBox>
+
+                <ScrollPane fx:id="chatScrollPane" fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+                    <content>
+                        <VBox fx:id="chatMessagesContainer" spacing="15.0" style="-fx-padding: 20;">
+                        </VBox>
+                    </content>
+                </ScrollPane>
+
+                <HBox alignment="CENTER" spacing="10.0" style="-fx-padding: 15; -fx-background-color: #FFF0D1; -fx-background-radius: 0 0 20 20;">
+                    <TextField fx:id="chatInputPopup" promptText="Type a message..." style="-fx-background-radius: 20; -fx-padding: 10;" HBox.hgrow="ALWAYS"/>
+                    <Button onAction="#handleSendPopupMessage" text="➤" style="-fx-background-color: #1E2A47; -fx-text-fill: white; -fx-background-radius: 20; -fx-min-width: 40px; -fx-min-height: 40px; -fx-cursor: hand;"/>
+                </HBox>
+            </children>
+        </VBox>
+
     </children>
-    <VBox fx:id="profilePopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="400.0" spacing="15.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
-        <padding><Insets bottom="20.0" left="25.0" right="25.0" top="20.0" /></padding>
-        <effect><DropShadow color="#00000080" radius="30.0" /></effect>
-        <children>
-
-            <HBox alignment="CENTER_RIGHT">
-                <children>
-                    <Button onAction="#closeProfilePopup" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20;" text="X" textFill="WHITE">
-                        <font><Font name="System Bold" size="14.0" /></font>
-                        <effect><DropShadow color="#00000033" offsetX="2.0" offsetY="2.0" /></effect>
-                    </Button>
-                </children>
-            </HBox>
-
-            <VBox alignment="CENTER" spacing="10.0">
-                <children>
-                    <StackPane>
-                        <children>
-                            <Circle fx:id="popupProfileImage" fill="DODGERBLUE" radius="40.0" stroke="BLACK" strokeType="INSIDE" />
-                        </children>
-                        <effect><DropShadow color="#00000033" offsetX="3.0" offsetY="3.0" /></effect>
-                    </StackPane>
-                    <Label fx:id="popupProfileName" text="Kullanıcı Adı">
-                        <font><Font name="System Bold" size="20.0" /></font>
-                    </Label>
-                    <Label fx:id="popupProfileLevel" text="Lvl. 10" textFill="#5e5e5e">
-                        <font><Font name="System Bold" size="14.0" /></font>
-                    </Label>
-                </children>
-            </VBox>
-
-            <VBox style="-fx-background-color: #FFE6CC; -fx-background-radius: 15; -fx-padding: 10;">
-                <children>
-                    <Label text="Biography:" underline="true" textFill="#1e3a5f">
-                        <font><Font name="System Bold" size="12.0" /></font>
-                    </Label>
-                    <Label fx:id="popupProfileBio" text="This user loves traveling..." wrapText="true">
-                        <font><Font size="13.0" /></font>
-                    </Label>
-                </children>
-            </VBox>
-
-            <HBox alignment="CENTER" spacing="15.0">
-                <children>
-                    <Button style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Send Message">
-                        <font><Font name="System Bold" size="14.0" /></font>
-                        <padding><Insets bottom="8.0" left="20.0" right="20.0" top="8.0" /></padding>
-                    </Button>
-                </children>
-                <VBox.margin><Insets top="10.0" /></VBox.margin>
-            </HBox>
-
-        </children>
-    </VBox>
 </StackPane>

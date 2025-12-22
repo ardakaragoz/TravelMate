@@ -142,6 +142,7 @@ public class HomeController {
 
         Region r1 = new Region(); HBox.setHgrow(r1, Priority.ALWAYS);
         Button viewProfileBtn = createStyledButton("View Profile", 13);
+        addClickEffect(viewProfileBtn);
         viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, owner.getId()));
 
         topRow.getChildren().addAll(profilePic, nameBox, r1, viewProfileBtn);
@@ -161,11 +162,13 @@ public class HomeController {
 
         HBox bottomRow = new HBox(15); bottomRow.setAlignment(Pos.CENTER);
         Button viewChannelBtn = createStyledButton("View Channel", 14);
+        addClickEffect(viewChannelBtn);
         viewChannelBtn.setOnAction(e -> {
             if (trip.getDestinationName() != null && !trip.getDestinationName().isEmpty()) openChannelPage(e, trip.getDestinationName());
         });
         Label cityLbl = createBoldLabel(trip.getDestinationName().toUpperCase(), 28); cityLbl.setTextFill(Color.web("#1e3a5f"));
         Button detailsBtn = createStyledButton("View Details", 14);
+        addClickEffect(detailsBtn);
         detailsBtn.setOnAction(e -> openDetailsPopup(trip, owner));
 
         Region s1 = new Region(); HBox.setHgrow(s1, Priority.ALWAYS);
@@ -377,9 +380,28 @@ public class HomeController {
             stage.show();
         } catch (java.io.IOException e) { e.printStackTrace(); }
     }
+    private void addClickEffect(Button button) {
+        button.setCursor(javafx.scene.Cursor.HAND);
 
-    @FXML public void handleHomeButton(ActionEvent event) { }
-    @FXML public void handleViewProfileButton(ActionEvent event) {}
-    @FXML public void handleViewChannelButton(ActionEvent event) {}
-    @FXML public void handleViewDetailsButton(ActionEvent event) {}
+        button.setOnMousePressed(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
+            st.setToX(0.90); // %90'a küçül
+            st.setToY(0.90);
+            st.play();
+        });
+
+        button.setOnMouseReleased(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
+            st.setToX(1.0); // %100'e geri dön
+            st.setToY(1.0);
+            st.play();
+        });
+
+        button.setOnMouseExited(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
+            st.setToX(1.0);
+            st.setToY(1.0);
+            st.play();
+        });
+    }
 }
