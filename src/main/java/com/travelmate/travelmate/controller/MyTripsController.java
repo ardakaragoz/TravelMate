@@ -36,6 +36,8 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.*;
@@ -260,7 +262,7 @@ public class MyTripsController implements Initializable {
 
             Circle avatar = new Circle(25, Color.LIGHTGRAY);
             avatar.setStroke(Color.BLACK);
-            setUserImage(avatar, req.user.getUsername());
+            setProfileImage(avatar, req.user);
 
             Label nameLbl = new Label(req.user.getUsername());
             nameLbl.setFont(Font.font("League Spartan Bold", 14));
@@ -346,17 +348,7 @@ public class MyTripsController implements Initializable {
         }, networkExecutor);
     }
 
-    private void setUserImage(Circle circle, String username) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                String path = "/images/" + username.toLowerCase() + ".png";
-                URL url = getClass().getResource(path);
-                if (url == null) url = getClass().getResource("/images/user_icon.png");
-                Image img = new Image(url.toExternalForm());
-                Platform.runLater(() -> circle.setFill(new ImagePattern(img)));
-            } catch (Exception e) {}
-        }, networkExecutor);
-    }
+
 
     private void handleViewProfile(javafx.event.ActionEvent event, String userId) {
         try {
@@ -391,11 +383,13 @@ public class MyTripsController implements Initializable {
                 if (creator != null) detailCreatorName.setText(creator.getName());
                 detailFriendsContainer.getChildren().clear();
                 detailFriendsLabel.setText("Friends: " + (mates != null ? mates.size() : 0) + "/" + trip.getMateCount());
+                setProfileImage(detailCreatorImage, creator);
                 if (mates != null) {
                     for (String uid : mates) {
                         Circle avatar = new Circle(15, Color.LIGHTGRAY);
                         avatar.setStroke(Color.WHITE); avatar.setStrokeWidth(2);
                         detailFriendsContainer.getChildren().add(avatar);
+                        setProfileImage(avatar, UserList.getUser(uid));
                     }
                 }
             });
@@ -440,7 +434,7 @@ public class MyTripsController implements Initializable {
             Platform.runLater(() -> {
                 for (Message msg : loadTask.getValue()) {
                     boolean isSelf = msg.getSender() != null && msg.getSender().getId().equals(currentUser.getId());
-                    addForumBubble(msg.getMessage(), (msg.getSender()!=null ? msg.getSender().getName() : "User"), isSelf);
+                    addForumBubble(msg.getMessage(), (msg.getSender()!=null ? msg.getSender().getName() : "User"), isSelf, msg.getSender());
                 }
             });
         });
@@ -450,7 +444,7 @@ public class MyTripsController implements Initializable {
     @FXML public void handleSendForumMessage() {
         String text = forumInputField.getText().trim();
         if (!text.isEmpty()) {
-            addForumBubble(text, currentUser.getName(), true);
+            addForumBubble(text, currentUser.getName(), true, currentUser);
             forumInputField.clear();
             new Thread(() -> {
                 try {
@@ -464,7 +458,7 @@ public class MyTripsController implements Initializable {
 
     @FXML public void closeForumPopup() { forumPopup.setVisible(false); detailsPopup.setVisible(true); }
 
-    private void addForumBubble(String text, String senderName, boolean isSelf) {
+    private void addForumBubble(String text, String senderName, boolean isSelf, User user) {
         HBox row = new HBox(10); row.setAlignment(isSelf ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
         VBox bubble = new VBox(5); bubble.setMaxWidth(300); bubble.setPadding(new Insets(10, 15, 10, 15));
         if (isSelf) bubble.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
@@ -473,11 +467,66 @@ public class MyTripsController implements Initializable {
         Label msgLbl = new Label(text); msgLbl.setWrapText(true); msgLbl.setTextFill(Color.web("#253A63")); msgLbl.setFont(Font.font("League Spartan", 14));
         bubble.getChildren().addAll(nameLbl, msgLbl);
         Circle pic = new Circle(18, isSelf ? Color.LIGHTBLUE : Color.LIGHTGRAY); pic.setStroke(Color.BLACK);
+
+        setProfileImage(pic, user);
+
         if (isSelf) row.getChildren().addAll(bubble, pic); else row.getChildren().addAll(pic, bubble);
         forumListContainer.getChildren().add(row);
         forumScrollPane.layout(); forumScrollPane.setVvalue(1.0);
     }
 
+    private void setProfileImage(Circle circle, User user) {
+        if (circle == null) return;
+        new Thread(() -> {
+            Image img = fetchImage(user);
+            Platform.runLater(() -> circle.setFill(new ImagePattern(img)));
+        }).start();
+    }
+
+    // --- ALGORITHM FOR IMAGEVIEW ---
+    private void setImageForImageView(ImageView view, User user) {
+        if (view == null) return;
+        new Thread(() -> {
+            Image img = fetchImage(user);
+            Platform.runLater(() -> view.setImage(img));
+        }).start();
+    }
+
+    // --- SHARED FETCH LOGIC ---
+    private Image fetchImage(User user) {
+        Image imageToSet = null;
+        try {
+            if (user != null && user.getProfile() != null) {
+                String secureUrl = formatToHttps(user.getProfile().getProfilePictureUrl());
+                if (secureUrl != null && !secureUrl.isEmpty()) {
+                    imageToSet = new Image(secureUrl, false);
+                }
+            }
+            if (imageToSet == null || imageToSet.isError()) {
+                var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
+                if (resource != null) imageToSet = new Image(resource);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return imageToSet;
+    }
+
+    private String formatToHttps(String gsUrl) {
+        if (gsUrl == null || gsUrl.isEmpty()) return null;
+        if (gsUrl.startsWith("http")) return gsUrl;
+        try {
+            if (gsUrl.startsWith("gs://")) {
+                String cleanPath = gsUrl.substring(5);
+                int bucketSeparator = cleanPath.indexOf('/');
+                if (bucketSeparator != -1) {
+                    String bucket = cleanPath.substring(0, bucketSeparator);
+                    String path = cleanPath.substring(bucketSeparator + 1);
+                    String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                    return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
     private void openEditPopup(Trip trip) {
         selectedTrip = trip;
         editDestination.setText(trip.getDestinationName());
