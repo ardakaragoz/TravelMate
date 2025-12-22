@@ -102,21 +102,6 @@ public class OtherProfileController {
         if (str.length() > 0){ str = str.substring(0, str.length() - 2); }
         pastTripsLabel.setText(str);
     }
-    private void populateComboBoxes() {
-        if (com.travelmate.travelmate.session.HobbyList.hobbies.isEmpty()) {
-            com.travelmate.travelmate.session.HobbyList.loadAllHobbies();
-        }
-        if (hobbyComboBox != null) {
-            // keySet() direkt String seti döndürür, ArrayList'e çevirmene bile gerek yok
-            hobbyComboBox.getItems().setAll(com.travelmate.travelmate.session.HobbyList.hobbies.keySet());
-        }
-        if (com.travelmate.travelmate.session.TripTypeList.triptypes.isEmpty()) {
-            com.travelmate.travelmate.session.TripTypeList.listAllTripTypes();
-        }
-        if (tripTypeComboBox != null) {
-            tripTypeComboBox.getItems().setAll(com.travelmate.travelmate.session.TripTypeList.triptypes.keySet());
-        }
-    }
     @FXML
     public void handleBackButton(ActionEvent event) {
         try {
