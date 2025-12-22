@@ -2,10 +2,7 @@ package com.travelmate.travelmate.controller;
 
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
-import com.travelmate.travelmate.model.Channel;
-import com.travelmate.travelmate.model.JoinRequest;
-import com.travelmate.travelmate.model.Trip;
-import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.model.*;
 import com.travelmate.travelmate.session.ChannelList;
 import com.travelmate.travelmate.session.TripList;
 import com.travelmate.travelmate.session.UserList;
@@ -33,10 +30,12 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.awt.Desktop;
+import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -77,7 +76,7 @@ public class ChannelsController {
     @FXML private VBox recommendationsPopup;
     @FXML private VBox recommendationsContainer;
     @FXML private Label recsTitleLabel;
-
+    @FXML private Button sendRecommendationButton;
     @FXML private VBox addRecPopup;
     @FXML private TextArea recCommentArea;
     @FXML private TextField recLinkField;
@@ -94,7 +93,15 @@ public class ChannelsController {
         loadCityButtons();
 
         if (channelRecsButton != null) {
-            channelRecsButton.setOnAction(e -> handleOpenRecommendations());
+            channelRecsButton.setOnAction(e -> {
+                try {
+                    handleOpenRecommendations();
+                } catch (ExecutionException ex) {
+                    throw new RuntimeException(ex);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
         }
     }
     public void openSpecificChannel(String cityName) {
@@ -110,7 +117,7 @@ public class ChannelsController {
     }
 
     @FXML
-    public void handleOpenRecommendations() {
+    public void handleOpenRecommendations() throws ExecutionException, InterruptedException {
         if (recommendationsPopup != null) {
             String city = (channelTitleLabel != null) ? channelTitleLabel.getText() : "City";
             if (recsTitleLabel != null) recsTitleLabel.setText(city + " Recommendations");
@@ -145,12 +152,12 @@ public class ChannelsController {
     }
 
     @FXML
-    public void sendRecommendation() {
+    public void sendRecommendation(String city) {
         String comment = (recCommentArea != null) ? recCommentArea.getText() : "";
         String link = (recLinkField != null) ? recLinkField.getText() : "";
 
         if (!comment.isEmpty()) {
-            addRecItem("Me (Just Now)", comment, link);
+            Recommendation rec = new Recommendation("" + System.currentTimeMillis(), comment, currentUser, ChannelList.getChannel(city), link);
         }
 
         if (recCommentArea != null) recCommentArea.clear();
@@ -159,13 +166,15 @@ public class ChannelsController {
         closeAddRecPopup();
     }
 
-    private void loadRecommendations(String city) {
+    private void loadRecommendations(String city) throws ExecutionException, InterruptedException {
         if (recommendationsContainer == null) return;
         recommendationsContainer.getChildren().clear();
 
-        addRecItem("Atakan Polat Lvl.44", "I have visited Lucky Cat Restaurant in London last week! It was amazing.", "http://google.com/maps");
-        addRecItem("Placide Zigira Lvl.56", "Gokyuzu restaurant in Green Lanes is one of the best things in the World!", "http://google.com/maps");
-        addRecItem("Arda Karagoz Lvl.99", "Don't forget to visit the British Museum, it's free and huge!", "https://britishmuseum.org");
+        ArrayList<String> recommendationsList = ChannelList.getChannel(city).getRecommendations();
+        for (String reco : recommendationsList){
+            Recommendation rec = new Recommendation(reco);
+            addRecItem(rec.getSender().getName(), rec.getMessage(), rec.getLink());
+        }
     }
 
     private void addRecItem(String name, String comment, String link) {
@@ -278,6 +287,9 @@ public class ChannelsController {
             btn.setOnAction(e -> {
                 updateActiveCityButton(btn);
                 openChannel(city);
+            });
+            sendRecommendationButton.setOnAction(e -> {
+                sendRecommendation(city);
             });
             citySelectionView.getChildren().add(btn);
         }

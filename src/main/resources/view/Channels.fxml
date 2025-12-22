@@ -233,7 +233,7 @@
                         <font><Font name="System Bold" size="16.0" /></font>
                         <padding><Insets bottom="10.0" left="30.0" right="30.0" top="10.0" /></padding>
                     </Button>
-                    <Button onAction="#sendRecommendation" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Send Request">
+                    <Button fx:id="sendRecommendationButton" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Send Request">
                         <font><Font name="System Bold" size="16.0" /></font>
                         <padding><Insets bottom="10.0" left="30.0" right="30.0" top="10.0" /></padding>
                     </Button>
