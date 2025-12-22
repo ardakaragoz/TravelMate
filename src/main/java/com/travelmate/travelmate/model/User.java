@@ -331,8 +331,7 @@ public class User {
     }
 
     public void leaveChannel(Channel channel) throws ExecutionException, InterruptedException {
-        channel.removeParticipant(this);
-        channels.remove(id);
+        channels.remove(channel.getId());
         updateUser();
     }
 

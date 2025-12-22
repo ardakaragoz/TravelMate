@@ -3,10 +3,7 @@ package com.travelmate.travelmate.controller;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.*;
-import com.travelmate.travelmate.session.ChannelList;
-import com.travelmate.travelmate.session.TripList;
-import com.travelmate.travelmate.session.UserList;
-import com.travelmate.travelmate.session.UserSession;
+import com.travelmate.travelmate.session.*;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -33,6 +30,8 @@ import java.awt.Desktop;
 import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -272,11 +271,10 @@ public class ChannelsController {
 
 
     private void loadCityButtons() {
-        String[] cities = {"London", "Barcelona", "Rio de Janeiro", "Tokyo", "Rome", "New York", "Sydney", "Paris"};
         if(citySelectionView == null) return;
         citySelectionView.getChildren().clear();
-
-        for (String city : cities) {
+        List<String> addedChannelNames = new ArrayList<>();
+        for (String city : currentUser.getChannels()){
             Button btn = new Button(city);
             btn.setMaxWidth(Double.MAX_VALUE);
             btn.setAlignment(Pos.CENTER_LEFT);
@@ -288,11 +286,45 @@ public class ChannelsController {
                 updateActiveCityButton(btn);
                 openChannel(city);
             });
+
             sendRecommendationButton.setOnAction(e -> {
                 sendRecommendation(city);
             });
             citySelectionView.getChildren().add(btn);
+            addedChannelNames.add(city);
         }
+        for (String city : CityList.cities.keySet()) {
+            if (!addedChannelNames.contains(city)){
+                Button btn = new Button(city);
+                btn.setMaxWidth(Double.MAX_VALUE);
+                btn.setAlignment(Pos.CENTER_LEFT);
+                btn.setPadding(new Insets(15, 20, 15, 20));
+                btn.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-text-fill: #1E3A5F; -fx-font-size: 16px; -fx-cursor: hand;");
+                addClickEffect(btn);
+
+                btn.setOnAction(e -> {
+                    updateActiveCityButton(btn);
+                    openChannel(city);
+                });
+                sendRecommendationButton.setOnAction(e -> {
+                    sendRecommendation(city);
+                });
+
+                citySelectionView.getChildren().add(btn);
+                addedChannelNames.add(city);
+            }
+
+        }
+    }
+
+    public void handleJoin(String city) throws ExecutionException, InterruptedException {
+        ChannelList.getChannel(city).addParticipant(currentUser);
+        loadCityButtons();
+    }
+
+    public void handleLeave(String city) throws ExecutionException, InterruptedException {
+        ChannelList.getChannel(city).removeParticipant(currentUser);
+        loadCityButtons();
     }
 
     public void openChannel(String cityName) {
@@ -300,6 +332,39 @@ public class ChannelsController {
         if(chatPopupTitle != null) chatPopupTitle.setText(cityName + " Chat");
         if(recsTitleLabel != null) recsTitleLabel.setText(cityName + " Recommendations");
 
+        if (channelJoinButton != null) {
+            // DURUM 1: ZATEN ÜYEYSE -> "LEAVE" BUTONU OLSUN
+            if (currentUser.getChannels().contains(cityName)) {
+                channelJoinButton.setText("Leave Channel");
+                channelJoinButton.setDisable(false);
+                // Kırmızımsı bir renk ile ayrılma butonu
+                channelJoinButton.setStyle("-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-background-radius: 15; -fx-cursor: hand; -fx-font-weight: bold;");
+
+                channelJoinButton.setOnAction(e -> {
+                    try {
+                        handleLeave(cityName);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                });
+
+            }
+            // DURUM 2: ÜYE DEĞİLSE -> "JOIN" BUTONU OLSUN
+            else {
+                channelJoinButton.setText("Join Channel");
+                channelJoinButton.setDisable(false);
+                // Yeşilimsi renk ile katılma butonu
+                channelJoinButton.setStyle("-fx-background-color: #CCFF00; -fx-text-fill: #1E3A5F; -fx-background-radius: 15; -fx-cursor: hand; -fx-font-weight: bold;");
+
+                channelJoinButton.setOnAction(e -> {
+                    try {
+                        handleJoin(cityName);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                });
+            }
+        }
         loadTripsForCity(cityName);
     }
 
