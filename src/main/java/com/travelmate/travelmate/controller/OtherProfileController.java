@@ -2,11 +2,14 @@ package com.travelmate.travelmate.controller;
 
 import com.travelmate.travelmate.model.Profile;
 import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.TripTypeList;
 import com.travelmate.travelmate.session.UserList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
@@ -16,6 +19,7 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,6 +35,9 @@ public class OtherProfileController {
     @FXML private FlowPane hobbiesContainer;
     @FXML private FlowPane tripTypesContainer;
     @FXML private Label pastTripsLabel;
+    @FXML private ComboBox hobbyComboBox;
+    @FXML private ComboBox tripTypeComboBox;
+    @FXML private Button messageButton;
 
     private Scene previousScene;
 
@@ -62,13 +69,25 @@ public class OtherProfileController {
         } catch (Exception e) {
             System.out.println("Resim yüklenemedi: " + "");
         }
-
-
         loadDynamicTags(hobbiesContainer, Arrays.asList("Photography", "Hiking", "Museums"));
         loadDynamicTags(tripTypesContainer, Arrays.asList("Cultural", "City Break", "Nature"));
         pastTripsLabel.setText("London, Paris, Berlin, Tokyo");
     }
-
+    private void populateComboBoxes() {
+        if (com.travelmate.travelmate.session.HobbyList.hobbies.isEmpty()) {
+            com.travelmate.travelmate.session.HobbyList.loadAllHobbies();
+        }
+        if (hobbyComboBox != null) {
+            // keySet() direkt String seti döndürür, ArrayList'e çevirmene bile gerek yok
+            hobbyComboBox.getItems().setAll(com.travelmate.travelmate.session.HobbyList.hobbies.keySet());
+        }
+        if (com.travelmate.travelmate.session.TripTypeList.triptypes.isEmpty()) {
+            com.travelmate.travelmate.session.TripTypeList.listAllTripTypes();
+        }
+        if (tripTypeComboBox != null) {
+            tripTypeComboBox.getItems().setAll(com.travelmate.travelmate.session.TripTypeList.triptypes.keySet());
+        }
+    }
     @FXML
     public void handleBackButton(ActionEvent event) {
         try {
@@ -91,6 +110,7 @@ public class OtherProfileController {
 
     @FXML
     public void handleMessageButton(ActionEvent event) {
+
         System.out.println("Mesaj gönder...");
     }
 
@@ -102,5 +122,29 @@ public class OtherProfileController {
             tagLabel.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-padding: 5 15 5 15; -fx-border-color: #1E3A5F; -fx-border-radius: 15; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;");
             container.getChildren().add(tagLabel);
         }
+    }
+    private void addClickEffect(Button button) {
+        button.setCursor(javafx.scene.Cursor.HAND);
+
+        button.setOnMousePressed(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
+            st.setToX(0.90); // %90'a küçül
+            st.setToY(0.90);
+            st.play();
+        });
+
+        button.setOnMouseReleased(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
+            st.setToX(1.0); // %100'e geri dön
+            st.setToY(1.0);
+            st.play();
+        });
+
+        button.setOnMouseExited(e -> {
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
+            st.setToX(1.0);
+            st.setToY(1.0);
+            st.play();
+        });
     }
 }

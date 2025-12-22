@@ -50,45 +50,26 @@ public class EditProfileController {
     }
 
     private void populateComboBoxes() {
-        Executors.newSingleThreadExecutor().submit(() -> {
-            List<String> hobbies = new ArrayList<>();
-            List<String> tripTypes = new ArrayList<>();
+        
+        
+        if (com.travelmate.travelmate.session.HobbyList.hobbies.isEmpty()) {
+            com.travelmate.travelmate.session.HobbyList.loadAllHobbies();
+        }
 
-            try {
-                Firestore db = FirebaseService.getFirestore();
-                var hQuery = db.collection("hobbies").get().get();
-                for (QueryDocumentSnapshot doc : hQuery.getDocuments()) hobbies.add(doc.getId());
-                var tQuery = db.collection("trip_types").get().get();
-                for (QueryDocumentSnapshot doc : tQuery.getDocuments()) tripTypes.add(doc.getId());
-
-            } catch (Exception e) {
-                System.out.println("⚠️ Firebase Hatası (Quota Dolmuş Olabilir): " + e.getMessage());
-                System.out.println("👉 Çevrimdışı modda dummy veri kullanılıyor.");
-            }
-            if (hobbies.isEmpty()) {
-                hobbies.add("Photography");
-                hobbies.add("Hiking");
-                hobbies.add("Gaming");
-                hobbies.add("Cooking");
-                hobbies.add("Travel");
-            }
-            if (tripTypes.isEmpty()) {
-                tripTypes.add("Cultural");
-                tripTypes.add("Nature");
-                tripTypes.add("City Break");
-                tripTypes.add("Adventure");
-                tripTypes.add("Cruise");
-            }
-            List<String> finalHobbies = hobbies;
-            List<String> finalTripTypes = tripTypes;
-
-            Platform.runLater(() -> {
-                if (hobbyComboBox != null) hobbyComboBox.getItems().setAll(finalHobbies);
-                if (tripTypeComboBox != null) tripTypeComboBox.getItems().setAll(finalTripTypes);
-            });
-        });
+        
+        if (hobbyComboBox != null) {
+            
+            hobbyComboBox.getItems().setAll(com.travelmate.travelmate.session.HobbyList.hobbies.keySet());
+        }
+        
+        
+        if (com.travelmate.travelmate.session.TripTypeList.triptypes.isEmpty()) {
+            com.travelmate.travelmate.session.TripTypeList.listAllTripTypes();
+        }
+        if (tripTypeComboBox != null) {
+            tripTypeComboBox.getItems().setAll(com.travelmate.travelmate.session.TripTypeList.triptypes.keySet());
+        }
     }
-
     @FXML
     public void handleSaveButton(ActionEvent event) {
         System.out.println("Kaydet'e basıldı (Firebase kapalı olsa da çalışır).");
