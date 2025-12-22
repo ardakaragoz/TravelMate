@@ -1,9 +1,7 @@
 package com.travelmate.travelmate.controller;
 
-import com.travelmate.travelmate.model.Hobby;
-import com.travelmate.travelmate.model.Profile;
-import com.travelmate.travelmate.model.TripTypes;
-import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.model.*;
+import com.travelmate.travelmate.session.TripList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -20,6 +18,8 @@ import javafx.scene.image.Image;
 import javafx.scene.effect.GaussianBlur;
 import javafx.event.ActionEvent;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class ProfileController {
@@ -54,7 +54,19 @@ public class ProfileController {
 
         reviewScoreLabel.setText("Review Score: (9)");
         bioLabel.setText(profile.getBiography());
-        pastTripsLabel.setText("Budapest, Rome, Maldives, New York");
+        List<String> citiesList = new ArrayList<>();
+        for (String id : user.getTrips()){
+            Trip trip = TripList.getTrip(id);
+            if (trip.isFinished() && !(citiesList.contains(trip.getDestinationName()))){
+                citiesList.add(trip.getDestinationName());
+            }
+        }
+        String str = "";
+        for (String city : citiesList){
+            str += city + ", ";
+        }
+        if (str.length() > 0){ str = str.substring(0, str.length() - 2); }
+        pastTripsLabel.setText(str);
         setProfileImage("user1");
 
         for (Hobby hobby : profile.getHobbies()){
@@ -62,7 +74,7 @@ public class ProfileController {
         }
 
         for (TripTypes triptype : profile.getFavoriteTripTypes()) {
-            addTag(tripTypesContainer, "Cruise", "#a4c2f2");
+            addTag(tripTypesContainer, triptype.getId(), "#a4c2f2");
         }
     }
 

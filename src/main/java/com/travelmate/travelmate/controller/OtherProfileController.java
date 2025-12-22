@@ -1,10 +1,7 @@
 package com.travelmate.travelmate.controller;
 
 import com.travelmate.travelmate.model.*;
-import com.travelmate.travelmate.session.ChatList;
-import com.travelmate.travelmate.session.TripTypeList;
-import com.travelmate.travelmate.session.UserList;
-import com.travelmate.travelmate.session.UserSession;
+import com.travelmate.travelmate.session.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -91,7 +88,19 @@ public class OtherProfileController {
         }
         loadDynamicTags(hobbiesContainer, hobbyList);
         loadDynamicTags(tripTypesContainer, tripTypesList);
-        pastTripsLabel.setText("London, Paris, Berlin, Tokyo");
+        List<String> citiesList = new ArrayList<>();
+        for (String id : user.getTrips()){
+            Trip trip = TripList.getTrip(id);
+            if (trip.isFinished() && !(citiesList.contains(trip.getDestinationName()))){
+                citiesList.add(trip.getDestinationName());
+            }
+        }
+        String str = "";
+        for (String city : citiesList){
+            str += city + ", ";
+        }
+        if (str.length() > 0){ str = str.substring(0, str.length() - 2); }
+        pastTripsLabel.setText(str);
     }
     private void populateComboBoxes() {
         if (com.travelmate.travelmate.session.HobbyList.hobbies.isEmpty()) {
