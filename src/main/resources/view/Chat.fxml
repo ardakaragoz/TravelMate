@@ -66,7 +66,7 @@
                             <HBox alignment="CENTER_LEFT" prefHeight="90.0" spacing="15.0" style="-fx-padding: 20 30 20 30; -fx-border-color: #EBB666; -fx-border-width: 0 0 1 0;">
                                 <children>
                                     <ImageView fx:id="currentChatImage" fitHeight="55.0" fitWidth="55.0" pickOnBounds="true" preserveRatio="true">
-                                        <image><Image url="@../images/user_icon.png" /></image>
+                                        <image><Image url="@../images/user_icons/img.png" /></image>
                                         <clip><Circle centerX="27.5" centerY="27.5" radius="27.5" /></clip>
                                     </ImageView>
                                     <VBox alignment="CENTER_LEFT">
