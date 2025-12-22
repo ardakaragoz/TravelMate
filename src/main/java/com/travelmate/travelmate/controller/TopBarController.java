@@ -81,7 +81,7 @@ public class TopBarController {
             try {
                 if (user.getProfile() != null) {
                     String url = user.getProfile().getProfilePictureUrl();
-                    if (url != null && !url.isEmpty() && url.startsWith("http")) {
+                    if (url != null && !url.isEmpty()) {
                         imageToSet = new Image(url, true);
                     }
                 }

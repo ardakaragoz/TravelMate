@@ -177,7 +177,6 @@ public class MyTripsController implements Initializable {
         return btn;
     }
 
-    // --- REQUESTS LOGIC (Background Thread for Freezing Fix) ---
     private void openRequestsPopup(Trip trip) {
         selectedTrip = trip;
         requestsListContainer.getChildren().clear();
@@ -248,11 +247,12 @@ public class MyTripsController implements Initializable {
 
             Circle avatar = new Circle(25, Color.LIGHTGRAY);
             avatar.setStroke(Color.BLACK);
-            setUserImage(avatar, req.user.getUsername());
+            // --- CHANGED: Use User object to fetch image ---
+            setUserImage(avatar, req.user);
 
             Label nameLbl = new Label(req.user.getUsername());
             nameLbl.setFont(Font.font("League Spartan Bold", 14));
-            nameLbl.setTextFill(Color.BLACK); // --- FIX: Explicit Black Text
+            nameLbl.setTextFill(Color.BLACK);
 
             Button viewProfileBtn = new Button("View Profile");
             viewProfileBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-text-fill: black; -fx-font-size: 10px; -fx-font-weight: bold; -fx-cursor: hand;");
@@ -273,7 +273,7 @@ public class MyTripsController implements Initializable {
             Label msgLbl = new Label(req.message);
             msgLbl.setWrapText(true);
             msgLbl.setFont(Font.font("League Spartan", 13));
-            msgLbl.setTextFill(Color.BLACK); // --- FIX: Explicit Black Text
+            msgLbl.setTextFill(Color.BLACK);
             msgScroll.setContent(msgLbl);
 
             messageSection.getChildren().add(msgScroll);
@@ -299,17 +299,15 @@ public class MyTripsController implements Initializable {
         }
     }
 
-    // --- FIX: Run Database operations in background to prevent freezing ---
     private void handleApprove(RequestData req) {
         requestsListContainer.getChildren().clear();
-        requestsListContainer.getChildren().add(new Label("Processing...")); // Immediate feedback
+        requestsListContainer.getChildren().add(new Label("Processing..."));
 
         CompletableFuture.runAsync(() -> {
             try {
-                selectedTrip.addMate(req.user); // Heavy DB operation
+                selectedTrip.addMate(req.user);
                 FirebaseService.getFirestore().collection("join_requests").document(req.requestId).update("status", "APPROVED");
-
-                Platform.runLater(() -> openRequestsPopup(selectedTrip)); // Refresh UI after done
+                Platform.runLater(() -> openRequestsPopup(selectedTrip));
             } catch (Exception e) {
                 e.printStackTrace();
                 Platform.runLater(() -> openRequestsPopup(selectedTrip));
@@ -323,9 +321,8 @@ public class MyTripsController implements Initializable {
 
         CompletableFuture.runAsync(() -> {
             try {
-                selectedTrip.removePendingMate(req.user); // Heavy DB operation
+                selectedTrip.removePendingMate(req.user);
                 FirebaseService.getFirestore().collection("join_requests").document(req.requestId).update("status", "DENIED");
-
                 Platform.runLater(() -> openRequestsPopup(selectedTrip));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -334,14 +331,33 @@ public class MyTripsController implements Initializable {
         }, networkExecutor);
     }
 
-    private void setUserImage(Circle circle, String username) {
+    // --- UPDATED: Fetch Image from User Object (DB first, then local) ---
+    private void setUserImage(Circle circle, User user) {
         CompletableFuture.runAsync(() -> {
             try {
-                String path = "/images/" + username.toLowerCase() + ".png";
-                URL url = getClass().getResource(path);
-                if (url == null) url = getClass().getResource("/images/user_icon.png");
-                Image img = new Image(url.toExternalForm());
-                Platform.runLater(() -> circle.setFill(new ImagePattern(img)));
+                Image img = null;
+
+                // 1. Check Database Field
+                String dbPic = user.getProfilePicture();
+                if (dbPic != null && !dbPic.isEmpty()) {
+                    if (dbPic.startsWith("http")) {
+                        img = new Image(dbPic, true);
+                    } else {
+                        URL url = getClass().getResource("/images/" + dbPic);
+                        if (url != null) img = new Image(url.toExternalForm());
+                    }
+                }
+
+                // 2. Fallback to Username
+                if (img == null) {
+                    String path = "/images/" + user.getUsername().toLowerCase() + ".png";
+                    URL url = getClass().getResource(path);
+                    if (url == null) url = getClass().getResource("/images/user_icon.png");
+                    img = new Image(url.toExternalForm());
+                }
+
+                final Image finalImg = img;
+                Platform.runLater(() -> circle.setFill(new ImagePattern(finalImg)));
             } catch (Exception e) {}
         }, networkExecutor);
     }
@@ -372,7 +388,12 @@ public class MyTripsController implements Initializable {
             User creator = UserList.getUser(trip.getUser());
             ArrayList<String> mates = trip.getJoinedMates();
             Platform.runLater(() -> {
-                if (creator != null) detailCreatorName.setText(creator.getName());
+                if (creator != null) {
+                    detailCreatorName.setText(creator.getName());
+                    // --- Added this line to set image in popup ---
+                    setUserImage(detailCreatorImage, creator);
+                }
+
                 detailFriendsContainer.getChildren().clear();
                 detailFriendsLabel.setText("Friends: " + (mates != null ? mates.size() : 0) + "/" + trip.getMateCount());
                 if (mates != null) {

@@ -35,8 +35,12 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CompletableFuture; // Added
+import java.util.concurrent.ExecutorService; // Added
+import java.util.concurrent.Executors;       // Added
 
 public class ChatController {
 
@@ -56,51 +60,45 @@ public class ChatController {
     private User currentUser;
     private User activeChatUser;
 
-    // Image Cache (Load once, use everywhere)
     private static Image defaultUserImage;
-    // Message Cache (ChatID -> List of Messages)
     private Map<String, List<Message>> localMessageCache = new HashMap<>();
+
+    // --- EXECUTOR FOR BACKGROUND LOADING ---
+    private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
 
     public void initialize() {
         if(sidebarController != null) sidebarController.setActivePage("Chat");
 
-        // 1. Pre-load Default Image (Efficiency)
         try {
             InputStream is = getClass().getResourceAsStream("/images/user_icon.png");
             if (is != null) defaultUserImage = new Image(is);
         } catch (Exception e) { e.printStackTrace(); }
 
-        // 2. Setup Scroll Logic
         messageScrollPane.setFitToHeight(true);
         messageBubbleContainer.setAlignment(Pos.BOTTOM_CENTER);
         messageBubbleContainer.heightProperty().addListener((observable, oldValue, newValue) -> {
             messageScrollPane.setVvalue(1.0);
         });
 
-        // 3. Get User
         currentUser = UserSession.getCurrentUser();
         if (currentUser == null) return;
 
-        // 4. Load Sidebar in Background (Fixes Lag)
         loadChatsFromDatabase();
     }
 
     private void loadChatsFromDatabase() {
-        // Clear UI first
         chatListContainer.getChildren().clear();
         chatItemNodes.clear();
 
         List<String> chatIds = currentUser.getChatRooms();
         if (chatIds == null || chatIds.isEmpty()) return;
 
-        // --- OPTIMIZATION: Background Loading for Sidebar ---
         Task<List<ChatData>> loadSidebarTask = new Task<>() {
             @Override
             protected List<ChatData> call() throws Exception {
                 List<ChatData> loadedChats = new ArrayList<>();
 
                 for (String chatId : chatIds) {
-                    // fetching data might be slow, so we do it here
                     ChatRoom room = ChatList.getChat(chatId);
                     if (room != null) {
                         User otherUser = findOtherUser(room);
@@ -120,9 +118,7 @@ public class ChatController {
             for (ChatData chat : data) {
                 addChatToSidebar(chat.name, chat.lastMsg, "", isFirst, chat.room, chat.otherUser);
 
-                // Auto-open first chat
                 if (isFirst) {
-                    // We must get the last node added to chatItemNodes
                     if (!chatItemNodes.isEmpty()) {
                         handleChatClick(chatItemNodes.get(chatItemNodes.size() - 1), chat.name, chat.room, chat.otherUser);
                     }
@@ -134,7 +130,6 @@ public class ChatController {
         new Thread(loadSidebarTask).start();
     }
 
-    // Helper class to hold data during background fetch
     private static class ChatData {
         String name;
         String lastMsg;
@@ -165,8 +160,10 @@ public class ChatController {
 
         Circle clip = new Circle(27.5, 27.5, 27.5);
         ImageView profilePic = new ImageView();
-        if (defaultUserImage != null) profilePic.setImage(defaultUserImage);
         profilePic.setFitWidth(55); profilePic.setFitHeight(55); profilePic.setClip(clip);
+
+        // --- CHANGED: Use helper to load from DB or Local ---
+        setUserImage(profilePic, otherUser);
 
         VBox content = new VBox(4);
         Label nameLabel = new Label(name);
@@ -198,12 +195,13 @@ public class ChatController {
         updateChatItemStyle(clickedItem, true);
 
         if (currentChatNameLabel != null) currentChatNameLabel.setText(name);
-        if (currentChatImage != null && defaultUserImage != null) currentChatImage.setImage(defaultUserImage);
+
+        // --- CHANGED: Load image for active chat header ---
+        if (currentChatImage != null) setUserImage(currentChatImage, otherUser);
 
         this.currentChatRoom = room;
         this.activeChatUser = otherUser;
 
-        // Instant load from cache if available
         if (localMessageCache.containsKey(room.getId())) {
             renderMessages(localMessageCache.get(room.getId()));
         } else {
@@ -211,18 +209,53 @@ public class ChatController {
         }
     }
 
+    // --- NEW HELPER METHOD: Loads image from Database URL or falls back to Local ---
+    private void setUserImage(ImageView targetView, User user) {
+        if (targetView == null || user == null) return;
+
+        CompletableFuture.runAsync(() -> {
+            Image image = null;
+            try {
+                // 1. Try Loading from Database Field (Profile Picture URL)
+                String dbPic = user.getProfilePicture();
+                if (dbPic != null && !dbPic.isEmpty()) {
+                    if (dbPic.startsWith("http")) {
+                        // Load from Cloud URL (Firebase Storage)
+                        image = new Image(dbPic, true); // true = background loading
+                    } else {
+                        // Load from Resource by Filename (Legacy)
+                        URL url = getClass().getResource("/images/" + dbPic);
+                        if (url != null) image = new Image(url.toExternalForm(), true);
+                    }
+                }
+
+                // 2. Fallback: Try Local File by Username
+                if (image == null) {
+                    String cleanName = (user.getUsername() != null) ? user.getUsername().toLowerCase().replace("ı", "i") : "user_icon";
+                    String path = "/images/" + cleanName + ".png";
+                    URL url = getClass().getResource(path);
+                    if (url == null) url = getClass().getResource("/images/user_icon.png");
+                    if (url != null) image = new Image(url.toExternalForm(), true);
+                }
+            } catch (Exception e) {}
+
+            final Image finalImg = image;
+            Platform.runLater(() -> {
+                if (finalImg != null) targetView.setImage(finalImg);
+            });
+        }, networkExecutor);
+    }
+
     private void loadMessagesForChat(ChatRoom room) {
         messageBubbleContainer.getChildren().clear();
         if (room == null || room.getMessages() == null) return;
 
-        // Background Task for Messages
         Task<List<Message>> loadMessagesTask = new Task<>() {
             @Override
             protected List<Message> call() throws Exception {
                 List<String> messageIds = room.getMessages();
                 if (messageIds.isEmpty()) return new ArrayList<>();
 
-                // Optimization: Load only last 25 messages
                 int total = messageIds.size();
                 int limit = 25;
                 int start = Math.max(0, total - limit);
@@ -236,18 +269,16 @@ public class ChatController {
                 }
                 if (refs.isEmpty()) return new ArrayList<>();
 
-                // Batch Fetch
                 ApiFuture<List<DocumentSnapshot>> future = FirebaseService.getFirestore().getAll(refs.toArray(new DocumentReference[0]));
                 List<DocumentSnapshot> snapshots = future.get();
 
                 List<Message> loadedMessages = new ArrayList<>();
                 for (DocumentSnapshot doc : snapshots) {
                     if (doc.exists()) {
-                        loadedMessages.add(new Message(doc)); // Efficient Constructor
+                        loadedMessages.add(new Message(doc));
                     }
                 }
 
-                // Sort
                 loadedMessages.sort(Comparator.comparing(m -> m.getCreatedAt() != null ? m.getCreatedAt() : new Date(0)));
                 return loadedMessages;
             }
@@ -287,13 +318,11 @@ public class ChatController {
         String text = messageInput.getText().trim();
         if (!text.isEmpty() && currentChatRoom != null) {
 
-            // 1. UI UPDATE FIRST (Instant)
             messageInput.clear();
             addMessageBubble(text, "Just now", true);
             messageScrollPane.layout();
             messageScrollPane.setVvalue(1.0);
 
-            // 2. BACKGROUND DB WORK
             String chatId = currentChatRoom.getId();
             User sender = currentUser;
 
@@ -323,7 +352,6 @@ public class ChatController {
         bubble.setMaxWidth(450);
         bubble.setPadding(new Insets(15, 20, 15, 20));
 
-        // Styling
         if (isSentByMe) {
             bubble.setStyle("-fx-background-color: #cbd45b; -fx-background-radius: 25 25 0 25;");
         } else {
@@ -331,15 +359,10 @@ public class ChatController {
         }
         bubble.setEffect(new DropShadow(5, Color.rgb(0,0,0,0.1)));
 
-        // --- MESSAGE LABEL (FIXED: Black & Wrapping) ---
         Label messageLabel = new Label(text);
         messageLabel.setFont(Font.font("League Spartan", 16));
-
-        // Force Black Text (Override any CSS inheritance)
         messageLabel.setTextFill(Color.BLACK);
         messageLabel.setStyle("-fx-text-fill: black;");
-
-        // Wrap Logic
         messageLabel.setWrapText(true);
         messageLabel.setMaxWidth(350);
         messageLabel.setMinHeight(Region.USE_PREF_SIZE);

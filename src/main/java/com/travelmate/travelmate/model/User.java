@@ -8,7 +8,6 @@ import com.travelmate.travelmate.session.ChannelList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -16,6 +15,9 @@ public class User {
     private String id, username, name, nationality, email, password, gender;
     private int age, levelPoint, monthlyPoints;
     private Profile profile;
+
+    // Field to store image URL
+    private String profilePictureUrl;
 
     // Initialize lists immediately to avoid NullPointerException
     private ArrayList<String> pastTrips = new ArrayList<>();
@@ -31,12 +33,10 @@ public class User {
     private int reviewCount;
     private int reviewPoints;
 
-    // --- CRITICAL FIX: Empty Constructor for Firestore ---
-    public User() {
-        // Firestore needs this to create the object before filling fields
-    }
+    // --- Constructor 1: Empty for Firestore ---
+    public User() { }
 
-    // --- Constructor 1: Create New User (Registration) ---
+    // --- Constructor 2: Create New User ---
     public User(String id, String username, String name, String nationality, String email,
                 String password, String gender, int age) throws ExecutionException, InterruptedException {
         this.id = id;
@@ -51,27 +51,23 @@ public class User {
         this.monthlyPoints = 0;
         this.reviewCount = 0;
         this.reviewPoints = 0;
-        // For new users, create profile immediately (one-time cost)
         this.profile = new Profile(id);
-
         updateUser();
     }
 
-    // --- Constructor 2: Optimized Loader (Login) ---
-    // This receives the data directly from SignInController
+    // --- Constructor 3: Optimized Loader ---
     public User(String id, DocumentSnapshot doc) {
         this.id = id;
-        // Load data directly from the doc we already have!
         loadFromDoc(doc);
     }
 
-    // --- Constructor 3: Legacy Loader (Slow) ---
+    // --- Constructor 4: Legacy Loader ---
     public User(String id) throws ExecutionException, InterruptedException {
         this.id = id;
         setCurrentUser();
     }
 
-    // Helper to parse data (Used by both Optimized and Legacy loaders)
+    // --- HELPER: Parse Data from Firestore ---
     private void loadFromDoc(DocumentSnapshot doc) {
         if (!doc.exists()) return;
         this.username = doc.getString("username");
@@ -80,6 +76,15 @@ public class User {
         this.gender = doc.getString("gender");
         this.nationality = doc.getString("nationality");
         this.password = doc.getString("password");
+
+        // --- FIX: SAFE IMAGE LOADING ---
+        // Reads "profilePictureUrl" field safely. If it's corrupted (not a string), it skips it.
+        Object picObj = doc.get("profilePictureUrl");
+        if (picObj instanceof String) {
+            this.profilePictureUrl = (String) picObj;
+        } else {
+            this.profilePictureUrl = null;
+        }
 
         if (doc.getLong("age") != null) this.age = doc.getLong("age").intValue();
         if (doc.getLong("levelPoint") != null) this.levelPoint = doc.getLong("levelPoint").intValue();
@@ -100,10 +105,11 @@ public class User {
 
     public void setCurrentUser() throws ExecutionException, InterruptedException {
         Firestore db = FirebaseService.getFirestore();
-        DocumentSnapshot doc = db.collection("users").document(id).get().get(); // Still blocks, but used less often
+        DocumentSnapshot doc = db.collection("users").document(id).get().get();
         loadFromDoc(doc);
     }
 
+    // --- ASYNC UPDATE ---
     public void updateUser() {
         CompletableFuture.runAsync(() -> {
             Map<String, Object> data = new HashMap<>();
@@ -130,10 +136,12 @@ public class User {
             data.put("chatRooms", chatRooms);
             data.put("joinRequests", joinRequests);
 
+            data.put("profilePictureUrl", profilePictureUrl);
+
             FirebaseService.getFirestore().collection("users").document(this.id).set(data);
         });
     }
-    // --- LAZY LOADING PROFILE GETTER ---
+
     public Profile getProfile() {
         if (this.profile == null) {
             try { this.profile = new Profile(this.id); } catch (Exception e) { e.printStackTrace(); }
@@ -174,7 +182,11 @@ public class User {
 
     public void addTripRequest(Trip trip) throws ExecutionException, InterruptedException {
         this.currentTrips.add(trip.getId());
-        ChannelList.getChannel(trip.getDestinationName()).addTripRequest(trip);
+        // Using safe check for ChannelList
+        try {
+            Channel channel = ChannelList.getChannel(trip.getDestinationName());
+            if (channel != null) channel.addTripRequest(trip);
+        } catch (Exception e) { e.printStackTrace(); }
         updateUser();
     }
 
@@ -210,8 +222,6 @@ public class User {
 
     public int calculateCompatibility(User otherUser) throws ExecutionException, InterruptedException {
         int score = 0;
-
-        // Ensure profiles are loaded before calculation
         if (this.getProfile() != null && otherUser.getProfile() != null) {
             double funPoint = 0;
             double funPoint2 = 0;
@@ -266,7 +276,6 @@ public class User {
 
     public int calculateCompatibility(City city) throws ExecutionException, InterruptedException {
         int score = 0;
-
         if (this.getProfile() != null) {
             int[] cityScores = city.getCompatibilityScores();
             double funPoint = 0, funPoint2 = cityScores[0];
@@ -339,7 +348,6 @@ public class User {
     public int getLevel() { return  1 + levelPoint / 10; }
     public int getLevelPoint() { return levelPoint; }
     public int getMonthlyPoints() { return monthlyPoints; }
-    // Note: getProfile is defined above as a lazy loader
     public ArrayList<String> getPastTrips() { return pastTrips; }
     public ArrayList<String> getCurrentTrips() { return currentTrips; }
     public ArrayList<String> getChannels() { return channels; }
@@ -351,6 +359,13 @@ public class User {
     public ArrayList<String> getMessages() { return messages; }
     public ArrayList<String> getTripRequests() { return tripRequests; }
     public ArrayList<String> getChatRooms() { return chatRooms; }
+
+    // --- Image Accessors ---
+    public String getProfilePicture() { return profilePictureUrl; }
+    public void setProfilePicture(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+        updateUser();
+    }
 
     public void setProfile(Profile profile) { this.profile = profile; }
     public void setLevelPoint(int allPoints) { this.levelPoint = allPoints; }

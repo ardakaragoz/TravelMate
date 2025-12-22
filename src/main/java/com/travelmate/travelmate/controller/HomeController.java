@@ -59,14 +59,12 @@ public class HomeController {
     @FXML private ProgressBar compatibilityScoreBar;
     @FXML private Label compalibilityScoreLabel;
 
-    // --- DETAILS POPUP ---
     @FXML private VBox detailsPopup;
     @FXML private Circle detailsProfilePic;
     @FXML private Label detailsOwnerName;
     @FXML private Label detailsDescription;
     @FXML private TextArea messageInputArea;
 
-    // --- NEW: Elements for handling own trip logic ---
     @FXML private Label ownTripLabel;
     @FXML private Button sendRequestBtn;
 
@@ -135,7 +133,8 @@ public class HomeController {
 
         HBox topRow = new HBox(10); topRow.setAlignment(Pos.CENTER_LEFT);
         Circle profilePic = new Circle(22, Color.LIGHTGRAY); profilePic.setStroke(Color.BLACK);
-        setCircleImage(profilePic, owner.getUsername());
+        // --- CHANGED: Pass USER object instead of name ---
+        setCircleImage(profilePic, owner);
 
         VBox nameBox = new VBox();
         nameBox.getChildren().addAll(createBoldLabel(owner.getUsername(), 16), createGrayLabel("Lvl. " + owner.getLevel(), 14));
@@ -197,10 +196,12 @@ public class HomeController {
         this.selectedTripOwnerForDetails = owner;
 
         if (detailsOwnerName != null) detailsOwnerName.setText(owner.getUsername());
-        if (detailsProfilePic != null) setCircleImage(detailsProfilePic, owner.getUsername());
+
+        // --- CHANGED: Pass USER object ---
+        if (detailsProfilePic != null) setCircleImage(detailsProfilePic, owner);
+
         if (detailsDescription != null) detailsDescription.setText(trip.getAdditionalNotes());
 
-        // --- LOGIC: Check if it's my own trip ---
         boolean isMyTrip = currentUser != null && currentUser.getId().equals(owner.getId());
 
         if (sendRequestBtn != null) {
@@ -335,17 +336,36 @@ public class HomeController {
         }, networkExecutor);
     }
 
-    private void setCircleImage(Circle targetCircle, String name) {
-        if (targetCircle == null) return;
+    // --- UPDATED: PULLS IMAGE FROM DATABASE (User Object) ---
+    private void setCircleImage(Circle targetCircle, User user) {
+        if (targetCircle == null || user == null) return;
+
         CompletableFuture.runAsync(() -> {
             Image image = null;
             try {
-                String cleanName = (name != null) ? name.toLowerCase().replace("ı", "i") : "user_icon";
-                String path = "/images/" + cleanName + ".png";
-                URL url = getClass().getResource(path);
-                if (url == null) url = getClass().getResource("/images/user_icon.png");
-                if (url != null) image = new Image(url.toExternalForm(), true);
+                // 1. Try Loading from Database Field (Profile Picture URL)
+                String dbPic = user.getProfilePicture();
+                if (dbPic != null && !dbPic.isEmpty()) {
+                    if (dbPic.startsWith("http")) {
+                        // Load from Cloud URL (Firebase Storage)
+                        image = new Image(dbPic, true); // true = background loading
+                    } else {
+                        // Load from Resource by Filename
+                        URL url = getClass().getResource("/images/" + dbPic);
+                        if (url != null) image = new Image(url.toExternalForm(), true);
+                    }
+                }
+
+                // 2. Fallback: Try Local File by Username
+                if (image == null) {
+                    String cleanName = (user.getUsername() != null) ? user.getUsername().toLowerCase().replace("ı", "i") : "user_icon";
+                    String path = "/images/" + cleanName + ".png";
+                    URL url = getClass().getResource(path);
+                    if (url == null) url = getClass().getResource("/images/user_icon.png");
+                    if (url != null) image = new Image(url.toExternalForm(), true);
+                }
             } catch (Exception e) {}
+
             final Image finalImg = image;
             Platform.runLater(() -> { if (finalImg != null) targetCircle.setFill(new ImagePattern(finalImg)); });
         }, networkExecutor);
