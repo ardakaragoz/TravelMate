@@ -66,7 +66,6 @@ public class ProfileController {
 
         reviewScoreLabel.setText("Review Score: (9)");
         bioLabel.setText(profile.getBiography());
-        pastTripsLabel.setText("Budapest, Rome, Maldives, New York");
 
         String rawUrl = profile.getProfilePictureUrl();
         String secureUrl = formatToHttps(rawUrl);
@@ -96,7 +95,6 @@ public class ProfileController {
         }
         if (str.length() > 0){ str = str.substring(0, str.length() - 2); }
         pastTripsLabel.setText(str);
-        setProfileImage("user1");
 
         for (Hobby hobby : profile.getHobbies()){
             addTag(hobbiesContainer, hobby.getName(), "#CCFF00");
