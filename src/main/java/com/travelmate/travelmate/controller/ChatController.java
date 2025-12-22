@@ -8,6 +8,7 @@ import com.travelmate.travelmate.model.*;
 import com.travelmate.travelmate.session.ChatList;
 import com.travelmate.travelmate.session.UserList;
 import com.travelmate.travelmate.session.UserSession;
+import com.travelmate.travelmate.utils.ImageLoader;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -158,6 +159,8 @@ public class ChatController {
         return null;
     }
 
+
+
     private void addChatToSidebar(String name, String lastMsg, String time, boolean isActive, ChatRoom room, User otherUser) {
         HBox chatItem = new HBox(15);
         chatItem.setAlignment(Pos.CENTER_LEFT);
@@ -168,6 +171,8 @@ public class ChatController {
         ImageView profilePic = new ImageView();
         if (defaultUserImage != null) profilePic.setImage(defaultUserImage);
         profilePic.setFitWidth(55); profilePic.setFitHeight(55); profilePic.setClip(clip);
+
+        ImageLoader.loadForUser(otherUser, profilePic);
 
         VBox content = new VBox(4);
         Label nameLabel = new Label(name);

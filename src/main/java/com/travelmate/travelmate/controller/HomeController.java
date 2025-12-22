@@ -16,6 +16,7 @@ import com.travelmate.travelmate.session.CityList;
 import com.travelmate.travelmate.session.TripList;
 import com.travelmate.travelmate.session.UserList;
 import com.travelmate.travelmate.session.UserSession;
+import com.travelmate.travelmate.utils.ImageLoader;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -143,6 +144,8 @@ public class HomeController {
         Circle profilePic = new Circle(22, Color.LIGHTGRAY); profilePic.setStroke(Color.BLACK);
         setCircleImage(profilePic, owner.getUsername());
 
+        ImageLoader.loadForUser(owner, profilePic);
+
         VBox nameBox = new VBox();
         nameBox.getChildren().addAll(createBoldLabel(owner.getUsername(), 16), createGrayLabel("Lvl. " + owner.getLevel(), 14));
 
@@ -201,27 +204,17 @@ public class HomeController {
 
     private void openDetailsPopup(Trip trip, User owner) {
         if (detailsPopup == null) return;
-
         this.selectedTripForDetails = trip;
         this.selectedTripOwnerForDetails = owner;
-
         if (detailsOwnerName != null) detailsOwnerName.setText(owner.getUsername());
-        if (detailsProfilePic != null) setCircleImage(detailsProfilePic, owner.getUsername());
+
+        // --- USE IMAGE LOADER ---
+        if (detailsProfilePic != null) ImageLoader.loadForUser(owner, detailsProfilePic);
+
         if (detailsDescription != null) detailsDescription.setText(trip.getAdditionalNotes());
-
-        // --- LOGIC: Check if it's my own trip ---
         boolean isMyTrip = currentUser != null && currentUser.getId().equals(owner.getId());
-
-        if (sendRequestBtn != null) {
-            sendRequestBtn.setVisible(!isMyTrip);
-            sendRequestBtn.setManaged(!isMyTrip);
-        }
-
-        if (ownTripLabel != null) {
-            ownTripLabel.setVisible(isMyTrip);
-            ownTripLabel.setManaged(isMyTrip);
-        }
-
+        if (sendRequestBtn != null) { sendRequestBtn.setVisible(!isMyTrip); sendRequestBtn.setManaged(!isMyTrip); }
+        if (ownTripLabel != null) { ownTripLabel.setVisible(isMyTrip); ownTripLabel.setManaged(isMyTrip); }
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
         detailsPopup.setVisible(true);
     }

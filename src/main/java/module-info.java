@@ -12,6 +12,7 @@ module com.travelmate.travelmate {
     requires javafx.graphics;
     requires java.desktop;
     requires com.google.gson;
+    requires google.cloud.storage;
 
     opens com.travelmate.travelmate.model to google.cloud.firestore;
     opens com.travelmate.travelmate to javafx.fxml, javafx.graphics, com.google.gson;

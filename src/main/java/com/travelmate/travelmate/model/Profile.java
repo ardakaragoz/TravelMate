@@ -9,6 +9,7 @@ import com.travelmate.travelmate.session.TripTypeList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class Profile {
@@ -30,7 +31,9 @@ public class Profile {
         if (doc.exists()) {
             nationality = doc.getString("nationality");
             biography = doc.getString("biography");
-            profilePictureUrl = doc.getString("profilePictureUrl");
+            if (doc.get("profilePictureUrl") instanceof String) {
+                profilePictureUrl = doc.getString("profilePictureUrl");
+            }
             hobbies = (ArrayList<String>) doc.get("hobbies");
             favoriteTripTypes = (ArrayList<String>) doc.get("favoriteTripTypes");
 
@@ -44,6 +47,17 @@ public class Profile {
             data.put("favoriteTripTypes", favoriteTripTypes);
             db.collection("profiles").document(id).set(data).get();
         }
+    }
+
+    public void setProfilePictureUrl(String url) {
+        this.profilePictureUrl = url;
+        CompletableFuture.runAsync(() -> {
+            Firestore db = FirebaseService.getFirestore();
+            // Update Profile Collection
+            db.collection("profiles").document(id).update("profilePictureUrl", url);
+            // Update Users Collection (Sync)
+            db.collection("users").document(id).update("profilePictureUrl", url);
+        });
     }
 
     public void resetHobby(){
@@ -117,11 +131,5 @@ public class Profile {
         Firestore db = FirebaseService.getFirestore();
         db.collection("profiles").document(id).update("biography", biography);
     }
-    public void setProfilePictureUrl(String profilePictureUrl) {
-        this.profilePictureUrl = profilePictureUrl;
-        Map<String, Object> data = new HashMap<>();
-        data.put("profilePictureUrl", hobbies);
-        Firestore db = FirebaseService.getFirestore();
-        db.collection("profiles").document(id).update("profilePictureUrl", data);
-    }
+
 }

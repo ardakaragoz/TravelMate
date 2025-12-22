@@ -26,6 +26,7 @@ public class User {
     private ArrayList<String> messages = new ArrayList<>();
     private ArrayList<String> tripRequests = new ArrayList<>();
     private ArrayList<String> chatRooms = new ArrayList<>();
+    private String profilePictureUrl;
 
     private int reviewCount;
     private int reviewPoints;
@@ -80,6 +81,13 @@ public class User {
         this.nationality = doc.getString("nationality");
         this.password = doc.getString("password");
 
+        Object picObj = doc.get("profilePictureUrl");
+        if (picObj instanceof String) {
+            this.profilePictureUrl = (String) picObj;
+        } else {
+            this.profilePictureUrl = null;
+        }
+
         if (doc.getLong("age") != null) this.age = doc.getLong("age").intValue();
         if (doc.getLong("levelPoint") != null) this.levelPoint = doc.getLong("levelPoint").intValue();
         if (doc.getLong("monthlyPoints") != null) this.monthlyPoints = doc.getLong("monthlyPoints").intValue();
@@ -114,6 +122,7 @@ public class User {
             data.put("email", email);
             data.put("monthlyPoints", monthlyPoints);
             data.put("name", name);
+            data.put("profilePictureUrl", profilePictureUrl);
             if (profile != null) data.put("profile", profile.getId());
             data.put("password", password);
             data.put("username", username);
@@ -333,6 +342,15 @@ public class User {
     public void leaveChannel(Channel channel) throws ExecutionException, InterruptedException {
         channel.removeParticipant(this);
         channels.remove(id);
+        updateUser();
+    }
+
+    public String getProfilePicture() {
+        return profilePictureUrl;
+    }
+
+    public void setProfilePicture(String url) {
+        this.profilePictureUrl = url;
         updateUser();
     }
 

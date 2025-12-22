@@ -7,18 +7,26 @@ import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.model.Hobby;
 import com.travelmate.travelmate.model.TripTypes;
 
+import com.travelmate.travelmate.utils.ImageLoader;
+import com.travelmate.travelmate.utils.ImageUploader;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class EditProfileController {
@@ -35,6 +43,8 @@ public class EditProfileController {
     // --- GEZİ TÜRÜ SEÇİM ALANLARI ---
     @FXML private ComboBox<String> tripTypeComboBox;    // Tüm gezi türlerinin olduğu kutu
     @FXML private ListView<String> selectedTripTypesListView; // Seçilenlerin listelendiği yer
+    private File selectedImageFile;
+    private User currentUser;
 
     public void initialize() {
         // 1. Kutuları doldur (JSON veya DB'den gelen verilerle)
@@ -52,6 +62,8 @@ public class EditProfileController {
                 // Eğer User modelinde 'getBiography' varsa:
                 // if (bioArea != null) bioArea.setText(currentUser.getProfile().getBiography());
                 if (bioArea != null) bioArea.setText(currentUser.getProfile().getBiography()); // Placeholder
+
+                ImageLoader.loadForUser(currentUser, profileImageCircle);
 
                 // --- MEVCUT HOBİLERİ YÜKLE ---
                 // Kullanıcının daha önce kaydettiği hobileri varsa ListView'e ekle
@@ -80,6 +92,7 @@ public class EditProfileController {
             e.printStackTrace();
         }
     }
+
 
     private void populateComboBoxes() {
         // --- HOBİLERİ YÜKLE ---
@@ -145,55 +158,71 @@ public class EditProfileController {
     // =========================================================
 
     @FXML
-    public void handleSaveButton(ActionEvent event) {
-        System.out.println("Kaydet butonuna basıldı...");
-        try {
-            User currentUser = UserSession.getCurrentUser();
-            String username = (String) usernameField.getText();
-            String fullName = (String) fullNameField.getText();
-            // 1. Yeni verileri al
-            String newBio = bioArea.getText();
-            List<String> finalHobbies = new ArrayList<>(selectedHobbiesListView.getItems());
-            List<String> finalTripTypes = new ArrayList<>(selectedTripTypesListView.getItems());
+    public void handleUploadPhoto(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Profile Picture");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
 
-            System.out.println("Bio: " + newBio);
-            System.out.println("Seçilen Hobiler: " + finalHobbies);
-            System.out.println("Seçilen Gezi Türleri: " + finalTripTypes);
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        File file = fileChooser.showOpenDialog(stage);
 
-            if (currentUser != null && currentUser.getProfile() != null) {
-                // 2. Profil nesnesini güncelle
-                currentUser.getProfile().setBiography(newBio);
-                currentUser.setName(fullName);
-                currentUser.setUsername(username);
-                currentUser.updateUser();
-                currentUser.getProfile().resetHobby();
-                currentUser.getProfile().resetTripType();
-                for (String finalHobby : finalHobbies){
-                    currentUser.getProfile().addHobby(HobbyList.getHobby(finalHobby));
-                }
-                for (String finalTripType : finalTripTypes){
-                    currentUser.getProfile().addTripType(TripTypeList.getTripType(finalTripType));
-                }
-                currentUser.getProfile().updateHobby_TripType();
-
-                // NOT: Profile.java içinde setHobbies(List<String> names) gibi bir metodun olmalı.
-                // Eğer yoksa, Hobby nesnelerine çevirip eklemen gerekebilir.
-                // Örn: currentUser.getProfile().updateHobbiesFromNames(finalHobbies);
-
-                // Şimdilik konsola bastık, User/Profile sınıflarında ilgili setter'ları açmalısın.
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (file != null) {
+            this.selectedImageFile = file;
+            // Preview locally immediately
+            profileImageCircle.setFill(new ImagePattern(new Image(file.toURI().toString())));
         }
+    }
 
-        // İşlem bitince Profil sayfasına dön
-        changeScene("/view/Profile.fxml", event);
+    @FXML
+    public void handleSaveButton(ActionEvent event) {
+        if (currentUser == null) return;
+        System.out.println("Saving profile...");
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                // 1. Upload Image
+                if (selectedImageFile != null) {
+                    String cloudUrl = ImageUploader.uploadProfilePicture(selectedImageFile, currentUser.getUsername());
+                    if (cloudUrl != null) {
+                        // Update User (Memory + DB)
+                        //currentUser.setProfilePicture(cloudUrl);
+                        // Update Profile (Memory + DB)
+                        currentUser.getProfile().setProfilePictureUrl(cloudUrl);
+                        // Update Cache
+                        ImageLoader.loadForUser(currentUser, profileImageCircle);
+                    }
+                }
+
+                // 2. Save Text
+                if (bioArea != null) {
+                    currentUser.getProfile().setBiography(bioArea.getText());
+                }
+
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Success");
+                    alert.setContentText("Profile Updated!");
+                    alert.showAndWait();
+                    handleCancelButton(event);
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @FXML
     public void handleCancelButton(ActionEvent event) {
-        changeScene("/view/Profile.fxml", event);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/Profile.fxml"));
+            Scene scene = new Scene(loader.load());
+            Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void changeScene(String fxmlPath, ActionEvent event) {

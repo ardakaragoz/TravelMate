@@ -2,6 +2,7 @@ package com.travelmate.travelmate.controller;
 
 import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.session.UserSession;
+import com.travelmate.travelmate.utils.ImageLoader;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -27,6 +28,8 @@ public class TopBarController {
     @FXML private Label userNameLabel;
     @FXML private Label userLevelLabel;
     @FXML private Circle profileImageCircle;
+    @FXML private Circle topBarProfileImage;
+    @FXML private Label topBarUsernameLabel;
 
     @FXML
     public void initialize() {
@@ -37,10 +40,10 @@ public class TopBarController {
             if (displayName == null || displayName.isEmpty()) {
                 displayName = currentUser.getUsername();
             }
+            ImageLoader.loadForUser(currentUser, topBarProfileImage);
             userNameLabel.setText(displayName != null ? displayName : "Unknown");
             userLevelLabel.setText("Lvl. " + currentUser.getLevel());
-            loadProfileImage(currentUser);
-        } else {
+            ImageLoader.loadForUser(currentUser, topBarProfileImage);        } else {
             userNameLabel.setText("Guest");
             userLevelLabel.setText("");
         }
