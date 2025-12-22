@@ -180,6 +180,14 @@ public class Trip {
     public void setCurrency(String currency) { this.currency = currency; }
     public void setMateCount(int mateCount) { this.mateCount = mateCount; }
     public void setDepartureDate(Date departureDate) { this.departureDate = departureDate; }
+    public void setJoinedMates(ArrayList<String> joinedMates) {
+        this.joinedMates = (joinedMates != null) ? joinedMates : new ArrayList<>();
+    }
+
+    public void setPendingMates(ArrayList<String> pendingMates) {
+        this.pendingMates = (pendingMates != null) ? pendingMates : new ArrayList<>();
+    }
+
     public String getId() { return id; }
     public String getDestinationName() { return destination; }
     public String getDepartureLocation() { return departureLocation; }
