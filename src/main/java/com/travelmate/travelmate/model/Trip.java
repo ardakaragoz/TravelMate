@@ -82,7 +82,9 @@ public class Trip {
         this.additionalNotes = additionalNotes;
 
         // This is safe to keep here as it's part of your creation logic
-        UserList.getUser(user).addTripRequest(this);
+        User userOwner = UserList.getUser(user);
+        userOwner.addTripRequest(this);
+        userOwner.increaseLevel(10);
         updateTrip();
     }
 
@@ -116,6 +118,14 @@ public class Trip {
                 this.tripChat = new TripChat(data.get("tripChat").toString(), this);
             }
         }
+    }
+
+    public boolean isFinished(){
+        if (this.endDate == null) return false;
+
+        long currentTime = System.currentTimeMillis();
+
+        return this.endDate.getTime() < currentTime;
     }
 
     public void updateTrip() {

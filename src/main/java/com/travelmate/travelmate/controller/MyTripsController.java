@@ -34,6 +34,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
@@ -100,8 +101,18 @@ public class MyTripsController implements Initializable {
         currentUser = UserList.getUser(currentUser.getId());
 
         CompletableFuture.runAsync(() -> {
-            ArrayList<String> currentIds = currentUser.getCurrentTrips();
-            ArrayList<String> pastIds = currentUser.getPastTrips();
+            ArrayList<String> currentIds = new ArrayList<>();
+            ArrayList<String> pastIds = new ArrayList<>();
+            ArrayList<String> trips = currentUser.getTrips();
+            for (String trip : trips) {
+                Trip valTrip = TripList.getTrip(trip);
+                if (!valTrip.isFinished()){
+                    currentIds.add(valTrip.getId());
+                } else {
+                    pastIds.add(valTrip.getId());
+                }
+            }
+
             if (currentIds != null) fetchAndRenderTrips(currentIds, upcomingTripsContainer, "No upcoming trips.");
             if (pastIds != null) fetchAndRenderTrips(pastIds, pastTripsContainer, "No past trips.");
         }, networkExecutor);

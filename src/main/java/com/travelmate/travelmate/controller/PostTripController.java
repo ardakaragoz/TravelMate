@@ -9,7 +9,9 @@ import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.concurrent.ExecutionException;
 
 public class PostTripController {
@@ -62,8 +64,10 @@ public class PostTripController {
         if (dest.isEmpty() || from.isEmpty() || date == null) {
             return;
         }
-
-        Trip trip = new Trip("" + System.currentTimeMillis(), destinationField.getText(), departureField.getText(), days, Integer.parseInt(budgetField.getText()), currencyChoiceBox.getValue(), datePicker.getValue(), datePicker.getValue().plusDays(4), UserSession.getCurrentUser().getId(), itinerary, mates, notes);
+        LocalDate endDate = datePicker.getValue().plusDays(days);
+        Date endDate_ = Date.from(endDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        String id = "" + System.currentTimeMillis() + "-" + endDate_.getTime();
+        Trip trip = new Trip(id, destinationField.getText(), departureField.getText(), days, Integer.parseInt(budgetField.getText()), currencyChoiceBox.getValue(), datePicker.getValue(), endDate, UserSession.getCurrentUser().getId(), itinerary, mates, notes);
 
     }
 }
