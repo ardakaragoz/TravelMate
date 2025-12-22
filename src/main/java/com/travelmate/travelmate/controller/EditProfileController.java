@@ -55,8 +55,6 @@ public class EditProfileController {
         if (com.travelmate.travelmate.session.HobbyList.hobbies.isEmpty()) {
             com.travelmate.travelmate.session.HobbyList.loadAllHobbies();
         }
-
-        
         if (hobbyComboBox != null) {
             
             hobbyComboBox.getItems().setAll(com.travelmate.travelmate.session.HobbyList.hobbies.keySet());

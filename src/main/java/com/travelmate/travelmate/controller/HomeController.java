@@ -46,12 +46,18 @@ import java.util.concurrent.Executors;
 
 public class HomeController {
 
+
     @FXML private BorderPane mainContainer;
     @FXML private VBox helpPopup;
     @FXML private VBox leaderboardContainer;
     @FXML private VBox tripsContainer;
     @FXML private SidebarController sidebarController;
     @FXML private TextField searchField;
+    @FXML private VBox filterPopup;
+    @FXML private Slider budgetSlider;
+    @FXML private Slider daysSlider;
+    @FXML private DatePicker filterStartDate;
+    @FXML private DatePicker filterEndDate;
 
     @FXML private ImageView promotedCitiesCityImage;
     @FXML private Label promotedCityNameLabel;
@@ -100,7 +106,33 @@ public class HomeController {
         });
         promotedCityNameLabel.setStyle("-fx-cursor: hand; -fx-background-color: #253A63; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #CCFF00;");
     }
+    @FXML
+    public void handleOpenFilters() {
+        if (filterPopup != null) {
+            if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
+            filterPopup.setVisible(true);
+            filterPopup.toFront();
+        }
+    }
 
+    @FXML
+    public void closeFilterPopup() {
+        // Bulanıklığı kaldır ve kapat
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (filterPopup != null) filterPopup.setVisible(false);
+    }
+
+    @FXML
+    public void applyFilters() {
+        double maxBudget = (budgetSlider != null) ? budgetSlider.getValue() : 0;
+        double days = (daysSlider != null) ? daysSlider.getValue() : 0;
+
+        System.out.println("Filtre Uygulandı -> Bütçe: " + maxBudget + ", Gün: " + days);
+        closeFilterPopup();
+
+        // 3. İleride buraya listeyi filtreleme kodunu ekleyeceğiz:
+        // loadTripsWithFilter(maxBudget, days, ...);
+    }
     private void loadRandomTrips() {
         CompletableFuture.runAsync(() -> {
             try {
@@ -385,7 +417,7 @@ public class HomeController {
 
         button.setOnMousePressed(e -> {
             javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
-            st.setToX(0.90); // %90'a küçül
+            st.setToX(0.90);
             st.setToY(0.90);
             st.play();
         });
@@ -405,3 +437,4 @@ public class HomeController {
         });
     }
 }
+

@@ -211,7 +211,6 @@ public class ChannelsController {
             }
         } catch (Exception e) { e.printStackTrace(); }
     }
-
     private void addTripCard(Trip trip, User owner) {
         HBox card = new HBox();
         card.setPrefHeight(180); card.setPrefWidth(800);
@@ -300,7 +299,6 @@ public class ChannelsController {
             stage.setScene(new javafx.scene.Scene(root));
         } catch (Exception e) { e.printStackTrace(); }
     }
-
     private void addClickEffect(Button button) {
         button.setCursor(javafx.scene.Cursor.HAND);
         button.setOnMousePressed(e -> {
@@ -313,3 +311,7 @@ public class ChannelsController {
         });
     }
 }
+
+
+
+
