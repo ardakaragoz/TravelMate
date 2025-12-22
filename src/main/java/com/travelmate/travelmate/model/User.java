@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class User {
@@ -73,7 +74,6 @@ public class User {
     // Helper to parse data (Used by both Optimized and Legacy loaders)
     private void loadFromDoc(DocumentSnapshot doc) {
         if (!doc.exists()) return;
-
         this.username = doc.getString("username");
         this.name = doc.getString("name");
         this.email = doc.getString("email");
@@ -81,14 +81,12 @@ public class User {
         this.nationality = doc.getString("nationality");
         this.password = doc.getString("password");
 
-        // Safe unboxing for numbers
         if (doc.getLong("age") != null) this.age = doc.getLong("age").intValue();
         if (doc.getLong("levelPoint") != null) this.levelPoint = doc.getLong("levelPoint").intValue();
         if (doc.getLong("monthlyPoints") != null) this.monthlyPoints = doc.getLong("monthlyPoints").intValue();
         if (doc.getLong("reviewCount") != null) this.reviewCount = doc.getLong("reviewCount").intValue();
         if (doc.getLong("reviewPoints") != null) this.reviewPoints = doc.getLong("reviewPoints").intValue();
 
-        // Load Lists Safely
         if (doc.get("currentTrips") != null) this.currentTrips = (ArrayList<String>) doc.get("currentTrips");
         if (doc.get("channels") != null) this.channels = (ArrayList<String>) doc.get("channels");
         if (doc.get("reviews") != null) this.reviews = (ArrayList<String>) doc.get("reviews");
@@ -98,10 +96,6 @@ public class User {
         if (doc.get("tripRequests") != null) this.tripRequests = (ArrayList<String>) doc.get("tripRequests");
         if (doc.get("chatRooms") != null) this.chatRooms = (ArrayList<String>) doc.get("chatRooms");
         if (doc.get("pastTrips") != null) this.pastTrips = (ArrayList<String>) doc.get("pastTrips");
-
-        // --- SPEED FIX: PROFILE LOADING REMOVED ---
-        // We do NOT load 'new Profile(id)' here because it freezes the login.
-        // It will be loaded lazily in getProfile() or by specific controllers.
     }
 
     public void setCurrentUser() throws ExecutionException, InterruptedException {
@@ -110,47 +104,39 @@ public class User {
         loadFromDoc(doc);
     }
 
-    public void updateUser() throws ExecutionException, InterruptedException {
-        Map<String, Object> data = new HashMap<>();
-        data.put("admin", isAdmin());
-        data.put("age", age);
-        data.put("levelPoint", levelPoint);
-        data.put("channels", channels);
-        data.put("gender", gender);
-        data.put("currentTrips", currentTrips);
-        data.put("pastTrips", pastTrips);
-        data.put("email", email);
-        data.put("monthlyPoints", monthlyPoints);
-        data.put("name", name);
-        if (profile != null) data.put("profile", profile.getId());
-        data.put("password", password);
-        data.put("username", username);
-        data.put("reviews", reviews);
-        data.put("reviewCount", reviewCount);
-        data.put("reviewPoints", reviewPoints);
-        data.put("nationality", nationality);
-        data.put("recommendations", recommendations);
-        data.put("messages", messages);
-        data.put("tripRequests", tripRequests);
-        data.put("chatRooms", chatRooms);
-        data.put("joinRequests", joinRequests);
+    public void updateUser() {
+        CompletableFuture.runAsync(() -> {
+            Map<String, Object> data = new HashMap<>();
+            data.put("admin", isAdmin());
+            data.put("age", age);
+            data.put("levelPoint", levelPoint);
+            data.put("channels", channels);
+            data.put("gender", gender);
+            data.put("currentTrips", currentTrips);
+            data.put("pastTrips", pastTrips);
+            data.put("email", email);
+            data.put("monthlyPoints", monthlyPoints);
+            data.put("name", name);
+            if (profile != null) data.put("profile", profile.getId());
+            data.put("password", password);
+            data.put("username", username);
+            data.put("reviews", reviews);
+            data.put("reviewCount", reviewCount);
+            data.put("reviewPoints", reviewPoints);
+            data.put("nationality", nationality);
+            data.put("recommendations", recommendations);
+            data.put("messages", messages);
+            data.put("tripRequests", tripRequests);
+            data.put("chatRooms", chatRooms);
+            data.put("joinRequests", joinRequests);
 
-        Firestore db = FirebaseService.getFirestore();
-        // Optimization: removed .get() to avoid blocking if just saving
-        db.collection("users").document(this.id).set(data);
+            FirebaseService.getFirestore().collection("users").document(this.id).set(data);
+        });
     }
-
     // --- LAZY LOADING PROFILE GETTER ---
     public Profile getProfile() {
         if (this.profile == null) {
-            try {
-                // If the profile is requested and null, fetch it now.
-                // This might cause a slight delay when opening the Profile page,
-                // but it keeps the Login page instant.
-                this.profile = new Profile(this.id);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            try { this.profile = new Profile(this.id); } catch (Exception e) { e.printStackTrace(); }
         }
         return this.profile;
     }
