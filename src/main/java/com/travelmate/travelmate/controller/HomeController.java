@@ -214,19 +214,33 @@ public class HomeController {
         }, networkExecutor);
     }
 
+    public LocalDate convertToLocalDateViaInstant(Date dateToConvert) {
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
 
     private void loadRandomTrips() {
         CompletableFuture.runAsync(() -> {
-            List<Trip> allTrips = new ArrayList<>(TripList.trips.values());
-            Collections.shuffle(allTrips);
-            // Limit to 10 for performance
-            List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
+            try {
+                List<Trip> allTrips = new ArrayList<>();
+                for (String tripID : TripList.trips.keySet()){
+                    if (!TripList.getTrip(tripID).isFinished() && !TripList.getTrip(tripID).getUser().equals(currentUser.getId())) allTrips.add(TripList.getTrip(tripID));
+                }
+                Collections.shuffle(allTrips);
+                List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
 
-            for (Trip trip : randomTrips) {
-                User owner = null;
-                try { owner = UserList.getUser(trip.getUser()); } catch (Exception e) { continue; }
-                final User finalOwner = owner;
-                Platform.runLater(() -> { if (finalOwner != null) addTripCard(trip, finalOwner); });
+                for (Trip trip : randomTrips) {
+                    User owner = null;
+                    try { owner = UserList.getUser(trip.getUser()); } catch (Exception e) { continue; }
+                    final User finalOwner = owner;
+
+                    Platform.runLater(() -> {
+                        if (finalOwner != null) addTripCard(trip, finalOwner);
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }, networkExecutor);
     }
