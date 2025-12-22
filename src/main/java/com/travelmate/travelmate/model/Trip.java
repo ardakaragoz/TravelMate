@@ -173,6 +173,13 @@ public class Trip {
     }
 
     // Getters and Setters
+    public void setDestination(String destination) { this.destination = destination; }
+    public void setDays(int days) { this.days = days; }
+    public void setDepartureLocation(String departureLocation) { this.departureLocation = departureLocation; }
+    public void setAverageBudget(int averageBudget) { this.averageBudget = averageBudget; }
+    public void setCurrency(String currency) { this.currency = currency; }
+    public void setMateCount(int mateCount) { this.mateCount = mateCount; }
+    public void setDepartureDate(Date departureDate) { this.departureDate = departureDate; }
     public String getId() { return id; }
     public String getDestinationName() { return destination; }
     public String getDepartureLocation() { return departureLocation; }
