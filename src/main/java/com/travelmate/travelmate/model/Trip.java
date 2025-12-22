@@ -160,6 +160,7 @@ public class Trip {
         if (!joinedMates.contains(mate.getId())) {
             joinedMates.add(mate.getId());
             removePendingMate(mate);
+            mate.addCurrentTrip(this.id);
             mateCount++;
             updateTrip();
         }
