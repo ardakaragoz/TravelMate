@@ -27,6 +27,14 @@
                     <padding><Insets bottom="20.0" left="20.0" right="20.0" top="30.0" /></padding>
                     <children>
                         <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+                  <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/logoBlue.png" />
+                     </image>
+                     <VBox.margin>
+                        <Insets left="25.0" top="189.0" />
+                     </VBox.margin>
+                  </ImageView>
                     </children>
                 </VBox>
             </left>

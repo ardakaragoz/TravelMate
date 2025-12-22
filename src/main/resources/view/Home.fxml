@@ -114,6 +114,12 @@
                                         <TextField fx:id="searchField" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="51.0" prefWidth="619.0" promptText="Search city, date, budget..." style="-fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-radius: 20; -fx-border-width: 2; -fx-text-fill: #253A63;" HBox.hgrow="ALWAYS">
                                             <font><Font name="League Spartan" size="18.0" /></font>
                                             <padding><Insets bottom="10.0" left="20.0" right="20.0" top="10.0" /></padding>
+                                 <opaqueInsets>
+                                    <Insets />
+                                 </opaqueInsets>
+                                 <HBox.margin>
+                                    <Insets left="50.0" />
+                                 </HBox.margin>
                                         </TextField>
                                         <Button mnemonicParsing="false" style="-fx-background-color: transparent; -fx-text-fill: #253A63;" text="🔍">
                                             <font><Font name="League Spartan Black" size="24.0" /></font>
@@ -207,7 +213,7 @@
                     </children>
                 </VBox>
 
-                <Label fx:id="ownTripLabel" text="You are the organizer of this trip." textFill="#FF4500" visible="false" managed="false">
+                <Label fx:id="ownTripLabel" managed="false" text="You are the organizer of this trip." textFill="#FF4500" visible="false">
                     <font><Font name="League Spartan Bold" size="16.0" /></font>
                 </Label>
 
