@@ -74,7 +74,7 @@
                                                 <font><Font name="League Spartan Bold" size="14.0" /></font>
                                                 <padding><Insets bottom="8.0" left="20.0" right="20.0" top="8.0" /></padding>
                                             </Button>
-                                            <Button mnemonicParsing="false" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Logout" textFill="WHITE">
+                                            <Button onAction="#logoutButton" mnemonicParsing="false" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Logout" textFill="WHITE">
                                                 <font><Font name="League Spartan Bold" size="14.0" /></font>
                                                 <padding><Insets bottom="8.0" left="30.0" right="30.0" top="8.0" /></padding>
                                             </Button>

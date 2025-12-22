@@ -46,14 +46,24 @@ public class Profile {
         }
     }
 
+    public void resetHobby(){
+        hobbies.clear();
+    }
+
+    public void resetTripType(){
+        favoriteTripTypes.clear();
+    }
+
     public void addHobby(Hobby hobby) {
         if (!hobbies.contains(hobby.getId())) {
             hobbies.add(hobby.getId());
-            Map<String, Object> data = new HashMap<>();
-            data.put("hobbies", hobbies);
-            Firestore db = FirebaseService.getFirestore();
-            db.collection("profiles").document(id).update("hobbies", data);
         }
+    }
+
+    public void updateHobby_TripType(){
+        Firestore db = FirebaseService.getFirestore();
+        db.collection("profiles").document(id).update("hobbies", hobbies);
+        db.collection("profiles").document(id).update("favoriteTripTypes", favoriteTripTypes);
     }
 
     public void removeHobby(Hobby hobby) {
@@ -67,10 +77,6 @@ public class Profile {
     public void addTripType(TripTypes tripType) {
         if (!favoriteTripTypes.contains(tripType.getId())) {
             favoriteTripTypes.add(tripType.getId());
-            Map<String, Object> data = new HashMap<>();
-            data.put("favoriteTripTypes", hobbies);
-            Firestore db = FirebaseService.getFirestore();
-            db.collection("profiles").document(id).update("favoriteTripTypes", data);
         }
     }
 
@@ -103,13 +109,13 @@ public class Profile {
         return triptypeList;
     }
 
+
+
     // Setters
     public void setBiography(String biography) {
         this.biography = biography;
-        Map<String, Object> data = new HashMap<>();
-        data.put("biography", hobbies);
         Firestore db = FirebaseService.getFirestore();
-        db.collection("profiles").document(id).update("biography", data);
+        db.collection("profiles").document(id).update("biography", biography);
     }
     public void setProfilePictureUrl(String profilePictureUrl) {
         this.profilePictureUrl = profilePictureUrl;

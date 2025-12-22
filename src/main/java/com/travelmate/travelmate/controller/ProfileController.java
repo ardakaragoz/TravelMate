@@ -79,6 +79,15 @@ public class ProfileController {
     }
 
     @FXML
+    public void logoutButton(ActionEvent event) throws IOException {
+        UserSession.setCurrentUser(null);
+        javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/sign-in-page.fxml"));
+        javafx.scene.Parent root = loader.load();
+        javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+        stage.getScene().setRoot(root);
+    }
+
+    @FXML
     public void handleEditProfileButton(ActionEvent event) {
         try {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/EditProfile.fxml"));

@@ -34,11 +34,13 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -100,8 +102,18 @@ public class MyTripsController implements Initializable {
         currentUser = UserList.getUser(currentUser.getId());
 
         CompletableFuture.runAsync(() -> {
-            ArrayList<String> currentIds = currentUser.getCurrentTrips();
-            ArrayList<String> pastIds = currentUser.getPastTrips();
+            ArrayList<String> currentIds = new ArrayList<>();
+            ArrayList<String> pastIds = new ArrayList<>();
+            ArrayList<String> trips = currentUser.getTrips();
+            for (String trip : trips) {
+                Trip valTrip = TripList.getTrip(trip);
+                if (!valTrip.isFinished()){
+                    currentIds.add(valTrip.getId());
+                } else {
+                    pastIds.add(valTrip.getId());
+                }
+            }
+
             if (currentIds != null) fetchAndRenderTrips(currentIds, upcomingTripsContainer, "No upcoming trips.");
             if (pastIds != null) fetchAndRenderTrips(pastIds, pastTripsContainer, "No past trips.");
         }, networkExecutor);
@@ -355,7 +367,11 @@ public class MyTripsController implements Initializable {
             controller.setProfileData(currentScene, userId);
             Stage stage = (Stage) currentScene.getWindow();
             stage.setScene(new Scene(root));
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) { e.printStackTrace(); } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void openDetailsPopup(Trip trip) {

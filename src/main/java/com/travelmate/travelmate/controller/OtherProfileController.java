@@ -1,11 +1,13 @@
 package com.travelmate.travelmate.controller;
 
-import com.travelmate.travelmate.model.Profile;
-import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.model.*;
+import com.travelmate.travelmate.session.ChatList;
 import com.travelmate.travelmate.session.TripTypeList;
 import com.travelmate.travelmate.session.UserList;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -19,9 +21,11 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class OtherProfileController {
 
@@ -41,7 +45,7 @@ public class OtherProfileController {
 
     private Scene previousScene;
 
-    public void setProfileData(Scene prevScene, String userID) {
+    public void setProfileData(Scene prevScene, String userID) throws ExecutionException, InterruptedException {
         this.previousScene = prevScene;
 
         User user = UserList.getUser(userID);
@@ -53,7 +57,15 @@ public class OtherProfileController {
 
         reviewScoreLabel.setText("Review Score: (9) ★★★★★");
         bioLabel.setText(userProfile.getBiography());
-
+        messageButton.setOnAction(event -> {
+            try {
+                handleMessageButton(user, event);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         try {
             String cleanName = userProfile.getId().toLowerCase().replaceAll("\\s+", "");
@@ -69,8 +81,16 @@ public class OtherProfileController {
         } catch (Exception e) {
             System.out.println("Resim yüklenemedi: " + "");
         }
-        loadDynamicTags(hobbiesContainer, Arrays.asList("Photography", "Hiking", "Museums"));
-        loadDynamicTags(tripTypesContainer, Arrays.asList("Cultural", "City Break", "Nature"));
+        ArrayList<String> hobbyList = new ArrayList<>();
+        for (Hobby hobby : userProfile.getHobbies()){
+            hobbyList.add(hobby.getName());
+        }
+        ArrayList<String> tripTypesList = new ArrayList<>();
+        for (TripTypes tripTypes : userProfile.getFavoriteTripTypes()){
+            tripTypesList.add(tripTypes.getId());
+        }
+        loadDynamicTags(hobbiesContainer, hobbyList);
+        loadDynamicTags(tripTypesContainer, tripTypesList);
         pastTripsLabel.setText("London, Paris, Berlin, Tokyo");
     }
     @FXML
@@ -94,9 +114,18 @@ public class OtherProfileController {
     }
 
     @FXML
-    public void handleMessageButton(ActionEvent event) {
+    public void handleMessageButton(User user, ActionEvent event) throws ExecutionException, InterruptedException {
 
-        System.out.println("Mesaj gönder...");
+        User currentUser = UserSession.getCurrentUser();
+        boolean oldChat = ChatList.checkDirectMessage(user, currentUser);
+        if (oldChat){
+            changeScene("/view/Chat.fxml", event);
+        } else {
+            DirectMessage newMes = new DirectMessage("" + System.currentTimeMillis(), currentUser, user);
+            currentUser.addChatRoom(newMes);
+            user.addChatRoom(newMes);
+            changeScene("/view/Chat.fxml", event);
+        }
     }
 
 
@@ -131,5 +160,17 @@ public class OtherProfileController {
             st.setToY(1.0);
             st.play();
         });
+    }
+
+    private void changeScene(String fxmlPath, ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Scene scene = new Scene(loader.load());
+            Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

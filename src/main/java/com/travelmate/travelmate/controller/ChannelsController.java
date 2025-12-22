@@ -6,10 +6,13 @@ import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.session.ChannelList;
 import com.travelmate.travelmate.session.TripList;
 import com.travelmate.travelmate.session.UserList;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -23,6 +26,7 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 import java.util.ArrayList;
 
@@ -203,7 +207,7 @@ public class ChannelsController {
             if (reqs != null) {
                 for (String req : reqs) {
                     Trip t = TripList.getTrip(req);
-                    if (t != null) {
+                    if (t != null && !t.isFinished()) {
                         User u = UserList.getUser(t.getUser());
                         if (u != null) addTripCard(t, u);
                     }
@@ -289,14 +293,24 @@ public class ChannelsController {
 
     private void switchToOtherProfile(javafx.event.ActionEvent event, String userID) {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
-            javafx.scene.Parent root = loader.load();
-            OtherProfileController controller = loader.getController();
-            javafx.scene.Node source = (javafx.scene.Node) event.getSource();
-            javafx.scene.Scene currentScene = source.getScene();
-            controller.setProfileData(currentScene, userID);
-            javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
-            stage.setScene(new javafx.scene.Scene(root));
+            User currentUser = UserSession.getCurrentUser();
+            if (userID.equals(currentUser.getId())){
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Profile.fxml"));
+                Scene scene = new Scene(loader.load());
+                Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+                stage.setScene(scene);
+                stage.show();
+            } else {
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
+                javafx.scene.Parent root = loader.load();
+                OtherProfileController controller = loader.getController();
+                javafx.scene.Node source = (javafx.scene.Node) event.getSource();
+                javafx.scene.Scene currentScene = source.getScene();
+                controller.setProfileData(currentScene, userID);
+                javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
+                stage.setScene(new javafx.scene.Scene(root));
+            }
+
         } catch (Exception e) { e.printStackTrace(); }
     }
     private void addClickEffect(Button button) {

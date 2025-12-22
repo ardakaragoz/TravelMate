@@ -18,8 +18,7 @@ public class User {
     private Profile profile;
 
     // Initialize lists immediately to avoid NullPointerException
-    private ArrayList<String> pastTrips = new ArrayList<>();
-    private ArrayList<String> currentTrips = new ArrayList<>();
+    private ArrayList<String> trips = new ArrayList<>();
     private ArrayList<String> channels = new ArrayList<>();
     private ArrayList<String> reviews = new ArrayList<>();
     private ArrayList<String> joinRequests = new ArrayList<>();
@@ -87,7 +86,7 @@ public class User {
         if (doc.getLong("reviewCount") != null) this.reviewCount = doc.getLong("reviewCount").intValue();
         if (doc.getLong("reviewPoints") != null) this.reviewPoints = doc.getLong("reviewPoints").intValue();
 
-        if (doc.get("currentTrips") != null) this.currentTrips = (ArrayList<String>) doc.get("currentTrips");
+        if (doc.get("trips") != null) this.trips = (ArrayList<String>) doc.get("trips");
         if (doc.get("channels") != null) this.channels = (ArrayList<String>) doc.get("channels");
         if (doc.get("reviews") != null) this.reviews = (ArrayList<String>) doc.get("reviews");
         if (doc.get("joinRequests") != null) this.joinRequests = (ArrayList<String>) doc.get("joinRequests");
@@ -95,7 +94,6 @@ public class User {
         if (doc.get("messages") != null) this.messages = (ArrayList<String>) doc.get("messages");
         if (doc.get("tripRequests") != null) this.tripRequests = (ArrayList<String>) doc.get("tripRequests");
         if (doc.get("chatRooms") != null) this.chatRooms = (ArrayList<String>) doc.get("chatRooms");
-        if (doc.get("pastTrips") != null) this.pastTrips = (ArrayList<String>) doc.get("pastTrips");
     }
 
     public void setCurrentUser() throws ExecutionException, InterruptedException {
@@ -112,8 +110,7 @@ public class User {
             data.put("levelPoint", levelPoint);
             data.put("channels", channels);
             data.put("gender", gender);
-            data.put("currentTrips", currentTrips);
-            data.put("pastTrips", pastTrips);
+            data.put("trips", trips);
             data.put("email", email);
             data.put("monthlyPoints", monthlyPoints);
             data.put("name", name);
@@ -143,6 +140,7 @@ public class User {
 
     public void addRequest(JoinRequest req) throws ExecutionException, InterruptedException {
         this.joinRequests.add(req.getId());
+        updateUser();
         req.getTrip().addPendingMate(this);
     }
 
@@ -153,6 +151,18 @@ public class User {
 
     public void removeUserRequest(JoinRequest req, User mate) throws ExecutionException, InterruptedException {
         req.getTrip().removePendingMate(mate);
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void addRecommendation(Recommendation recommendation) throws ExecutionException, InterruptedException {
@@ -173,7 +183,7 @@ public class User {
     }
 
     public void addTripRequest(Trip trip) throws ExecutionException, InterruptedException {
-        this.currentTrips.add(trip.getId());
+        this.trips.add(trip.getId());
         ChannelList.getChannel(trip.getDestinationName()).addTripRequest(trip);
         updateUser();
     }
@@ -306,7 +316,7 @@ public class User {
     }
 
     public void addCurrentTrip(String id) throws ExecutionException, InterruptedException {
-        currentTrips.add(id);
+        trips.add(id);
         updateUser();
     }
 
@@ -340,8 +350,7 @@ public class User {
     public int getLevelPoint() { return levelPoint; }
     public int getMonthlyPoints() { return monthlyPoints; }
     // Note: getProfile is defined above as a lazy loader
-    public ArrayList<String> getPastTrips() { return pastTrips; }
-    public ArrayList<String> getCurrentTrips() { return currentTrips; }
+    public ArrayList<String> getTrips() { return trips; }
     public ArrayList<String> getChannels() { return channels; }
     public ArrayList<String> getReviews() { return reviews; }
     public int getReviewCount() { return reviewCount; }

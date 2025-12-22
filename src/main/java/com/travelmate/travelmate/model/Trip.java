@@ -82,7 +82,9 @@ public class Trip {
         this.additionalNotes = additionalNotes;
 
         // This is safe to keep here as it's part of your creation logic
-        UserList.getUser(user).addTripRequest(this);
+        User userOwner = UserList.getUser(user);
+        userOwner.addTripRequest(this);
+        userOwner.increaseLevel(10);
         updateTrip();
     }
 
@@ -118,6 +120,14 @@ public class Trip {
         }
     }
 
+    public boolean isFinished(){
+        if (this.endDate == null) return false;
+
+        long currentTime = System.currentTimeMillis();
+
+        return this.endDate.getTime() < currentTime;
+    }
+
     public void updateTrip() {
         CompletableFuture.runAsync(() -> {
             Map<String, Object> data = new HashMap<>();
@@ -150,6 +160,7 @@ public class Trip {
         if (!joinedMates.contains(mate.getId())) {
             joinedMates.add(mate.getId());
             removePendingMate(mate);
+            mate.addCurrentTrip(this.id);
             mateCount++;
             updateTrip();
         }
