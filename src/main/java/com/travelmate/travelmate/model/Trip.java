@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class Trip {
@@ -117,26 +118,27 @@ public class Trip {
         }
     }
 
-    public void updateTrip() throws ExecutionException, InterruptedException {
-        Map<String, Object> data = new HashMap<>();
-        data.put("id", id); // Good to store ID in document too
-        data.put("destination", destination);
-        data.put("departureLocation", departureLocation);
-        data.put("days", days);
-        data.put("averageBudget", averageBudget);
-        data.put("currency", currency);
-        data.put("departureDate", departureDate);
-        data.put("endDate", endDate);
-        data.put("user", user != null ? user : null); // Store ID, not full object
-        data.put("joinedMates", joinedMates);
-        data.put("pendingMates", pendingMates);
-        data.put("mateCount", mateCount);
-        if (tripChat != null) data.put("tripChat", tripChat.getId());
-        data.put("itinerary", itinerary);
-        data.put("additionalNotes", additionalNotes);
+    public void updateTrip() {
+        CompletableFuture.runAsync(() -> {
+            Map<String, Object> data = new HashMap<>();
+            data.put("id", id);
+            data.put("destination", destination);
+            data.put("departureLocation", departureLocation);
+            data.put("days", days);
+            data.put("averageBudget", averageBudget);
+            data.put("currency", currency);
+            data.put("departureDate", departureDate);
+            data.put("endDate", endDate);
+            data.put("user", user);
+            data.put("joinedMates", joinedMates);
+            data.put("pendingMates", pendingMates);
+            data.put("mateCount", mateCount);
+            if (tripChat != null) data.put("tripChat", tripChat.getId());
+            data.put("itinerary", itinerary);
+            data.put("additionalNotes", additionalNotes);
 
-        // Removed .get() to prevent blocking
-        db.collection("trips").document(id).set(data);
+            db.collection("trips").document(id).set(data);
+        });
     }
 
     public String getDestination() throws ExecutionException, InterruptedException {
@@ -173,6 +175,21 @@ public class Trip {
     }
 
     // Getters and Setters
+    public void setDestination(String destination) { this.destination = destination; }
+    public void setDays(int days) { this.days = days; }
+    public void setDepartureLocation(String departureLocation) { this.departureLocation = departureLocation; }
+    public void setAverageBudget(int averageBudget) { this.averageBudget = averageBudget; }
+    public void setCurrency(String currency) { this.currency = currency; }
+    public void setMateCount(int mateCount) { this.mateCount = mateCount; }
+    public void setDepartureDate(Date departureDate) { this.departureDate = departureDate; }
+    public void setJoinedMates(ArrayList<String> joinedMates) {
+        this.joinedMates = (joinedMates != null) ? joinedMates : new ArrayList<>();
+    }
+
+    public void setPendingMates(ArrayList<String> pendingMates) {
+        this.pendingMates = (pendingMates != null) ? pendingMates : new ArrayList<>();
+    }
+
     public String getId() { return id; }
     public String getDestinationName() { return destination; }
     public String getDepartureLocation() { return departureLocation; }

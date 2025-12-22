@@ -16,52 +16,70 @@ public class TripList {
         trips.put(trip.getId(), trip);
     }
 
-    public static Trip getTrip(String name) {
-        return trips.get(name);
+    public static Trip getTrip(String id) {
+        return trips.get(id);
     }
 
     public static void loadAllTrips() {
         Firestore db = FirebaseService.getFirestore();
-        db.collection("trips").addSnapshotListener(new EventListener<QuerySnapshot>() {
-            public void onEvent(QuerySnapshot snapshots, FirestoreException e) {
-                if (e != null) {
-                    System.err.println("Channel dinlenirken hata oluştu: " + e.getMessage());
-                    return;
-                }
+        db.collection("trips").addSnapshotListener((snapshots, e) -> {
+            if (e != null) {
+                System.err.println("Listen failed: " + e);
+                return;
+            }
 
-                if (snapshots != null) {
-                    // JavaFX arayüzü ile çakışmaması için güncellemeyi JavaFX Thread'ine alıyoruz
-                    Platform.runLater(() -> {
-                        trips.clear();
-                        for (QueryDocumentSnapshot doc : snapshots) {
-                            Trip trip = null;
-                            try {
-                                String id = doc.getId();
-                                String user = doc.getString("user");
-                                String tripChat = doc.getString("tripChat");
-                                ArrayList<String> pendingMates = (ArrayList<String>) doc.get("pendingMates");
-                                ArrayList<String> joinedMates = (ArrayList<String>) doc.get("pendingMates");
-                                String additionalNotes = (String) doc.get("additionalNotes");
-                                int averageBudget =  doc.getLong("averageBudget").intValue();
-                                String currency = (String) doc.get("currency");
-                                int days = doc.getLong("days").intValue();
-                                Date departureDate = doc.getDate("departureDate");
-                                String destination = (String) doc.get("destination");
-                                int mateCount = doc.getLong("mateCount").intValue();
-                                String itinerary = (String) doc.get("itinerary");
-                                String departureLocation = (String) doc.get("departureLocation");
-                                Date endDate = doc.getDate("endDate");
-                                trip = new Trip(id, destination, departureLocation, days, averageBudget, currency, departureDate, endDate, user, itinerary, mateCount, additionalNotes);
-                            } catch (Exception ex) {
-                                throw new RuntimeException(ex);
-                            }
+            if (snapshots != null) {
+                Platform.runLater(() -> {
+                    // --- OPTIMIZATION: Process ONLY changes ---
+                    for (DocumentChange dc : snapshots.getDocumentChanges()) {
+                        QueryDocumentSnapshot doc = dc.getDocument();
+                        String id = doc.getId();
 
-                            addTrip(trip);
+                        switch (dc.getType()) {
+                            case ADDED:
+                            case MODIFIED:
+                                // Parse and update/add ONLY this trip
+                                Trip trip = parseTrip(doc);
+                                if (trip != null) trips.put(id, trip);
+                                break;
+                            case REMOVED:
+                                trips.remove(id);
+                                break;
                         }
-                        System.out.println("Başarılı! Toplam " + trips.size() + " trip hafızaya alındı/güncellendi.");
-                    });
-                }
+                    }
+                    System.out.println("Trip list updated efficiently. Total: " + trips.size());
+                });
             }
         });
+    }
+
+    private static Trip parseTrip(QueryDocumentSnapshot doc) {
+        try {
+            String id = doc.getId();
+            String user = doc.getString("user");
+
+            ArrayList<String> pendingMates = (ArrayList<String>) doc.get("pendingMates");
+            ArrayList<String> joinedMates = (ArrayList<String>) doc.get("joinedMates"); // Fixed Typo
+
+            String additionalNotes = doc.getString("additionalNotes");
+            int averageBudget = doc.getLong("averageBudget") != null ? doc.getLong("averageBudget").intValue() : 0;
+            String currency = doc.getString("currency");
+            int days = doc.getLong("days") != null ? doc.getLong("days").intValue() : 0;
+            Date departureDate = doc.getDate("departureDate");
+            String destination = doc.getString("destination");
+            int mateCount = doc.getLong("mateCount") != null ? doc.getLong("mateCount").intValue() : 0;
+            String itinerary = doc.getString("itinerary");
+            String departureLocation = doc.getString("departureLocation");
+            Date endDate = doc.getDate("endDate");
+
+            Trip trip = new Trip(id, destination, departureLocation, days, averageBudget, currency, departureDate, endDate, user, itinerary, mateCount, additionalNotes);
+            trip.setPendingMates(pendingMates);
+            trip.setJoinedMates(joinedMates);
+
+            return trip;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 }

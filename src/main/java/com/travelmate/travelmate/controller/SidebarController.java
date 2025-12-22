@@ -7,6 +7,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import java.io.IOException;
 
@@ -22,11 +24,12 @@ public class SidebarController {
     public void setActivePage(String pageName) {
         resetStyles();
 
-        // Active Style (Green) - With Transparent Focus Fix
-        String activeStyle = "-fx-background-color: #CCFF00; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
+        // --- NEW STYLE STRINGS (Nested Backgrounds, No Borders) ---
 
-        // Active Chat Style - With Transparent Focus Fix
-        String activeChatStyle = "-fx-background-color: #CCFF00; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
+        // Active = Green Inner, Navy Outer
+        String activeStyle = "-fx-background-color: #253A63, #CCFF00; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
+
+        String activeChatStyle = "-fx-background-color: #253A63, #CCFF00; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 
         switch (pageName) {
             case "Home": if (homeButton != null) homeButton.setStyle(activeStyle); break;
@@ -39,11 +42,10 @@ public class SidebarController {
     }
 
     private void resetStyles() {
-        // Default Style (White) - With Transparent Focus Fix
-        String defaultStyle = "-fx-background-color: WHITE; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
+        // Default = White Inner, Navy Outer
+        String defaultStyle = "-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 
-        // Default Chat Style - With Transparent Focus Fix
-        String defaultChatStyle = "-fx-background-color: WHITE; -fx-border-color: #253A63; -fx-border-width: 3; -fx-background-radius: 30; -fx-border-radius: 30; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-weight: bold; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
+        String defaultChatStyle = "-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 
         if (homeButton != null) homeButton.setStyle(defaultStyle);
         if (myTripsButton != null) myTripsButton.setStyle(defaultStyle);
@@ -51,6 +53,29 @@ public class SidebarController {
         if (channelsButton != null) channelsButton.setStyle(defaultStyle);
         if (chatButton != null) chatButton.setStyle(defaultChatStyle);
         if (profileButton != null) profileButton.setStyle(defaultStyle);
+    }
+
+    // --- ANIMATION LOGIC (Real Life Push) ---
+    @FXML
+    private void handleMousePressed(MouseEvent event) {
+        if (event.getSource() instanceof Button) {
+            Button btn = (Button) event.getSource();
+            btn.setTranslateY(4);
+            if (btn.getEffect() instanceof DropShadow) {
+                ((DropShadow) btn.getEffect()).setOffsetY(3.0);
+            }
+        }
+    }
+
+    @FXML
+    private void handleMouseReleased(MouseEvent event) {
+        if (event.getSource() instanceof Button) {
+            Button btn = (Button) event.getSource();
+            btn.setTranslateY(0);
+            if (btn.getEffect() instanceof DropShadow) {
+                ((DropShadow) btn.getEffect()).setOffsetY(7.0);
+            }
+        }
     }
 
     @FXML private void handleHomeButton(ActionEvent event) { switchScene("/view/Home.fxml", event); }
