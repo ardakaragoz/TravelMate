@@ -140,6 +140,7 @@ public class User {
 
     public void addRequest(JoinRequest req) throws ExecutionException, InterruptedException {
         this.joinRequests.add(req.getId());
+        updateUser();
         req.getTrip().addPendingMate(this);
     }
 
