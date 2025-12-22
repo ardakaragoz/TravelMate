@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 public class ChatController {
 
@@ -369,6 +370,10 @@ public class ChatController {
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 

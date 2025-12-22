@@ -40,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -366,7 +367,11 @@ public class MyTripsController implements Initializable {
             controller.setProfileData(currentScene, userId);
             Stage stage = (Stage) currentScene.getWindow();
             stage.setScene(new Scene(root));
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) { e.printStackTrace(); } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void openDetailsPopup(Trip trip) {

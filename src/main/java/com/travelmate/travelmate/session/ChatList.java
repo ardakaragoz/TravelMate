@@ -2,10 +2,7 @@ package com.travelmate.travelmate.session;
 
 import com.google.cloud.firestore.*;
 import com.travelmate.travelmate.firebase.FirebaseService;
-import com.travelmate.travelmate.model.ChannelChat;
-import com.travelmate.travelmate.model.ChatRoom;
-import com.travelmate.travelmate.model.DirectMessage;
-import com.travelmate.travelmate.model.TripChat;
+import com.travelmate.travelmate.model.*;
 import javafx.application.Platform;
 
 import java.util.ArrayList;
@@ -13,9 +10,20 @@ import java.util.HashMap;
 
 public class ChatList {
     public static HashMap<String, ChatRoom> chats = new HashMap<>();
-
+    public static HashMap<String, DirectMessage> directMessages = new HashMap<>();
     public static void addChat(ChatRoom room) {
         chats.put(room.getId(), room);
+    }
+
+    public static boolean checkDirectMessage(User user1, User user2) {
+        boolean found = false;
+        for (DirectMessage directMessage : directMessages.values()) {
+            if (directMessage.getActiveUsers().contains(user1.getId()) && directMessage.getActiveUsers().contains(user2.getId())) {
+                found = true;
+                break;
+            }
+        }
+        return found;
     }
 
     public static ChatRoom getChat(String name) {
@@ -47,6 +55,7 @@ public class ChatList {
                             chat = new ChannelChat(id, messages, activeUsers);
                         } else if (type.equals("Direct")){
                             chat = new DirectMessage(id, activeUsers, messages);
+                            directMessages.put(id, (DirectMessage) chat);
                         } else {
                             chat = new TripChat(id, activeUsers, messages);
                         }

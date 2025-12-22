@@ -51,7 +51,7 @@ public class EditProfileController {
 
                 // Eğer User modelinde 'getBiography' varsa:
                 // if (bioArea != null) bioArea.setText(currentUser.getProfile().getBiography());
-                if (bioArea != null) bioArea.setText("Hi! I am using TravelMate."); // Placeholder
+                if (bioArea != null) bioArea.setText(currentUser.getProfile().getBiography()); // Placeholder
 
                 // --- MEVCUT HOBİLERİ YÜKLE ---
                 // Kullanıcının daha önce kaydettiği hobileri varsa ListView'e ekle
@@ -149,7 +149,8 @@ public class EditProfileController {
         System.out.println("Kaydet butonuna basıldı...");
         try {
             User currentUser = UserSession.getCurrentUser();
-
+            String username = (String) usernameField.getText();
+            String fullName = (String) fullNameField.getText();
             // 1. Yeni verileri al
             String newBio = bioArea.getText();
             List<String> finalHobbies = new ArrayList<>(selectedHobbiesListView.getItems());
@@ -162,6 +163,18 @@ public class EditProfileController {
             if (currentUser != null && currentUser.getProfile() != null) {
                 // 2. Profil nesnesini güncelle
                 currentUser.getProfile().setBiography(newBio);
+                currentUser.setName(fullName);
+                currentUser.setUsername(username);
+                currentUser.updateUser();
+                currentUser.getProfile().resetHobby();
+                currentUser.getProfile().resetTripType();
+                for (String finalHobby : finalHobbies){
+                    currentUser.getProfile().addHobby(HobbyList.getHobby(finalHobby));
+                }
+                for (String finalTripType : finalTripTypes){
+                    currentUser.getProfile().addTripType(TripTypeList.getTripType(finalTripType));
+                }
+                currentUser.getProfile().updateHobby_TripType();
 
                 // NOT: Profile.java içinde setHobbies(List<String> names) gibi bir metodun olmalı.
                 // Eğer yoksa, Hobby nesnelerine çevirip eklemen gerekebilir.
