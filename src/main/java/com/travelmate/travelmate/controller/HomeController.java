@@ -39,10 +39,8 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -160,8 +158,57 @@ public class HomeController {
         LocalDate endDate = (filterEndDate != null) ? filterEndDate.getValue() : null;
 
         closeFilterPopup();
+        tripsContainer.getChildren().clear();
+        loadRandomTrips((int) maxBudget, days, mateCount, departure, destination, startDate, endDate);
 
+    }
 
+    private void loadRandomTrips(int maxBudget, int days, int mateCount, String departure, String destination, LocalDate startDate, LocalDate endDate) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                List<Trip> allTrips = new ArrayList<>();
+                for (String tripID : TripList.trips.keySet()){
+                    Trip trip = TripList.getTrip(tripID);
+                    if (!trip.isFinished() && trip.getUser().equals(currentUser.getId())){
+                        boolean pass = maxBudget == 0 || trip.getAverageBudget() <= maxBudget;
+                        System.out.println(pass);
+                        if (pass && days != 0 && trip.getDays() != days) pass = false;
+                        System.out.println(pass);
+                        if (pass && mateCount != 0 && trip.getMateCount() != mateCount) pass = false;
+                        System.out.println(pass);
+                        if (pass && departure.length() > 0 && !trip.getDepartureLocation().equalsIgnoreCase(departure)) pass = false;
+                        System.out.println(pass);
+                        if (pass && destination.length() > 0 && !trip.getDestination().equalsIgnoreCase(destination)) pass = false;
+                        System.out.println(pass);
+                        if (pass && startDate != null && !startDate.equals(convertToLocalDateViaInstant(trip.getDepartureDate()))) pass = false;
+                        System.out.println(pass);
+                        if (pass && endDate != null && !endDate.equals(convertToLocalDateViaInstant(trip.getEndDate()))) pass = false;
+                        System.out.println(pass);
+                        if (pass) allTrips.add(TripList.getTrip(tripID));
+                    }
+                }
+                Collections.shuffle(allTrips);
+                List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
+
+                for (Trip trip : randomTrips) {
+                    User owner = null;
+                    try { owner = UserList.getUser(trip.getUser()); } catch (Exception e) { continue; }
+                    final User finalOwner = owner;
+
+                    Platform.runLater(() -> {
+                        if (finalOwner != null) addTripCard(trip, finalOwner);
+                    });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, networkExecutor);
+    }
+
+    public LocalDate convertToLocalDateViaInstant(Date dateToConvert) {
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
     }
 
 
