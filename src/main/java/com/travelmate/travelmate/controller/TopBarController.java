@@ -80,7 +80,7 @@ public class TopBarController {
             Image imageToSet = null;
             try {
                 if (user.getProfile() != null) {
-                    String url = user.getProfile().getProfilePictureUrl();
+                    String url = user.getProfilePicture();
                     if (url != null && !url.isEmpty()) {
                         imageToSet = new Image(url, true);
                     }

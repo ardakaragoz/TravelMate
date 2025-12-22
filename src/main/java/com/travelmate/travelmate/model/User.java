@@ -360,10 +360,10 @@ public class User {
     public ArrayList<String> getTripRequests() { return tripRequests; }
     public ArrayList<String> getChatRooms() { return chatRooms; }
 
-    // --- Image Accessors ---
     public String getProfilePicture() { return profilePictureUrl; }
-    public void setProfilePicture(String profilePictureUrl) {
-        this.profilePictureUrl = profilePictureUrl;
+
+    public void setProfilePicture(String url) {
+        this.profilePictureUrl = url;
         updateUser();
     }
 
