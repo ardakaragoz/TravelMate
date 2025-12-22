@@ -104,7 +104,10 @@ public class HomeController {
     private void loadRandomTrips() {
         CompletableFuture.runAsync(() -> {
             try {
-                List<Trip> allTrips = new ArrayList<>(TripList.trips.values());
+                List<Trip> allTrips = new ArrayList<>();
+                for (String tripID : TripList.trips.keySet()){
+                    if (!TripList.getTrip(tripID).isFinished()) allTrips.add(TripList.getTrip(tripID));
+                }
                 Collections.shuffle(allTrips);
                 List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
 
