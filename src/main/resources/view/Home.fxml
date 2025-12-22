@@ -59,7 +59,8 @@
                 </VBox>
             </left>
             <center>
-                <ScrollPane fitToWidth="true" style="-fx-background-color: #FFF7EA; -fx-background: #FFF7EA; -fx-border-color: transparent;" BorderPane.alignment="CENTER">                    <content>
+                <ScrollPane fitToWidth="true" style="-fx-background-color: #FFF7EA; -fx-background: #FFF7EA; -fx-border-color: transparent;" BorderPane.alignment="CENTER">
+                    <content>
                         <VBox prefHeight="481.0" prefWidth="976.0" spacing="25.0" style="-fx-background-color: #FFF7EA;">
                             <padding><Insets bottom="30.0" right="30.0" top="30.0" /></padding>
                             <children>
@@ -83,9 +84,7 @@
                                                         <HBox alignment="CENTER_LEFT" prefHeight="19.0" prefWidth="257.0" spacing="10.0">
                                                             <children>
                                                                 <Label text="Compatibility Score:" textFill="#253A63">
-                                                                    <font>
-                                                      <Font name="League Spartan Bold" size="14.0" />
-                                                   </font>
+                                                                    <font><Font name="League Spartan Bold" size="14.0" /></font>
                                                                 </Label>
                                                                 <ProgressBar fx:id="compatibilityScoreBar" prefWidth="150.0" progress="0.7" style="-fx-accent: #253A63; -fx-control-inner-background: #FFFFFF;" />
                                                                 <Label fx:id="compalibilityScoreLabel" text="\%70" textFill="#253A63"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
@@ -98,28 +97,20 @@
                                                     <children>
                                                         <ImageView fx:id="promotedCitiesCityImage" fitHeight="273.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true" />
                                                     </children>
-                                                    <clip>
-                                                        <Rectangle arcHeight="30.0" arcWidth="30.0" height="200.0" width="280.0" />
-                                                    </clip>
+                                                    <clip><Rectangle arcHeight="30.0" arcWidth="30.0" height="200.0" width="280.0" /></clip>
                                                     <StackPane.margin><Insets right="10.0" /></StackPane.margin>
                                                 </StackPane>
                                             </children>
                                             <effect><DropShadow color="#00000015" offsetX="5.0" offsetY="5.0" radius="0.0" /></effect>
                                         </HBox>
                                         <Button mnemonicParsing="false" onAction="#handleNextPromoted" style="-fx-background-color: #CCFF00; -fx-background-radius: 50; -fx-min-width: 40px; -fx-min-height: 40px; -fx-text-fill: #253A63;" text="&gt;">
-                                            <font>
-                                    <Font name="League Spartan Bold" size="20.0" />
-                                 </font>
-                                            <effect>
-                                    <DropShadow color="#00000020" offsetX="2.0" offsetY="2.0" radius="0.0" />
-                                 </effect>
+                                            <font><Font name="League Spartan Bold" size="20.0" /></font>
+                                            <effect><DropShadow color="#00000020" offsetX="2.0" offsetY="2.0" radius="0.0" /></effect>
                                         </Button>
                                     </children>
                                 </HBox>
                                 <HBox alignment="CENTER_LEFT" spacing="15.0">
                                     <children>
-                              <Label text="      " />
-                              <Label />
                                         <TextField fx:id="searchField" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="51.0" prefWidth="619.0" promptText="Search city, date, budget..." style="-fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-radius: 20; -fx-border-width: 2; -fx-text-fill: #253A63;" HBox.hgrow="ALWAYS">
                                             <font><Font name="League Spartan" size="18.0" /></font>
                                             <padding><Insets bottom="10.0" left="20.0" right="20.0" top="10.0" /></padding>
@@ -129,10 +120,10 @@
                                         </Button>
                                     </children>
                                 </HBox>
-                                <Label text="Available Trips" textFill="#253A63"><font><Font name="League Spartan Bold" size="29.0" /></font>
-                           <VBox.margin>
-                              <Insets left="52.0" />
-                           </VBox.margin></Label>
+                                <Label text="Available Trips" textFill="#253A63">
+                                    <font><Font name="League Spartan Bold" size="29.0" /></font>
+                                    <VBox.margin><Insets left="52.0" /></VBox.margin>
+                                </Label>
                                 <VBox fx:id="tripsContainer" spacing="20.0" />
                             </children>
                         </VBox>
@@ -215,7 +206,12 @@
                         </javafx.scene.control.TextArea>
                     </children>
                 </VBox>
-                <Button onAction="#handleSendRequestButton" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Send Request">
+
+                <Label fx:id="ownTripLabel" text="You are the organizer of this trip." textFill="#FF4500" visible="false" managed="false">
+                    <font><Font name="League Spartan Bold" size="16.0" /></font>
+                </Label>
+
+                <Button fx:id="sendRequestBtn" onAction="#handleSendRequestButton" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Send Request">
                     <font><Font name="League Spartan Bold" size="16.0" /></font>
                     <padding><Insets bottom="10.0" left="30.0" right="30.0" top="10.0" /></padding>
                     <effect><DropShadow color="#00000020" offsetX="3.0" offsetY="3.0" /></effect>

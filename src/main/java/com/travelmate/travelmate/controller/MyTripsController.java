@@ -4,6 +4,7 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.FieldValue;
+import com.google.cloud.firestore.QuerySnapshot;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.*;
 import com.travelmate.travelmate.session.TripList;
@@ -12,24 +13,32 @@ import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.CompletableFuture; // <--- THIS FIXES THE ERROR
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,44 +49,41 @@ public class MyTripsController implements Initializable {
     @FXML private SidebarController sidebarController;
     @FXML private BorderPane mainContent;
 
-    // --- DETAILS POPUP ---
-    @FXML private VBox detailsPopup;
+    // --- POPUPS ---
+    @FXML private VBox detailsPopup, forumPopup, editPopup, requestsPopup;
+
+    // Details
     @FXML private ImageView detailsBannerImage;
-    @FXML private Label detailHeaderDest, detailHeaderTitle;
+    @FXML private Label detailHeaderDest, detailHeaderTitle, detailCreatorName, detailNotes, detailBudget, detailDate, detailItinerary, detailFriendsLabel;
     @FXML private Circle detailCreatorImage;
-    @FXML private Label detailCreatorName;
-    @FXML private Label detailNotes, detailBudget, detailDate, detailItinerary, detailFriendsLabel;
     @FXML private HBox detailFriendsContainer;
 
-    // --- FORUM POPUP ---
-    @FXML private VBox forumPopup;
+    // Forum
     @FXML private Label forumTitleDest, forumSubtitle;
     @FXML private VBox forumListContainer;
     @FXML private TextField forumInputField;
     @FXML private ScrollPane forumScrollPane;
 
-    // --- EDIT & REQUESTS POPUPS ---
-    @FXML private VBox editPopup, requestsPopup;
+    // Edit
     @FXML private TextField editDestination, editDeparture, editBudget, editItinerary;
     @FXML private TextArea editNotes;
     @FXML private Spinner<Integer> editDays, editMates;
     @FXML private DatePicker editDate;
     @FXML private ChoiceBox<String> editCurrency;
+
+    // Requests
     @FXML private VBox requestsListContainer;
 
     private User currentUser;
     private Trip selectedTrip;
     private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-
-    // Cache for Forum Messages
     private Map<String, List<Message>> forumCache = new HashMap<>();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         if (sidebarController != null) sidebarController.setActivePage("MyTrips");
 
-        // Init Form Elements
         editDays.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 365, 4));
         editMates.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 2));
         editCurrency.getItems().addAll("$", "€", "₺", "£");
@@ -85,10 +91,7 @@ public class MyTripsController implements Initializable {
         currentUser = UserSession.getCurrentUser();
         if (currentUser != null) loadTrips();
 
-        // Auto-scroll forum to bottom
-        forumListContainer.heightProperty().addListener((observable, oldValue, newValue) -> {
-            forumScrollPane.setVvalue(1.0);
-        });
+        forumListContainer.heightProperty().addListener((o, old, val) -> forumScrollPane.setVvalue(1.0));
     }
 
     private void loadTrips() {
@@ -174,7 +177,187 @@ public class MyTripsController implements Initializable {
         return btn;
     }
 
-    // --- POPUP: DETAILS ---
+    // --- REQUESTS LOGIC (Background Thread for Freezing Fix) ---
+    private void openRequestsPopup(Trip trip) {
+        selectedTrip = trip;
+        requestsListContainer.getChildren().clear();
+        Label loading = new Label("Loading requests...");
+        loading.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+        requestsListContainer.getChildren().add(loading);
+        showPopup(requestsPopup);
+
+        CompletableFuture.runAsync(() -> {
+            List<RequestData> requestDataList = new ArrayList<>();
+            try {
+                QuerySnapshot query = FirebaseService.getFirestore()
+                        .collection("join_requests")
+                        .whereEqualTo("trip", trip.getId())
+                        .get().get();
+
+                for (DocumentSnapshot doc : query.getDocuments()) {
+                    String status = doc.getString("status");
+                    if ("PENDING".equalsIgnoreCase(status)) {
+                        String reqId = doc.getId();
+                        String userId = doc.getString("requester");
+                        String msg = doc.getString("message");
+
+                        User u = UserList.getUser(userId);
+                        if (u != null) {
+                            requestDataList.add(new RequestData(u, msg != null ? msg : "No message provided.", reqId));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            Platform.runLater(() -> renderRequestsList(requestDataList));
+        }, networkExecutor);
+    }
+
+    private static class RequestData {
+        User user;
+        String message;
+        String requestId;
+        public RequestData(User user, String message, String requestId) {
+            this.user = user;
+            this.message = message;
+            this.requestId = requestId;
+        }
+    }
+
+    private void renderRequestsList(List<RequestData> requests) {
+        requestsListContainer.getChildren().clear();
+        if (requests.isEmpty()) {
+            Label lbl = new Label("No active requests.");
+            lbl.setStyle("-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;");
+            requestsListContainer.getChildren().add(lbl);
+            return;
+        }
+
+        for (RequestData req : requests) {
+            HBox card = new HBox(15);
+            card.setAlignment(Pos.CENTER_LEFT);
+            card.setPadding(new Insets(15));
+            card.setStyle("-fx-background-color: #FFF7EA; -fx-background-radius: 20;");
+            card.setPrefHeight(110);
+
+            VBox profileSection = new VBox(5);
+            profileSection.setAlignment(Pos.CENTER);
+            profileSection.setMinWidth(120);
+
+            Circle avatar = new Circle(25, Color.LIGHTGRAY);
+            avatar.setStroke(Color.BLACK);
+            setUserImage(avatar, req.user.getUsername());
+
+            Label nameLbl = new Label(req.user.getUsername());
+            nameLbl.setFont(Font.font("League Spartan Bold", 14));
+            nameLbl.setTextFill(Color.BLACK); // --- FIX: Explicit Black Text
+
+            Button viewProfileBtn = new Button("View Profile");
+            viewProfileBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-text-fill: black; -fx-font-size: 10px; -fx-font-weight: bold; -fx-cursor: hand;");
+            viewProfileBtn.setOnAction(e -> handleViewProfile(e, req.user.getId()));
+
+            profileSection.getChildren().addAll(avatar, nameLbl, viewProfileBtn);
+
+            VBox messageSection = new VBox();
+            messageSection.setAlignment(Pos.TOP_LEFT);
+            HBox.setHgrow(messageSection, Priority.ALWAYS);
+            messageSection.setStyle("-fx-background-color: #FFCB7B; -fx-background-radius: 15; -fx-padding: 10;");
+
+            ScrollPane msgScroll = new ScrollPane();
+            msgScroll.setFitToWidth(true);
+            msgScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            msgScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+            Label msgLbl = new Label(req.message);
+            msgLbl.setWrapText(true);
+            msgLbl.setFont(Font.font("League Spartan", 13));
+            msgLbl.setTextFill(Color.BLACK); // --- FIX: Explicit Black Text
+            msgScroll.setContent(msgLbl);
+
+            messageSection.getChildren().add(msgScroll);
+
+            VBox actionSection = new VBox(10);
+            actionSection.setAlignment(Pos.CENTER);
+            actionSection.setMinWidth(100);
+
+            Button approveBtn = new Button("APPROVE");
+            approveBtn.setPrefWidth(90);
+            approveBtn.setStyle("-fx-background-color: #28A745; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand;");
+            approveBtn.setOnAction(e -> handleApprove(req));
+
+            Button denyBtn = new Button("DENY");
+            denyBtn.setPrefWidth(90);
+            denyBtn.setStyle("-fx-background-color: #FF4500; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand;");
+            denyBtn.setOnAction(e -> handleDeny(req));
+
+            actionSection.getChildren().addAll(approveBtn, denyBtn);
+
+            card.getChildren().addAll(profileSection, messageSection, actionSection);
+            requestsListContainer.getChildren().add(card);
+        }
+    }
+
+    // --- FIX: Run Database operations in background to prevent freezing ---
+    private void handleApprove(RequestData req) {
+        requestsListContainer.getChildren().clear();
+        requestsListContainer.getChildren().add(new Label("Processing...")); // Immediate feedback
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                selectedTrip.addMate(req.user); // Heavy DB operation
+                FirebaseService.getFirestore().collection("join_requests").document(req.requestId).update("status", "APPROVED");
+
+                Platform.runLater(() -> openRequestsPopup(selectedTrip)); // Refresh UI after done
+            } catch (Exception e) {
+                e.printStackTrace();
+                Platform.runLater(() -> openRequestsPopup(selectedTrip));
+            }
+        }, networkExecutor);
+    }
+
+    private void handleDeny(RequestData req) {
+        requestsListContainer.getChildren().clear();
+        requestsListContainer.getChildren().add(new Label("Processing..."));
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                selectedTrip.removePendingMate(req.user); // Heavy DB operation
+                FirebaseService.getFirestore().collection("join_requests").document(req.requestId).update("status", "DENIED");
+
+                Platform.runLater(() -> openRequestsPopup(selectedTrip));
+            } catch (Exception e) {
+                e.printStackTrace();
+                Platform.runLater(() -> openRequestsPopup(selectedTrip));
+            }
+        }, networkExecutor);
+    }
+
+    private void setUserImage(Circle circle, String username) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                String path = "/images/" + username.toLowerCase() + ".png";
+                URL url = getClass().getResource(path);
+                if (url == null) url = getClass().getResource("/images/user_icon.png");
+                Image img = new Image(url.toExternalForm());
+                Platform.runLater(() -> circle.setFill(new ImagePattern(img)));
+            } catch (Exception e) {}
+        }, networkExecutor);
+    }
+
+    private void handleViewProfile(javafx.event.ActionEvent event, String userId) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
+            Parent root = loader.load();
+            OtherProfileController controller = loader.getController();
+            Scene currentScene = ((Node) event.getSource()).getScene();
+            controller.setProfileData(currentScene, userId);
+            Stage stage = (Stage) currentScene.getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
     private void openDetailsPopup(Trip trip) {
         selectedTrip = trip;
         loadImage(detailsBannerImage, trip.getDestinationName());
@@ -190,7 +373,6 @@ public class MyTripsController implements Initializable {
             ArrayList<String> mates = trip.getJoinedMates();
             Platform.runLater(() -> {
                 if (creator != null) detailCreatorName.setText(creator.getName());
-
                 detailFriendsContainer.getChildren().clear();
                 detailFriendsLabel.setText("Friends: " + (mates != null ? mates.size() : 0) + "/" + trip.getMateCount());
                 if (mates != null) {
@@ -205,152 +387,81 @@ public class MyTripsController implements Initializable {
         showPopup(detailsPopup);
     }
 
-    // --- POPUP: FORUM (Chat with DB) ---
-    @FXML
-    public void handleOpenForum() {
-        detailsPopup.setVisible(false);
-        forumPopup.setVisible(true);
-        forumPopup.toFront();
-
+    @FXML public void handleOpenForum() {
+        detailsPopup.setVisible(false); forumPopup.setVisible(true); forumPopup.toFront();
         forumTitleDest.setText(selectedTrip.getDestinationName());
         forumSubtitle.setText(selectedTrip.getDestinationName() + " Trip with Friends");
         forumListContainer.getChildren().clear();
-
         loadForumMessages(selectedTrip);
     }
 
     private void loadForumMessages(Trip trip) {
         forumListContainer.getChildren().clear();
-
         Task<List<Message>> loadTask = new Task<>() {
-            @Override
-            protected List<Message> call() throws Exception {
+            @Override protected List<Message> call() throws Exception {
                 String chatRoomId = trip.getId();
-
-                // 1. Get Chat Room Document
                 DocumentSnapshot roomDoc = FirebaseService.getFirestore().collection("chatrooms").document(chatRoomId).get().get();
-                if (!roomDoc.exists()) {
-                    return new ArrayList<>();
-                }
-
+                if (!roomDoc.exists()) return new ArrayList<>();
                 List<String> messageIds = (List<String>) roomDoc.get("messages");
                 if (messageIds == null || messageIds.isEmpty()) return new ArrayList<>();
 
-                // 2. Batch Fetch Messages
                 int total = messageIds.size();
                 int limit = 25;
                 int start = Math.max(0, total - limit);
                 List<String> recentIds = messageIds.subList(start, total);
-
                 List<DocumentReference> refs = new ArrayList<>();
-                for (String msgId : recentIds) {
-                    if (msgId != null && !msgId.trim().isEmpty()) {
-                        refs.add(FirebaseService.getFirestore().collection("messages").document(msgId));
-                    }
-                }
+                for (String msgId : recentIds) if (msgId != null && !msgId.trim().isEmpty()) refs.add(FirebaseService.getFirestore().collection("messages").document(msgId));
                 if (refs.isEmpty()) return new ArrayList<>();
-
                 ApiFuture<List<DocumentSnapshot>> future = FirebaseService.getFirestore().getAll(refs.toArray(new DocumentReference[0]));
                 List<DocumentSnapshot> snapshots = future.get();
-
                 List<Message> loadedMessages = new ArrayList<>();
-                for (DocumentSnapshot doc : snapshots) {
-                    if (doc.exists()) {
-                        loadedMessages.add(new Message(doc));
-                    }
-                }
-
+                for (DocumentSnapshot doc : snapshots) if (doc.exists()) loadedMessages.add(new Message(doc));
                 loadedMessages.sort(Comparator.comparing(m -> m.getCreatedAt() != null ? m.getCreatedAt() : new Date(0)));
                 return loadedMessages;
             }
         };
-
         loadTask.setOnSucceeded(event -> {
-            List<Message> messages = loadTask.getValue();
-            forumCache.put(trip.getId(), messages);
-
             Platform.runLater(() -> {
-                for (Message msg : messages) {
+                for (Message msg : loadTask.getValue()) {
                     boolean isSelf = msg.getSender() != null && msg.getSender().getId().equals(currentUser.getId());
-                    String name = (msg.getSender() != null) ? msg.getSender().getName() : "User";
-                    addForumBubble(msg.getMessage(), name, isSelf);
+                    addForumBubble(msg.getMessage(), (msg.getSender()!=null ? msg.getSender().getName() : "User"), isSelf);
                 }
             });
         });
-
         new Thread(loadTask).start();
     }
 
-    @FXML
-    public void handleSendForumMessage() {
+    @FXML public void handleSendForumMessage() {
         String text = forumInputField.getText().trim();
         if (!text.isEmpty()) {
-            // 1. Optimistic UI Update
             addForumBubble(text, currentUser.getName(), true);
             forumInputField.clear();
-
-            // 2. Background DB Update
             new Thread(() -> {
                 try {
                     String msgId = UUID.randomUUID().toString();
                     Message msg = new Message(msgId, text, currentUser);
-
-                    String chatRoomId = selectedTrip.getId();
-
-                    FirebaseService.getFirestore().collection("chatrooms")
-                            .document(chatRoomId)
-                            .update("messages", FieldValue.arrayUnion(msgId));
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                    FirebaseService.getFirestore().collection("chatrooms").document(selectedTrip.getId()).update("messages", FieldValue.arrayUnion(msgId));
+                } catch (Exception e) {}
             }).start();
         }
     }
 
-    @FXML
-    public void closeForumPopup() {
-        forumPopup.setVisible(false);
-        detailsPopup.setVisible(true);
-    }
+    @FXML public void closeForumPopup() { forumPopup.setVisible(false); detailsPopup.setVisible(true); }
 
     private void addForumBubble(String text, String senderName, boolean isSelf) {
-        HBox row = new HBox(10);
-        row.setAlignment(isSelf ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-
-        VBox bubble = new VBox(5);
-        bubble.setMaxWidth(300);
-        bubble.setPadding(new Insets(10, 15, 10, 15));
-
-        if (isSelf) {
-            bubble.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
-        } else {
-            bubble.setStyle("-fx-background-color: #FFCB7B; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
-        }
-
-        Label nameLbl = new Label(senderName);
-        nameLbl.setFont(Font.font("League Spartan Bold", 12));
-        nameLbl.setTextFill(Color.web("#253A63"));
-
-        Label msgLbl = new Label(text);
-        msgLbl.setWrapText(true);
-        msgLbl.setTextFill(Color.web("#253A63"));
-        msgLbl.setFont(Font.font("League Spartan", 14));
-
+        HBox row = new HBox(10); row.setAlignment(isSelf ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        VBox bubble = new VBox(5); bubble.setMaxWidth(300); bubble.setPadding(new Insets(10, 15, 10, 15));
+        if (isSelf) bubble.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
+        else bubble.setStyle("-fx-background-color: #FFCB7B; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
+        Label nameLbl = new Label(senderName); nameLbl.setFont(Font.font("League Spartan Bold", 12)); nameLbl.setTextFill(Color.web("#253A63"));
+        Label msgLbl = new Label(text); msgLbl.setWrapText(true); msgLbl.setTextFill(Color.web("#253A63")); msgLbl.setFont(Font.font("League Spartan", 14));
         bubble.getChildren().addAll(nameLbl, msgLbl);
-
-        Circle pic = new Circle(18, isSelf ? Color.LIGHTBLUE : Color.LIGHTGRAY);
-        pic.setStroke(Color.BLACK);
-
-        if (isSelf) row.getChildren().addAll(bubble, pic);
-        else row.getChildren().addAll(pic, bubble);
-
+        Circle pic = new Circle(18, isSelf ? Color.LIGHTBLUE : Color.LIGHTGRAY); pic.setStroke(Color.BLACK);
+        if (isSelf) row.getChildren().addAll(bubble, pic); else row.getChildren().addAll(pic, bubble);
         forumListContainer.getChildren().add(row);
-        forumScrollPane.layout();
-        forumScrollPane.setVvalue(1.0);
+        forumScrollPane.layout(); forumScrollPane.setVvalue(1.0);
     }
 
-    // --- OTHER POPUPS ---
     private void openEditPopup(Trip trip) {
         selectedTrip = trip;
         editDestination.setText(trip.getDestinationName());
@@ -361,14 +472,11 @@ public class MyTripsController implements Initializable {
         editMates.getValueFactory().setValue(trip.getMateCount());
         editNotes.setText(trip.getAdditionalNotes());
         editItinerary.setText(trip.getItinerary());
-        if (trip.getDepartureDate() != null) {
-            editDate.setValue(trip.getDepartureDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-        }
+        if (trip.getDepartureDate() != null) editDate.setValue(trip.getDepartureDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         showPopup(editPopup);
     }
 
-    @FXML
-    public void saveTripEdit() {
+    @FXML public void saveTripEdit() {
         if (selectedTrip != null) {
             try {
                 selectedTrip.setDestination(editDestination.getText());
@@ -379,56 +487,11 @@ public class MyTripsController implements Initializable {
                 selectedTrip.setMateCount(editMates.getValue());
                 selectedTrip.setAdditionalNotes(editNotes.getText());
                 selectedTrip.setItinerary(editItinerary.getText());
-                if (editDate.getValue() != null) {
-                    selectedTrip.setDepartureDate(Date.from(editDate.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-                }
+                if (editDate.getValue() != null) selectedTrip.setDepartureDate(Date.from(editDate.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant()));
                 selectedTrip.updateTrip();
-                closePopups();
-                loadTrips();
+                closePopups(); loadTrips();
             } catch (Exception e) { e.printStackTrace(); }
         }
-    }
-
-    private void openRequestsPopup(Trip trip) {
-        selectedTrip = trip;
-        requestsListContainer.getChildren().clear();
-        requestsListContainer.getChildren().add(new Label("Loading..."));
-        showPopup(requestsPopup);
-        CompletableFuture.runAsync(() -> {
-            ArrayList<String> pendingIds = trip.getPendingMates();
-            List<User> pendingUsers = new ArrayList<>();
-            if (pendingIds != null) {
-                for (String uid : pendingIds) {
-                    try { pendingUsers.add(new User(uid)); } catch (Exception e) {}
-                }
-            }
-            Platform.runLater(() -> renderRequestsList(pendingUsers));
-        }, networkExecutor);
-    }
-
-    private void renderRequestsList(List<User> users) {
-        requestsListContainer.getChildren().clear();
-        if (users.isEmpty()) { requestsListContainer.getChildren().add(new Label("No pending requests.")); return; }
-        for (User u : users) {
-            HBox row = new HBox(10);
-            row.setAlignment(Pos.CENTER_LEFT);
-            row.setStyle("-fx-background-color: white; -fx-padding: 10; -fx-border-color: #253A63; -fx-border-radius: 10;");
-            Label nameLbl = new Label(u.getUsername());
-            nameLbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #253A63;");
-            HBox.setHgrow(nameLbl, Priority.ALWAYS);
-            nameLbl.setMaxWidth(Double.MAX_VALUE);
-            Button accept = new Button("✔"); accept.setOnAction(e -> handleApprove(u));
-            Button deny = new Button("✖"); deny.setOnAction(e -> handleDeny(u));
-            row.getChildren().addAll(nameLbl, accept, deny);
-            requestsListContainer.getChildren().add(row);
-        }
-    }
-
-    private void handleApprove(User user) {
-        try { selectedTrip.addMate(user); openRequestsPopup(selectedTrip); } catch (Exception e) {}
-    }
-    private void handleDeny(User user) {
-        try { selectedTrip.removePendingMate(user); openRequestsPopup(selectedTrip); } catch (Exception e) {}
     }
 
     private void showPopup(VBox popup) {
@@ -437,8 +500,7 @@ public class MyTripsController implements Initializable {
         popup.toFront();
     }
 
-    @FXML
-    public void closePopups() {
+    @FXML public void closePopups() {
         mainContent.setEffect(null);
         detailsPopup.setVisible(false);
         requestsPopup.setVisible(false);
@@ -451,10 +513,7 @@ public class MyTripsController implements Initializable {
         try {
             String path = "/images/city photos/" + cityName.toLowerCase() + ".jpg";
             URL url = getClass().getResource(path);
-            if (url == null) {
-                path = "/images/city photos/" + cityName.toLowerCase() + ".png";
-                url = getClass().getResource(path);
-            }
+            if (url == null) { path = "/images/city photos/" + cityName.toLowerCase() + ".png"; url = getClass().getResource(path); }
             if (url != null) view.setImage(new Image(url.toExternalForm()));
             else view.setImage(new Image(getClass().getResource("/images/logoBlue.png").toExternalForm()));
         } catch (Exception e) {}
