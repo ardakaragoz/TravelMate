@@ -367,7 +367,11 @@ public class HomeController {
             controller.setProfileData(currentScene, userID);
             javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
             stage.setScene(new javafx.scene.Scene(root));
-        } catch (java.io.IOException e) { e.printStackTrace(); }
+        } catch (java.io.IOException e) { e.printStackTrace(); } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void openChannelPage(javafx.event.Event event, String cityName) {
