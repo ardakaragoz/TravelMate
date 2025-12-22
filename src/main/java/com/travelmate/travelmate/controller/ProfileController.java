@@ -70,7 +70,7 @@ public class ProfileController {
 
         String rawUrl = profile.getProfilePictureUrl();
         String secureUrl = formatToHttps(rawUrl);
-
+        System.out.println("DEBUG - Trying to load image from: " + rawUrl); // <--- Add this
         // 2. Load Image
         if (secureUrl != null && !secureUrl.isEmpty()) {
             try {
