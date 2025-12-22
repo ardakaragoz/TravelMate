@@ -58,23 +58,23 @@ public class EditProfileController {
                 if (currentUser.getProfile() != null) {
                     // Not: Profil sınıfındaki getHobbies() metodun ArrayList<Hobby> dönüyorsa isimlerini almalısın
                     // Örnek kullanım:
-                    /*
+
                     try {
                         ArrayList<Hobby> myHobbies = currentUser.getProfile().getHobbies();
                         for (Hobby h : myHobbies) {
                             selectedHobbiesListView.getItems().add(h.getName());
                         }
                     } catch (Exception e) { e.printStackTrace(); }
-                    */
+
                 }
 
                 // --- MEVCUT GEZİ TÜRLERİNİ YÜKLE ---
-                /*
+
                 if (currentUser.getProfile() != null) {
-                    // ArrayList<TripTypes> myTypes = currentUser.getProfile().getFavoriteTripTypes();
-                    // for (TripTypes t : myTypes) selectedTripTypesListView.getItems().add(t.getName());
+                    ArrayList<TripTypes> myTypes = currentUser.getProfile().getFavoriteTripTypes();
+                    for (TripTypes t : myTypes) selectedTripTypesListView.getItems().add(t.getName());
                 }
-                */
+
             }
         } catch (Exception e) {
             e.printStackTrace();

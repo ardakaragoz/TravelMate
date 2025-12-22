@@ -1,9 +1,7 @@
 package com.travelmate.travelmate.controller;
 
-import com.travelmate.travelmate.model.Hobby;
-import com.travelmate.travelmate.model.Profile;
-import com.travelmate.travelmate.model.TripTypes;
-import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.model.*;
+import com.travelmate.travelmate.session.TripList;
 import com.travelmate.travelmate.session.UserSession;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -29,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 
@@ -83,13 +83,27 @@ public class ProfileController {
         } else {
             loadDefaultImage();
         }
+        List<String> citiesList = new ArrayList<>();
+        for (String id : user.getTrips()){
+            Trip trip = TripList.getTrip(id);
+            if (trip.isFinished() && !(citiesList.contains(trip.getDestinationName()))){
+                citiesList.add(trip.getDestinationName());
+            }
+        }
+        String str = "";
+        for (String city : citiesList){
+            str += city + ", ";
+        }
+        if (str.length() > 0){ str = str.substring(0, str.length() - 2); }
+        pastTripsLabel.setText(str);
+        setProfileImage("user1");
 
         for (Hobby hobby : profile.getHobbies()){
             addTag(hobbiesContainer, hobby.getName(), "#CCFF00");
         }
 
         for (TripTypes triptype : profile.getFavoriteTripTypes()) {
-            addTag(tripTypesContainer, "Cruise", "#a4c2f2");
+            addTag(tripTypesContainer, triptype.getId(), "#a4c2f2");
         }
     }
     private void loadDefaultImage() {
