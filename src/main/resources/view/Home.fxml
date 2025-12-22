@@ -7,13 +7,17 @@
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
@@ -149,9 +153,9 @@
                 <VBox alignment="CENTER_LEFT" maxWidth="450.0" spacing="10.0">
                     <children>
                         <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Completing a trip with a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+50" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Completing biography &amp; hobbies:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+10" textFill="#2ecc71" /></HBox>
+                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Completing biography &amp; hobbies:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+25" textFill="#2ecc71" /></HBox>
                         <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Receiving a 4-5 star review:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+20" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Writing a review for a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+10" textFill="#2ecc71" /></HBox>
+                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Writing a review for a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+15" textFill="#2ecc71" /></HBox>
                         <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Posting a trip request:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+10" textFill="#2ecc71" /></HBox>
                     </children>
                 </VBox>
@@ -228,41 +232,77 @@
             </children>
         </VBox>
 
-        <VBox fx:id="filterPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="450.0" spacing="20.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
-            <padding><Insets bottom="30.0" left="30.0" right="30.0" top="20.0" /></padding>
+        <VBox fx:id="filterPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" prefWidth="550.0" spacing="15.0" style="-fx-background-color: WHITE; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 20;" visible="false">
+            <padding><Insets bottom="25.0" left="30.0" right="30.0" top="20.0" /></padding>
             <effect><DropShadow color="#00000080" radius="30.0" /></effect>
             <children>
-                <HBox alignment="CENTER_RIGHT">
-                    <Button onAction="#closeFilterPopup" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20;" text="X" textFill="WHITE">
-                        <font><Font name="System Bold" size="14.0" /></font>
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="FILTERS" textFill="#1e3a5f">
+                        <font><Font name="System Bold" size="24.0" /></font>
+                    </Label>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button onAction="#closeFilterPopup" style="-fx-background-color: transparent; -fx-cursor: hand;" text="X" textFill="#1e3a5f">
+                        <font><Font name="System Bold" size="18.0" /></font>
                     </Button>
                 </HBox>
 
-                <Label text="FILTERS" textFill="#1e3a5f" underline="true">
-                    <font><Font name="System Bold" size="28.0" /></font>
-                </Label>
-
-                <VBox spacing="5.0" alignment="CENTER_LEFT">
-                    <Label text="Budget Range ($)" style="-fx-font-weight: bold;"/>
-                    <Slider fx:id="budgetSlider" max="5000" showTickLabels="true" showTickMarks="true"/>
-                </VBox>
-
-                <VBox spacing="5.0" alignment="CENTER_LEFT">
-                    <Label text="Days" style="-fx-font-weight: bold;"/>
-                    <Slider fx:id="daysSlider" min="1" max="30" showTickLabels="true"/>
-                </VBox>
-
-                <VBox spacing="10.0" alignment="CENTER_LEFT">
-                    <Label text="Departure Date Range" style="-fx-font-weight: bold;"/>
-                    <HBox spacing="10.0">
-                        <DatePicker fx:id="filterStartDate" promptText="From" />
-                        <DatePicker fx:id="filterEndDate" promptText="To" />
+                <VBox spacing="5.0">
+                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                        <Label style="-fx-font-weight: bold; -fx-font-size: 16px;" text="Max Budget:" textFill="#1e3a5f" />
+                        <Label fx:id="budgetValueLabel" text="5000 $" textFill="#555" />
                     </HBox>
+                    <Slider fx:id="budgetSlider" blockIncrement="100.0" majorTickUnit="1000.0" max="5000.0" min="0.0" showTickMarks="true" style="-fx-cursor: hand;" />
                 </VBox>
 
-                <Button onAction="#applyFilters" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20;" text="Apply Filters">
+                <GridPane hgap="20.0" vgap="15.0">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    </columnConstraints>
+                    <children>
+                        <VBox spacing="5.0">
+                            <Label style="-fx-font-weight: bold;" text="Days:" textFill="#1e3a5f" />
+                            <Spinner fx:id="daysSpinner" editable="true" style="-fx-background-radius: 10; -fx-border-radius: 10;" />
+                        </VBox>
+
+                        <VBox spacing="5.0" GridPane.columnIndex="1">
+                            <Label style="-fx-font-weight: bold;" text="Mate Count:" textFill="#1e3a5f" />
+                            <Spinner fx:id="mateCountSpinner" editable="true" style="-fx-background-radius: 10; -fx-border-radius: 10;" />
+                        </VBox>
+
+                        <VBox spacing="5.0" GridPane.rowIndex="1">
+                            <Label style="-fx-font-weight: bold;" text="Departure:" textFill="#1e3a5f" />
+                            <TextField fx:id="filterDepartureField" promptText="Anywhere" style="-fx-background-radius: 10; -fx-border-color: #1E3A5F; -fx-border-radius: 10;" />
+                        </VBox>
+
+                        <VBox spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <Label style="-fx-font-weight: bold;" text="Destination:" textFill="#1e3a5f" />
+                            <TextField fx:id="filterDestinationField" promptText="Anywhere" style="-fx-background-radius: 10; -fx-border-color: #1E3A5F; -fx-border-radius: 10;" />
+                        </VBox>
+                    </children>
+                    <rowConstraints>
+                        <RowConstraints />
+                        <RowConstraints />
+                    </rowConstraints>
+                </GridPane>
+
+                <HBox spacing="20.0">
+                    <children>
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label style="-fx-font-weight: bold;" text="From:" textFill="#1e3a5f" />
+                            <DatePicker fx:id="filterStartDate" promptText="Start Date" style="-fx-background-radius: 10;" />
+                        </VBox>
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label style="-fx-font-weight: bold;" text="To:" textFill="#1e3a5f" />
+                            <DatePicker fx:id="filterEndDate" promptText="End Date" style="-fx-background-radius: 10;" />
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <Button onAction="#applyFilters" prefWidth="200.0" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: BLACK; -fx-border-radius: 20; -fx-cursor: hand;" text="Search">
                     <font><Font name="System Bold" size="18.0" /></font>
-                    <padding><Insets bottom="10.0" left="40.0" right="40.0" top="10.0" /></padding>
+                    <effect><DropShadow color="#00000033" offsetX="3.0" offsetY="3.0" /></effect>
+                    <VBox.margin><Insets top="10.0" /></VBox.margin>
                 </Button>
             </children>
         </VBox>

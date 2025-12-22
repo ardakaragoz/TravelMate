@@ -38,6 +38,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,16 +50,20 @@ import java.util.concurrent.Executors;
 
 public class HomeController {
 
-
     @FXML private BorderPane mainContainer;
     @FXML private VBox helpPopup;
     @FXML private VBox leaderboardContainer;
     @FXML private VBox tripsContainer;
     @FXML private SidebarController sidebarController;
     @FXML private TextField searchField;
+
     @FXML private VBox filterPopup;
     @FXML private Slider budgetSlider;
-    @FXML private Slider daysSlider;
+    @FXML private Label budgetValueLabel;
+    @FXML private Spinner<Integer> daysSpinner;
+    @FXML private Spinner<Integer> mateCountSpinner;
+    @FXML private TextField filterDepartureField;
+    @FXML private TextField filterDestinationField;
     @FXML private DatePicker filterStartDate;
     @FXML private DatePicker filterEndDate;
 
@@ -68,14 +73,12 @@ public class HomeController {
     @FXML private ProgressBar compatibilityScoreBar;
     @FXML private Label compalibilityScoreLabel;
 
-    // --- DETAILS POPUP ---
     @FXML private VBox detailsPopup;
     @FXML private Circle detailsProfilePic;
     @FXML private Label detailsOwnerName;
     @FXML private Label detailsDescription;
     @FXML private TextArea messageInputArea;
 
-    // --- NEW: Elements for handling own trip logic ---
     @FXML private Label ownTripLabel;
     @FXML private Button sendRequestBtn;
 
@@ -108,7 +111,26 @@ public class HomeController {
             if (city != null && !city.isEmpty()) openChannelPage(event, city);
         });
         promotedCityNameLabel.setStyle("-fx-cursor: hand; -fx-background-color: #253A63; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #CCFF00;");
+
+        setupFilterComponents();
     }
+
+    private void setupFilterComponents() {
+        if (daysSpinner != null) {
+            SpinnerValueFactory<Integer> daysFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 30, 0);
+            daysSpinner.setValueFactory(daysFactory);
+        }
+        if (mateCountSpinner != null) {
+            SpinnerValueFactory<Integer> matesFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 10, 0);
+            mateCountSpinner.setValueFactory(matesFactory);
+        }
+        if (budgetSlider != null && budgetValueLabel != null) {
+            budgetSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+                budgetValueLabel.setText((int) newVal.doubleValue() + " $");
+            });
+        }
+    }
+
     @FXML
     public void handleOpenFilters() {
         if (filterPopup != null) {
@@ -120,28 +142,35 @@ public class HomeController {
 
     @FXML
     public void closeFilterPopup() {
-        // Bulanıklığı kaldır ve kapat
         if (mainContainer != null) mainContainer.setEffect(null);
         if (filterPopup != null) filterPopup.setVisible(false);
     }
 
     @FXML
     public void applyFilters() {
-        double maxBudget = (budgetSlider != null) ? budgetSlider.getValue() : 0;
-        double days = (daysSlider != null) ? daysSlider.getValue() : 0;
 
-        System.out.println("Filtre Uygulandı -> Bütçe: " + maxBudget + ", Gün: " + days);
+        double maxBudget = (budgetSlider != null) ? budgetSlider.getValue() : 0;
+        int days = (daysSpinner != null && daysSpinner.getValue() != null) ? daysSpinner.getValue() : 0;
+        int mateCount = (mateCountSpinner != null && mateCountSpinner.getValue() != null) ? mateCountSpinner.getValue() : 0;
+
+        String departure = (filterDepartureField != null) ? filterDepartureField.getText() : "";
+        String destination = (filterDestinationField != null) ? filterDestinationField.getText() : "";
+
+        LocalDate startDate = (filterStartDate != null) ? filterStartDate.getValue() : null;
+        LocalDate endDate = (filterEndDate != null) ? filterEndDate.getValue() : null;
+
         closeFilterPopup();
 
-        // 3. İleride buraya listeyi filtreleme kodunu ekleyeceğiz:
-        // loadTripsWithFilter(maxBudget, days, ...);
+
     }
+
+
     private void loadRandomTrips() {
         CompletableFuture.runAsync(() -> {
             try {
                 List<Trip> allTrips = new ArrayList<>();
                 for (String tripID : TripList.trips.keySet()){
-                    if (!TripList.getTrip(tripID).isFinished() && !TripList.getTrip(tripID).getUser().equals(currentUser.getId())) allTrips.add(TripList.getTrip(tripID));
+                    if (!TripList.getTrip(tripID).isFinished()) allTrips.add(TripList.getTrip(tripID));
                 }
                 Collections.shuffle(allTrips);
                 List<Trip> randomTrips = allTrips.subList(0, Math.min(allTrips.size(), 10));
@@ -241,7 +270,6 @@ public class HomeController {
         if (detailsProfilePic != null) setCircleImage(detailsProfilePic, owner.getUsername());
         if (detailsDescription != null) detailsDescription.setText(trip.getAdditionalNotes());
 
-        // --- LOGIC: Check if it's my own trip ---
         boolean isMyTrip = currentUser != null && currentUser.getId().equals(owner.getId());
 
         if (sendRequestBtn != null) {
@@ -456,4 +484,3 @@ public class HomeController {
         });
     }
 }
-
