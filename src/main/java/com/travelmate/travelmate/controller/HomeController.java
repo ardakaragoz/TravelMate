@@ -242,24 +242,14 @@ public class HomeController {
                     String path = cleanPath.substring(bucketSeparator + 1);
                     String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
                     return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
-    public LocalDate convertToLocalDateViaInstant(Date dateToConvert) {
-        return dateToConvert.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-    }
-
-
-    private void loadRandomTrips() {
-        CompletableFuture.runAsync(() -> {
-            try {
-                List<Trip> allTrips = new ArrayList<>();
-                for (String tripID : TripList.trips.keySet()){
-                    if (!TripList.getTrip(tripID).isFinished() && !TripList.getTrip(tripID).getUser().equals(currentUser.getId())) allTrips.add(TripList.getTrip(tripID));
                 }
             }
         } catch (Exception e) { e.printStackTrace(); }
         return null;
     }
+
+
+
 
     private void setProfileImage(Circle targetCircle, User user) {
         if (targetCircle == null) return;
