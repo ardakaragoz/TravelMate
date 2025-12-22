@@ -21,6 +21,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.GaussianBlur;
@@ -33,6 +35,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -359,14 +362,23 @@ public class HomeController {
 
     private void switchToOtherProfile(javafx.event.ActionEvent event, String userID) {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
-            javafx.scene.Parent root = loader.load();
-            OtherProfileController controller = loader.getController();
-            javafx.scene.Node source = (javafx.scene.Node) event.getSource();
-            javafx.scene.Scene currentScene = source.getScene();
-            controller.setProfileData(currentScene, userID);
-            javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
-            stage.setScene(new javafx.scene.Scene(root));
+            if (userID.equals(currentUser.getId())){
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Profile.fxml"));
+                Scene scene = new Scene(loader.load());
+                Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+                stage.setScene(scene);
+                stage.show();
+            } else {
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
+                javafx.scene.Parent root = loader.load();
+                OtherProfileController controller = loader.getController();
+                javafx.scene.Node source = (javafx.scene.Node) event.getSource();
+                javafx.scene.Scene currentScene = source.getScene();
+                controller.setProfileData(currentScene, userID);
+                javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
+                stage.setScene(new javafx.scene.Scene(root));
+            }
+
         } catch (java.io.IOException e) { e.printStackTrace(); } catch (ExecutionException e) {
             throw new RuntimeException(e);
         } catch (InterruptedException e) {
