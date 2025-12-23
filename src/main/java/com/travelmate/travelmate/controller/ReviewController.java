@@ -2,6 +2,8 @@ package com.travelmate.travelmate.controller;
 
 import com.travelmate.travelmate.model.Review;
 import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserList;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -13,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
@@ -23,6 +26,8 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
@@ -98,7 +103,58 @@ public class ReviewController {
         }
 
     }
+    private void setProfileImage(Circle circle, User user) {
+        if (circle == null) return;
+        new Thread(() -> {
+            Image img = fetchImage(user);
+            Platform.runLater(() -> circle.setFill(new ImagePattern(img)));
+        }).start();
+    }
 
+    // --- ALGORITHM FOR IMAGEVIEW ---
+    private void setImageForImageView(ImageView view, User user) {
+        if (view == null) return;
+        new Thread(() -> {
+            Image img = fetchImage(user);
+            Platform.runLater(() -> view.setImage(img));
+        }).start();
+    }
+
+    // --- SHARED FETCH LOGIC ---
+    private Image fetchImage(User user) {
+        Image imageToSet = null;
+        try {
+            if (user != null && user.getProfile() != null) {
+                String secureUrl = formatToHttps(user.getProfile().getProfilePictureUrl());
+                if (secureUrl != null && !secureUrl.isEmpty()) {
+                    imageToSet = new Image(secureUrl, false);
+                }
+            }
+            if (imageToSet == null || imageToSet.isError()) {
+                var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
+                if (resource != null) imageToSet = new Image(resource);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return imageToSet;
+    }
+
+    private String formatToHttps(String gsUrl) {
+        if (gsUrl == null || gsUrl.isEmpty()) return null;
+        if (gsUrl.startsWith("http")) return gsUrl;
+        try {
+            if (gsUrl.startsWith("gs://")) {
+                String cleanPath = gsUrl.substring(5);
+                int bucketSeparator = cleanPath.indexOf('/');
+                if (bucketSeparator != -1) {
+                    String bucket = cleanPath.substring(0, bucketSeparator);
+                    String path = cleanPath.substring(bucketSeparator + 1);
+                    String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                    return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
     
     private void renderSummaryStars(double f, double r, double c, double a, double b, double h) {
         
@@ -200,7 +256,7 @@ public class ReviewController {
         header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
         Circle profilePic = new Circle(25, Color.LIGHTGRAY);
-        setCircleImage(profilePic, name);
+        setProfileImage(profilePic, UserList.getUser(name));
 
         VBox nameBox = new VBox(2);
         Label nameLbl = new Label(name); nameLbl.setFont(Font.font("System", FontWeight.BOLD, 16)); nameLbl.setTextFill(Color.web("#1E3A5F"));
