@@ -178,6 +178,7 @@ public class ProfileController {
         } catch (java.io.IOException e) {
             e.printStackTrace();
         }
+    }
     private void loadProfileImage(User user) {
         if (profileImageCircle == null) return;
         profileImageCircle.setFill(javafx.scene.paint.Color.LIGHTGRAY);
