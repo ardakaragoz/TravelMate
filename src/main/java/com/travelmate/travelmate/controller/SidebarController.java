@@ -1,5 +1,7 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.User;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,15 +22,25 @@ public class SidebarController {
     @FXML private Button channelsButton;
     @FXML private Button chatButton;
     @FXML private Button profileButton;
+    @FXML private Button adminButton; 
+
+    public void initialize() {
+        checkAdminStatus();
+    }
+
+    private void checkAdminStatus() {
+        if (adminButton == null) return;
+
+        User currentUser = UserSession.getCurrentUser();
+        adminButton.setVisible(true);
+    }
 
     public void setActivePage(String pageName) {
         resetStyles();
+        checkAdminStatus(); 
 
-        // --- NEW STYLE STRINGS (Nested Backgrounds, No Borders) ---
-
-        // Active = Green Inner, Navy Outer
+        
         String activeStyle = "-fx-background-color: #253A63, #CCFF00; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
-
         String activeChatStyle = "-fx-background-color: #253A63, #CCFF00; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 
         switch (pageName) {
@@ -38,13 +50,12 @@ public class SidebarController {
             case "Channels": if (channelsButton != null) channelsButton.setStyle(activeStyle); break;
             case "Chat": if (chatButton != null) chatButton.setStyle(activeChatStyle); break;
             case "Profile": if (profileButton != null) profileButton.setStyle(activeStyle); break;
+            case "Admin": if (adminButton != null) adminButton.setStyle(activeStyle); break;
         }
     }
 
     private void resetStyles() {
-        // Default = White Inner, Navy Outer
         String defaultStyle = "-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
-
         String defaultChatStyle = "-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 
         if (homeButton != null) homeButton.setStyle(defaultStyle);
@@ -53,17 +64,15 @@ public class SidebarController {
         if (channelsButton != null) channelsButton.setStyle(defaultStyle);
         if (chatButton != null) chatButton.setStyle(defaultChatStyle);
         if (profileButton != null) profileButton.setStyle(defaultStyle);
+        if (adminButton != null) adminButton.setStyle(defaultStyle);
     }
 
-    // --- ANIMATION LOGIC (Real Life Push) ---
     @FXML
     private void handleMousePressed(MouseEvent event) {
         if (event.getSource() instanceof Button) {
             Button btn = (Button) event.getSource();
             btn.setTranslateY(4);
-            if (btn.getEffect() instanceof DropShadow) {
-                ((DropShadow) btn.getEffect()).setOffsetY(3.0);
-            }
+            if (btn.getEffect() instanceof DropShadow) ((DropShadow) btn.getEffect()).setOffsetY(3.0);
         }
     }
 
@@ -72,9 +81,7 @@ public class SidebarController {
         if (event.getSource() instanceof Button) {
             Button btn = (Button) event.getSource();
             btn.setTranslateY(0);
-            if (btn.getEffect() instanceof DropShadow) {
-                ((DropShadow) btn.getEffect()).setOffsetY(7.0);
-            }
+            if (btn.getEffect() instanceof DropShadow) ((DropShadow) btn.getEffect()).setOffsetY(7.0);
         }
     }
 
@@ -84,7 +91,7 @@ public class SidebarController {
     @FXML private void handleChannelsButton(ActionEvent event) { switchScene("/view/Channels.fxml", event); }
     @FXML private void handleChatButton(ActionEvent event) { switchScene("/view/Chat.fxml", event); }
     @FXML private void handleProfileButton(ActionEvent event) { switchScene("/view/Profile.fxml", event); }
-
+    @FXML private void handleAdminButton(ActionEvent event) { switchScene("/view/AdminPage.fxml", event); }
     private void switchScene(String fxmlPath, ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
@@ -92,8 +99,6 @@ public class SidebarController {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 }

@@ -7,7 +7,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="350.0" prefWidth="232.0" spacing="20.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.SidebarController">
+<VBox prefHeight="450.0" prefWidth="232.0" spacing="20.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.SidebarController">
     <children>
 
         <Button fx:id="channelsButton" focusTraversable="false" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleChannelsButton" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="55.0" prefWidth="232.0" style="-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" text="Channels     &gt;" textFill="#253a63">
@@ -46,5 +46,15 @@
                 </DropShadow>
             </effect>
         </Button>
+
+        <Button fx:id="adminButton" focusTraversable="false" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleAdminButton" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="55.0" prefWidth="232.0" style="-fx-background-color: #253A63, #CCFF00; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" text="Admin Page  &gt;" textFill="#253a63" visible="false">
+            <font><Font name="League Spartan Black" size="20.0" /></font>
+            <effect>
+                <DropShadow height="1.0" offsetY="7.0" radius="0.5" spread="0.1" width="0.0">
+                    <color><Color red="0.145" green="0.227" blue="0.388" /></color>
+                </DropShadow>
+            </effect>
+        </Button>
+
     </children>
 </VBox>
