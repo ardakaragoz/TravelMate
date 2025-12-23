@@ -50,6 +50,7 @@ public class MyTripsController implements Initializable {
 
     @FXML private FlowPane upcomingTripsContainer;
     @FXML private FlowPane pastTripsContainer;
+    @FXML private FlowPane pendingTripsContainer;
     @FXML private SidebarController sidebarController;
     @FXML private BorderPane mainContent;
 
@@ -115,7 +116,21 @@ public class MyTripsController implements Initializable {
                     pastIds.add(valTrip.getId());
                 }
             }
+            Map<String, String> pendingList = new HashMap<>();
+            ArrayList<String> tripRequests = currentUser.getJoinRequests();
+            for (String tripRequest : tripRequests) {
+                try {
+                    JoinRequest req = new JoinRequest(tripRequest);
+                    pendingList.put(tripRequest, req.getStatus());
 
+
+                } catch (ExecutionException e) {
+                    throw new RuntimeException(e);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (pendingList != null) fetchAndRenderPendingTrips(pendingList, pendingTripsContainer, "No pending trip found.");
             if (currentIds != null) fetchAndRenderTrips(currentIds, upcomingTripsContainer, "No upcoming trips.");
             if (pastIds != null) fetchAndRenderTrips(pastIds, pastTripsContainer, "No past trips.");
         }, networkExecutor);
@@ -140,6 +155,29 @@ public class MyTripsController implements Initializable {
                 else for (Trip trip : loadedTrips) container.getChildren().add(createTripCard(trip));
             });
         });
+    }
+
+    private void fetchAndRenderPendingTrips(Map<String, String> pendingTrips, FlowPane container, String emptyMsg) {
+        /*List<CompletableFuture<Trip>> futures = new ArrayList<>();
+        for (String tripId : tripIds) {
+            futures.add(CompletableFuture.supplyAsync(() -> {
+                try { return TripList.getTrip(tripId); } catch (Exception e) { return null; }
+            }, networkExecutor));
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(v -> {
+            List<Trip> loadedTrips = new ArrayList<>();
+            for (CompletableFuture<Trip> f : futures) {
+                try { if (f.get() != null) loadedTrips.add(f.get()); } catch (Exception e) {}
+            }
+            Platform.runLater(() -> {
+                container.getChildren().clear();
+                if (loadedTrips.isEmpty()) container.getChildren().add(new Label(emptyMsg));
+                else for (Trip trip : loadedTrips) container.getChildren().add(createTripCard(trip));
+            });
+        });
+        */
+
     }
 
     private HBox createTripCard(Trip trip) {

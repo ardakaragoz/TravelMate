@@ -58,15 +58,14 @@
                                         <FlowPane fx:id="pastTripsContainer" hgap="30.0" prefWrapLength="900.0" style="-fx-background-color: transparent;" vgap="30.0" />
                                     </children>
                                 </VBox>
-                        <VBox prefHeight="90.0" prefWidth="896.0">
-                           <children>
-                              <Label text="Pending Trips" textFill="#253A63">
-                                 <font>
-                                    <Font name="League Spartan ExtraBold" size="24.0" />
-                                 </font>
-                              </Label>
-                           </children>
-                        </VBox>
+                                <VBox spacing="15.0">
+                                    <children>
+                                        <Label text="Pending Trips" textFill="#253A63">
+                                            <font><Font name="League Spartan ExtraBold" size="24.0" /></font>
+                                        </Label>
+                                        <FlowPane fx:id="pendingTripsContainer" hgap="30.0" prefWrapLength="900.0" style="-fx-background-color: transparent;" vgap="30.0" />
+                                    </children>
+                                </VBox>
                             </children>
                         </VBox>
                     </content>
