@@ -116,12 +116,12 @@ public class MyTripsController implements Initializable {
                     pastIds.add(valTrip.getId());
                 }
             }
-            Map<String, String> pendingList = new HashMap<>();
+            ArrayList<JoinRequest> pendingList = new ArrayList<>();
             ArrayList<String> tripRequests = currentUser.getJoinRequests();
             for (String tripRequest : tripRequests) {
                 try {
                     JoinRequest req = new JoinRequest(tripRequest);
-                    pendingList.put(tripRequest, req.getStatus());
+                    pendingList.add(req);
 
 
                 } catch (ExecutionException e) {
@@ -157,7 +157,7 @@ public class MyTripsController implements Initializable {
         });
     }
 
-    private void fetchAndRenderPendingTrips(Map<String, String> pendingTrips, FlowPane container, String emptyMsg) {
+    private void fetchAndRenderPendingTrips(List<JoinRequest> pendingTrips, FlowPane container, String emptyMsg) {
         /*List<CompletableFuture<Trip>> futures = new ArrayList<>();
         for (String tripId : tripIds) {
             futures.add(CompletableFuture.supplyAsync(() -> {
