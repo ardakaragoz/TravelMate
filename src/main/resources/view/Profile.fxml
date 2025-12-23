@@ -62,7 +62,7 @@
                                                     </Button>
                                                 </children>
                                             </HBox>
-                                            <Label fx:id="reviewScoreLabel" text="Review Score: (9)" textFill="#1e3a5f">
+                                            <Label fx:id="reviewScoreLabel" text="Review Score: (9)" textFill="#1e3a5f" onMouseClicked="#handleReviewClick" style="-fx-cursor: hand;">
                                                 <font><Font name="League Spartan Bold" size="16.0" /></font>
                                             </Label>
                                         </children>

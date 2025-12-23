@@ -162,6 +162,22 @@ public class ProfileController {
         tag.setFont(Font.font("System", FontWeight.BOLD, 14));
         container.getChildren().add(tag);
     }
+    @FXML
+    public void handleReviewClick(javafx.scene.input.MouseEvent event) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Review.fxml"));
+            javafx.scene.Parent root = loader.load();
+            ReviewController controller = loader.getController();
+            javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
+            String myName = fullNameLabel.getText();
+            controller.setReviewsContext(currentScene, myName);
+
+            javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
+            stage.setScene(new javafx.scene.Scene(root));
+
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
     private void loadProfileImage(User user) {
         if (profileImageCircle == null) return;
         profileImageCircle.setFill(javafx.scene.paint.Color.LIGHTGRAY);
