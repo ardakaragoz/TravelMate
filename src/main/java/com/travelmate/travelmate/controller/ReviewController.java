@@ -1,5 +1,7 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.Review;
+import com.travelmate.travelmate.model.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -21,6 +23,9 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
 
 public class ReviewController {
 
@@ -55,15 +60,36 @@ public class ReviewController {
         }
     }
 
-    public void setReviewsContext(Scene prevScene, String username) {
+    public void setReviewsContext(Scene prevScene, User user) throws ExecutionException, InterruptedException {
         this.previousScene = prevScene;
         if (reviewsTitleLabel != null) {
-            reviewsTitleLabel.setText("REVIEWS OF " + username.toUpperCase());
+            reviewsTitleLabel.setText("REVIEWS OF " + user.getUsername().toUpperCase());
         }
-
-        
-        renderSummaryStars(4.7, 4.2, 3.8, 4.5, 2.5, 4.9);
-        loadReviews();
+        double point1 = 0;
+        double point2 = 0;
+        double point3 = 0;
+        double point4 = 0;
+        double point5 = 0;
+        double point6 = 0;
+        ArrayList<Review> reviewsList = new ArrayList<>();
+        for (String reviewNo : user.getReviews()){
+            Review review = new Review(reviewNo);
+            point1 += review.getFriendlinessPoint();
+            point2 += review.getReliabilityPoint();
+            point3 += review.getCommunicationPoint();
+            point4 += review.getAdaptationPoint();
+            point5 += review.getBudgetPoint();
+            point6 += review.getHelpfulnessPoint();
+            reviewsList.add(review);
+        }
+        point1 /= reviewsList.size();
+        point2 /= reviewsList.size();
+        point3 /= reviewsList.size();
+        point4 /= reviewsList.size();
+        point5 /= reviewsList.size();
+        point6 /= reviewsList.size();
+        renderSummaryStars(point1, point2, point3, point4, point5, point6);
+        loadReviews(reviewsList);
     }
 
     
@@ -147,13 +173,13 @@ public class ReviewController {
         }
     }
 
-    private void loadReviews() {
+    private void loadReviews(ArrayList<Review> reviews) throws ExecutionException, InterruptedException {
         if (commentsContainer == null) return;
         commentsContainer.getChildren().clear();
 
-        
-        addReviewCard("Arda Karagöz", "Travelled Dubai", "05-05-2024", "Great trip experience!", 4.5, new double[]{5, 4, 5, 4, 3, 5});
-        addReviewCard("Placide Zigira", "Travelled Istanbul", "23-06-2025", "Very reliable mate.", 4.0, new double[]{4, 5, 4, 3, 4, 4});
+        for (Review review : reviews) {
+            addReviewCard(review.getEvaluatorUser().getName(), "Travelled " + review.getTrip().getDestination(), review.getTrip().getDepartureDate().toString(), review.getComments(), review.getOverallPoints(), new double[]{review.getFriendlinessPoint(), review.getReliabilityPoint(), review.getCommunicationPoint(), review.getAdaptationPoint(), review.getBudgetPoint(), review.getHelpfulnessPoint()});
+        }
     }
 
     private void addReviewCard(String name, String subInfo, String date, String comment, double userScore, double[] details) {

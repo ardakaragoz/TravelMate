@@ -44,9 +44,11 @@ public class OtherProfileController {
     @FXML private Button messageButton;
     private String currentProfileName = "Unknown";
     private Scene previousScene;
+    private String selectedUserID = "";
 
     public void setProfileData(Scene prevScene, String userID) throws ExecutionException, InterruptedException {
         this.previousScene = prevScene;
+        selectedUserID = userID;
         User user = UserList.getUser(userID);
         fullNameLabel.setText(user.getName());
         this.currentProfileName = user.getName();
@@ -257,13 +259,17 @@ public class OtherProfileController {
             ReviewController controller = loader.getController();
 
             javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
-            controller.setReviewsContext(currentScene, currentProfileName);
+            controller.setReviewsContext(currentScene, UserList.getUser(selectedUserID));
 
             javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
             stage.setScene(new javafx.scene.Scene(root));
 
         } catch (java.io.IOException e) {
             e.printStackTrace();
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 }

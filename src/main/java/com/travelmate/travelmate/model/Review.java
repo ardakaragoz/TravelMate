@@ -18,7 +18,7 @@ public class Review {
     private int adaptationPoint;
     private int budgetPoint;
     private int helpfulnessPoint;
-    private double overallPoints;
+    private double overallPoints = 0;
     private String comments;
     private User evaluatedUser;
     private User evaluatorUser;
@@ -52,18 +52,19 @@ public class Review {
         data.put("evaluatedUser", evaluatedUser.getId());
         data.put("evaluatorUser", evaluatorUser.getId());
         data.put("trip", trip.getId());
+        db.collection("reviews").document(id).set(data);
         calculateOverall();
     }
 
     public Review(String id) throws ExecutionException, InterruptedException {
         this.id = id;
         DocumentSnapshot data = db.collection("reviews").document(id).get().get();
-        this.friendlinessPoint = (int) data.get("friendlinessPoint");
-        this.reliabilityPoint = (int) data.get("reliabilityPoint");
-        this.communicationPoint = (int) data.get("communicationPoint");
-        this.adaptationPoint = (int) data.get("adaptationPoint");
-        this.budgetPoint = (int) data.get("budgetPoint");
-        this.helpfulnessPoint = (int) data.get("helpfulnessPoint");
+        this.friendlinessPoint = data.getLong("friendlinessPoint").intValue();
+        this.reliabilityPoint = data.getLong("reliabilityPoint").intValue();
+        this.communicationPoint = data.getLong("communicationPoint").intValue();
+        this.adaptationPoint = data.getLong("adaptationPoint").intValue();
+        this.budgetPoint = data.getLong("budgetPoint").intValue();
+        this.helpfulnessPoint = data.getLong("helpfulnessPoint").intValue();
         this.comments = data.get("comments").toString();
         this.evaluatedUser = UserList.getUser(data.get("evaluatedUser").toString());
         this.evaluatorUser = UserList.getUser(data.get("evaluatorUser").toString());
@@ -74,6 +75,12 @@ public class Review {
     public void calculateOverall() {
         this.overallPoints = (friendlinessPoint + reliabilityPoint + communicationPoint +
                              adaptationPoint + budgetPoint + helpfulnessPoint) / 6.0;
+    }
+
+
+
+    public Trip getTrip() {
+        return trip;
     }
 
     // Getters and Setters

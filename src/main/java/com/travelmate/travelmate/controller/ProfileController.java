@@ -170,13 +170,17 @@ public class ProfileController {
             ReviewController controller = loader.getController();
             javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
             String myName = fullNameLabel.getText();
-            controller.setReviewsContext(currentScene, myName);
+            controller.setReviewsContext(currentScene, currentUser);
 
             javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
             stage.setScene(new javafx.scene.Scene(root));
 
         } catch (java.io.IOException e) {
             e.printStackTrace();
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
     private void loadProfileImage(User user) {
