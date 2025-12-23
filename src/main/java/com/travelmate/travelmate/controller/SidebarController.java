@@ -32,7 +32,14 @@ public class SidebarController {
         if (adminButton == null) return;
 
         User currentUser = UserSession.getCurrentUser();
-        adminButton.setVisible(true);
+        System.out.println(currentUser.isAdmin());
+        if (currentUser.isAdmin()){
+            adminButton.setVisible(true);
+
+        } else {
+            adminButton.setVisible(false);
+
+        }
     }
 
     public void setActivePage(String pageName) {

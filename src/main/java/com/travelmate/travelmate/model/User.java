@@ -27,7 +27,7 @@ public class User {
     private ArrayList<String> messages = new ArrayList<>();
     private ArrayList<String> tripRequests = new ArrayList<>();
     private ArrayList<String> chatRooms = new ArrayList<>();
-
+    private boolean admin;
     private int reviewCount;
     private double reviewPoints;
 
@@ -38,7 +38,7 @@ public class User {
 
     // --- Constructor 1: Create New User (Registration) ---
     public User(String id, String username, String name, String nationality, String email,
-                String password, String gender, int age) throws ExecutionException, InterruptedException {
+                String password, String gender, int age, boolean admin) throws ExecutionException, InterruptedException {
         this.id = id;
         this.username = username;
         this.name = name;
@@ -51,6 +51,7 @@ public class User {
         this.monthlyPoints = 0;
         this.reviewCount = 0;
         this.reviewPoints = 0;
+        this.admin = admin;
         // For new users, create profile immediately (one-time cost)
         this.profile = new Profile(id);
 
@@ -80,7 +81,7 @@ public class User {
         this.gender = doc.getString("gender");
         this.nationality = doc.getString("nationality");
         this.password = doc.getString("password");
-
+        this.admin = Boolean.TRUE.equals(doc.getBoolean("admin"));
         if (doc.getLong("age") != null) this.age = doc.getLong("age").intValue();
         if (doc.getLong("levelPoint") != null) this.levelPoint = doc.getLong("levelPoint").intValue();
         if (doc.getLong("monthlyPoints") != null) this.monthlyPoints = doc.getLong("monthlyPoints").intValue();
@@ -217,7 +218,7 @@ public class User {
     }
 
     public boolean isAdmin() {
-        return this instanceof Admin;
+        return this.admin;
     }
 
     public int calculateCompatibility(User otherUser) throws ExecutionException, InterruptedException {
