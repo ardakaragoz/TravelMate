@@ -51,7 +51,7 @@ public class ReviewController {
     @FXML private Label adaptationVal;
     @FXML private Label budgetVal;
     @FXML private Label helpfulnessVal;
-
+    @FXML private Label commentCount;
     private Scene previousScene;
 
     public void initialize() {
@@ -65,6 +65,7 @@ public class ReviewController {
         if (reviewsTitleLabel != null) {
             reviewsTitleLabel.setText("REVIEWS OF " + user.getUsername().toUpperCase());
         }
+
         double point1 = 0;
         double point2 = 0;
         double point3 = 0;
@@ -88,6 +89,7 @@ public class ReviewController {
         point4 /= reviewsList.size();
         point5 /= reviewsList.size();
         point6 /= reviewsList.size();
+        commentCount.setText("View Comments (" + reviewsList.size() + ")");
         renderSummaryStars(point1, point2, point3, point4, point5, point6);
         loadReviews(reviewsList);
     }
