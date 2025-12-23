@@ -202,7 +202,15 @@ public class HomeController {
                     final User finalOwner = owner;
 
                     Platform.runLater(() -> {
-                        if (finalOwner != null) addTripCard(trip, finalOwner);
+                        if (finalOwner != null) {
+                            try {
+                                addTripCard(trip, finalOwner);
+                            } catch (ExecutionException e) {
+                                throw new RuntimeException(e);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
                     });
                 }
             } catch (Exception e) {
@@ -233,7 +241,15 @@ public class HomeController {
                     final User finalOwner = owner;
 
                     Platform.runLater(() -> {
-                        if (finalOwner != null) addTripCard(trip, finalOwner);
+                        if (finalOwner != null) {
+                            try {
+                                addTripCard(trip, finalOwner);
+                            } catch (ExecutionException e) {
+                                throw new RuntimeException(e);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
                     });
                 }
             } catch (Exception e) {
@@ -265,34 +281,58 @@ public class HomeController {
     private void setProfileImage(Circle targetCircle, User user) {
         if (targetCircle == null) return;
 
-        targetCircle.setFill(Color.LIGHTGRAY); // Placeholder
+        // 1. Önce bir placeholder (gri renk) koy ki boş durmasın
+        Platform.runLater(() -> targetCircle.setFill(Color.LIGHTGRAY));
 
+        // 2. Arka plan thread'i başlat
         new Thread(() -> {
             Image imageToSet = null;
             try {
                 if (user.getProfile() != null) {
                     String rawUrl = user.getProfile().getProfilePictureUrl();
                     String secureUrl = formatToHttps(rawUrl);
+
                     if (secureUrl != null && !secureUrl.isEmpty()) {
+                        // DÜZELTME BURADA: 'false' kullanıyoruz.
+                        // Zaten background thread'deyiz, thread'in resmi indirmesini beklemesini istiyoruz.
+                        // Böylece alt satıra geçtiğinde resim HAZIR olacak.
                         imageToSet = new Image(secureUrl, false);
                     }
                 }
-                if (imageToSet == null || imageToSet.isError()) {
-                    var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
-                    if (resource != null) imageToSet = new Image(resource);
-                }
             } catch (Exception e) {
-                System.out.println("Home Image Error: " + e.getMessage());
+                System.out.println("URL Error: " + e.getMessage());
             }
 
-            if (imageToSet != null) {
+            // 3. Hata kontrolü ve Fallback (Varsayılan resim)
+            // Eğer resim null ise veya indirme sırasında hata oluştuysa (404 vs.)
+            if (imageToSet == null || imageToSet.isError()) {
+                try {
+                    var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
+                    if (resource != null) {
+                        imageToSet = new Image(resource); // Local resource olduğu için anında yüklenir
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // 4. UI Güncellemesi
+            if (imageToSet != null && !imageToSet.isError()) {
                 final Image finalImg = imageToSet;
-                Platform.runLater(() -> targetCircle.setFill(new ImagePattern(finalImg)));
+                Platform.runLater(() -> {
+                    try {
+                        // Artık resim tamamen indiği için ImagePattern hata vermez
+                        targetCircle.setFill(new ImagePattern(finalImg));
+                    } catch (Exception e) {
+                        // Çok nadir durumlarda (örn: resim dosyası bozuksa) yine hata olabilir
+                        System.out.println("Pattern Error: " + e.getMessage());
+                        targetCircle.setFill(Color.DARKGRAY);
+                    }
+                });
             }
         }).start();
     }
-
-    private void addTripCard(Trip trip, User owner) {
+    private void addTripCard(Trip trip, User owner) throws ExecutionException, InterruptedException {
         HBox card = new HBox();
         card.setPrefHeight(220); card.setPrefWidth(800);
         card.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 3; -fx-border-radius: 20;");
@@ -327,8 +367,9 @@ public class HomeController {
         ((Region) midRow.getChildren().get(1)).prefWidthProperty().bind(infoBox.widthProperty().divide(3));
 
         HBox scoreRow = new HBox(10); scoreRow.setAlignment(Pos.CENTER_LEFT);
-        ProgressBar pBar = new ProgressBar(0.5); pBar.setPrefWidth(120); pBar.setStyle("-fx-accent: #1E3A5F;");
-        scoreRow.getChildren().addAll(new Label("Compatibility Score: %50"), pBar);
+        int compatibility = (currentUser.calculateCompatibility(owner) + currentUser.calculateCompatibility(CityList.getCity(trip.getDestinationName()))) / 2;
+        ProgressBar pBar = new ProgressBar((double) compatibility / 100); pBar.setPrefWidth(120); pBar.setStyle("-fx-accent: #1E3A5F;");
+        scoreRow.getChildren().addAll(new Label("Compatibility Score: %" + compatibility), pBar);
 
         HBox bottomRow = new HBox(15); bottomRow.setAlignment(Pos.CENTER);
         Button viewChannelBtn = createStyledButton("View Channel", 14);

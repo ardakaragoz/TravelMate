@@ -195,12 +195,13 @@ public class User {
         double review_points = review.getOverallPoints();
         this.reviewPoints += review_points;
         if (review_points >= 4.0){
-            increaseLevel((int) Math.floor(25 * (review_points - 3.8)));
+            increaseLevel((int) Math.floor(25 * (review_points - 3.4)));
         }
         updateUser();
     }
 
     public void sendReview(Review review) throws ExecutionException, InterruptedException {
+        increaseLevel(15);
         review.getEvaluatedUser().addReview(review);
     }
 
@@ -318,6 +319,7 @@ public class User {
 
     public void addCurrentTrip(String id) throws ExecutionException, InterruptedException {
         trips.add(id);
+        increaseLevel(20);
         updateUser();
     }
 

@@ -8,6 +8,8 @@ import com.travelmate.travelmate.session.UserSession;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
@@ -18,6 +20,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -88,7 +91,10 @@ public class AdminPageController {
         denyBtn.setStyle("-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-background-radius: 10; -fx-cursor: hand; -fx-font-weight: bold; -fx-border-color: #000000; -fx-border-radius: 10;");
         denyBtn.setMaxWidth(Double.MAX_VALUE);
 
-        
+        viewProfileBtn.setOnAction(e -> {
+            switchToOtherProfile(e, rec.getSender());
+        });
+
         approveBtn.setOnAction(e -> {
             System.out.println("Approved recommendation for " + channelName);
             try {
@@ -121,5 +127,30 @@ public class AdminPageController {
 
         
         approvalsContainer.getChildren().add(card);
+    }
+    private void switchToOtherProfile(javafx.event.ActionEvent event, String userID) {
+        try {
+            if (userID.equals(UserSession.getCurrentUser().getId())){
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Profile.fxml"));
+                Scene scene = new Scene(loader.load());
+                Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+                stage.setScene(scene);
+                stage.show();
+            } else {
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/OtherProfile.fxml"));
+                javafx.scene.Parent root = loader.load();
+                OtherProfileController controller = loader.getController();
+                javafx.scene.Node source = (javafx.scene.Node) event.getSource();
+                javafx.scene.Scene currentScene = source.getScene();
+                controller.setProfileData(currentScene, userID);
+                javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
+                stage.setScene(new javafx.scene.Scene(root));
+            }
+
+        } catch (java.io.IOException e) { e.printStackTrace(); } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
