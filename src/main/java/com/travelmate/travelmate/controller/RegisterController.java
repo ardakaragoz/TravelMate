@@ -50,35 +50,43 @@ public class RegisterController {
         String gender = (genderComboBox.getValue() != null) ? genderComboBox.getValue() : "";
 
         System.out.println(password);
-
-        if (password.equals(confirmPassword)) {
-            
-            if (statusLabel != null) {
-                statusLabel.setText("Successfully Registered! Redirecting...");
-                statusLabel.setTextFill(Color.GREEN);
-                statusLabel.setVisible(true);
-            }
-
-            
-            
-            Firestore db = FirebaseService.getFirestore();
-
-            
-            int ageVal = (age != null && !age.isEmpty()) ? Integer.parseInt(age) : 0;
-            User user = new User(email, name, name + " " + surname, "", email, password, gender, ageVal);
-            UserSession.setCurrentUser(user);
-            UserList.addUser(user);
-
-            
-            changeScene("/view/Home.fxml", event);
-
-        } else {
-            System.out.println("Register failed.");
-            if (statusLabel != null) {
-                statusLabel.setText("Registration Failed! Passwords do not match.");
+        if (UserList.users.keySet().contains(email)) {
+            if (statusLabel != null){
+                statusLabel.setText("This email has already taken, please choose another one.");
                 statusLabel.setTextFill(Color.RED);
                 statusLabel.setVisible(true);
             }
+        } else {
+            if (password.equals(confirmPassword)) {
+
+                if (statusLabel != null) {
+                    statusLabel.setText("Successfully Registered! Redirecting...");
+                    statusLabel.setTextFill(Color.GREEN);
+                    statusLabel.setVisible(true);
+                }
+
+
+
+                Firestore db = FirebaseService.getFirestore();
+
+
+                int ageVal = (age != null && !age.isEmpty()) ? Integer.parseInt(age) : 0;
+                User user = new User(email, name, name + " " + surname, "", email, password, gender, ageVal);
+                UserSession.setCurrentUser(user);
+                UserList.addUser(user);
+
+
+                changeScene("/view/Home.fxml", event);
+
+            } else {
+                System.out.println("Register failed.");
+                if (statusLabel != null) {
+                    statusLabel.setText("Registration Failed! Passwords do not match.");
+                    statusLabel.setTextFill(Color.RED);
+                    statusLabel.setVisible(true);
+                }
+        }
+
         }
     }
 
