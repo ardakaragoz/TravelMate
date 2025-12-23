@@ -90,8 +90,13 @@ public class ReviewController {
         point5 /= reviewsList.size();
         point6 /= reviewsList.size();
         commentCount.setText("View Comments (" + reviewsList.size() + ")");
-        renderSummaryStars(point1, point2, point3, point4, point5, point6);
-        loadReviews(reviewsList);
+        if (reviewsList.size() > 0){
+            renderSummaryStars(point1, point2, point3, point4, point5, point6);
+            loadReviews(reviewsList);
+        } else {
+            averageRatingLabel.setText("No Reviews Received Yet.");
+        }
+
     }
 
     

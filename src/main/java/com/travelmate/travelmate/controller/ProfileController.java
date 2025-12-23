@@ -66,7 +66,11 @@ public class ProfileController {
             levelProgressBar.setProgress(progress);
         }
 
-        reviewScoreLabel.setText("Review Score: (9)");
+        String str_ = "Review Score: (" + user.getReviews().size() + ") ";
+        for (int i = 1; i < (user.getReviewPoints() / user.getReviewCount()); i++) {
+            str_ += "★";
+        }
+        reviewScoreLabel.setText(str_);
         bioLabel.setText(profile.getBiography());
 
         String rawUrl = profile.getProfilePictureUrl();

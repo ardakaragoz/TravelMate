@@ -56,8 +56,12 @@ public class OtherProfileController {
         levelLabel.setText("Level " + user.getLevel());
         levelProgressBar.setProgress((user.getLevelPoint() % 10) / 10.0);
         Profile userProfile = user.getProfile();
+        String str_ = "Review Score: (" + user.getReviews().size() + ") ";
+        for (int i = 0; i < (user.getReviewPoints() / user.getReviewCount()); i++) {
+            str_ += "★";
+        }
+        reviewScoreLabel.setText(str_);
 
-        reviewScoreLabel.setText("Review Score: (9) ★★★★★");
         bioLabel.setText(userProfile.getBiography());
         messageButton.setOnAction(event -> {
             try {

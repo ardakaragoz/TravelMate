@@ -28,7 +28,7 @@ public class User {
     private ArrayList<String> chatRooms = new ArrayList<>();
 
     private int reviewCount;
-    private int reviewPoints;
+    private double reviewPoints;
 
     // --- CRITICAL FIX: Empty Constructor for Firestore ---
     public User() {
@@ -84,7 +84,7 @@ public class User {
         if (doc.getLong("levelPoint") != null) this.levelPoint = doc.getLong("levelPoint").intValue();
         if (doc.getLong("monthlyPoints") != null) this.monthlyPoints = doc.getLong("monthlyPoints").intValue();
         if (doc.getLong("reviewCount") != null) this.reviewCount = doc.getLong("reviewCount").intValue();
-        if (doc.getLong("reviewPoints") != null) this.reviewPoints = doc.getLong("reviewPoints").intValue();
+        if (doc.getLong("reviewPoints") != null) this.reviewPoints = doc.getLong("reviewPoints").doubleValue();
 
         if (doc.get("trips") != null) this.trips = (ArrayList<String>) doc.get("trips");
         if (doc.get("channels") != null) this.channels = (ArrayList<String>) doc.get("channels");
@@ -192,7 +192,7 @@ public class User {
         this.reviews.add(review.getId());
         this.reviewCount++;
         double review_points = review.getOverallPoints();
-        this.reviewPoints += (int) review_points;
+        this.reviewPoints += review_points;
         if (review_points >= 4.0){
             increaseLevel((int) Math.floor(25 * (review_points - 3.8)));
         }
@@ -353,7 +353,7 @@ public class User {
     public ArrayList<String> getChannels() { return channels; }
     public ArrayList<String> getReviews() { return reviews; }
     public int getReviewCount() { return reviewCount; }
-    public int getReviewPoints() { return reviewPoints; }
+    public double getReviewPoints() { return reviewPoints; }
     public ArrayList<String> getJoinRequests() { return joinRequests; }
     public ArrayList<String> getRecommendations() { return recommendations; }
     public ArrayList<String> getMessages() { return messages; }
@@ -364,5 +364,5 @@ public class User {
     public void setLevelPoint(int allPoints) { this.levelPoint = allPoints; }
     public void setMonthlyPoints(int monthlyPoints) { this.monthlyPoints = monthlyPoints; }
     public void setReviewCount(int reviewCount) { this.reviewCount = reviewCount; }
-    public void setReviewPoints(int reviewPoints) { this.reviewPoints = reviewPoints; }
+    public void setReviewPoints(double reviewPoints) { this.reviewPoints = reviewPoints; }
 }
