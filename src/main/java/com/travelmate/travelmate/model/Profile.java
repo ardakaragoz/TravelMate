@@ -119,9 +119,7 @@ public class Profile {
     }
     public void setProfilePictureUrl(String profilePictureUrl) {
         this.profilePictureUrl = profilePictureUrl;
-        Map<String, Object> data = new HashMap<>();
-        data.put("profilePictureUrl", hobbies);
         Firestore db = FirebaseService.getFirestore();
-        db.collection("profiles").document(id).update("profilePictureUrl", data);
+        db.collection("profiles").document(id).update("profilePictureUrl", profilePictureUrl);
     }
 }

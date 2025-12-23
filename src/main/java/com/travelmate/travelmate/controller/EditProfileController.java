@@ -1,5 +1,6 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.session.HobbyList;
 import com.travelmate.travelmate.session.TripTypeList;
 import com.travelmate.travelmate.session.UserSession;
@@ -7,6 +8,9 @@ import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.model.Hobby;
 import com.travelmate.travelmate.model.TripTypes;
 
+import com.google.cloud.storage.Acl;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Bucket;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,12 +25,16 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.UUID;
+
+
+import javafx.scene.control.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class EditProfileController {
 
@@ -43,8 +51,10 @@ public class EditProfileController {
     @FXML private ComboBox<String> tripTypeComboBox;    // Tüm gezi türlerinin olduğu kutu
     @FXML private ListView<String> selectedTripTypesListView; // Seçilenlerin listelendiği yer
     private File selectedImageFile;
+    private User currentUser;
 
     public void initialize() {
+        currentUser = UserSession.getCurrentUser();
         // 1. Kutuları doldur (JSON veya DB'den gelen verilerle)
         populateComboBoxes();
 
@@ -83,6 +93,7 @@ public class EditProfileController {
                     for (TripTypes t : myTypes) selectedTripTypesListView.getItems().add(t.getName());
                 }
                 loadProfileImage(currentUser);
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -134,12 +145,19 @@ public class EditProfileController {
 
     @FXML
     public void handleUploadPhoto(ActionEvent event) {
-        FileChooser fc = new FileChooser();
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg"));
-        File file = fc.showOpenDialog(((Node) event.getSource()).getScene().getWindow());
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Profile Picture");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
+
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        File file = fileChooser.showOpenDialog(stage);
+
         if (file != null) {
             this.selectedImageFile = file;
-            profileImageCircle.setFill(new ImagePattern(new Image(file.toURI().toString())));
+
+            // Immediate Local Preview (No upload yet)
+//            Image localImage = new Image(file.toURI().toString());
+//            profileImageCircle.setFill(new ImagePattern(localImage));
         }
     }
     
@@ -223,6 +241,12 @@ public class EditProfileController {
             System.out.println("Seçilen Gezi Türleri: " + finalTripTypes);
 
             if (currentUser != null && currentUser.getProfile() != null) {
+                if (selectedImageFile != null) {
+                    uploadImageFixedName(selectedImageFile);
+                }
+
+                // B. Save Bio
+
                 // 2. Profil nesnesini güncelle
                 currentUser.getProfile().setBiography(newBio);
                 currentUser.setName(fullName);
@@ -230,6 +254,7 @@ public class EditProfileController {
                 currentUser.updateUser();
                 currentUser.getProfile().resetHobby();
                 currentUser.getProfile().resetTripType();
+
                 for (String finalHobby : finalHobbies){
                     currentUser.getProfile().addHobby(HobbyList.getHobby(finalHobby));
                 }
@@ -253,10 +278,56 @@ public class EditProfileController {
         changeScene("/view/Profile.fxml", event);
     }
 
+
+
+    private void uploadImageFixedName(File file) throws IOException {
+        Bucket bucket = FirebaseService.getStorageBucket();
+        if (bucket == null) {
+            System.err.println("Error: Firebase Storage Bucket is null.");
+            return;
+        }
+
+        // --- OVERWRITE LOGIC ---
+        // By using the username directly without UUID, we force overwrite.
+        // e.g. "profile_pics/john_doe.jpg"
+        String blobName = "profile_images/" + currentUser.getId() + ".png";
+
+        try (FileInputStream fis = new FileInputStream(file)) {
+            // 1. Upload (This replaces the existing file if it exists)
+            Blob blob = bucket.create(blobName, fis, "image/png");
+
+            // 2. Make Public
+            blob.createAcl(Acl.of(Acl.User.ofAllUsers(), Acl.Role.READER));
+
+            // 3. Generate Link
+            // Adding a timestamp query param (?t=...) forces JavaFX to ignore its old cache
+            String publicUrl = "https://storage.googleapis.com/" + bucket.getName() + "/" + blobName + "?t=" + System.currentTimeMillis();
+
+            System.out.println("Uploaded & Overwritten: " + publicUrl);
+
+            // 4. Update User
+            currentUser.setProfilePicture(publicUrl);
+            if (currentUser.getProfile() != null) {
+                currentUser.getProfile().setProfilePictureUrl(publicUrl);
+            }
+        }
+    }
+
     @FXML
     public void handleCancelButton(ActionEvent event) {
-        changeScene("/view/Profile.fxml", event);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/Profile.fxml"));
+            Scene scene = new Scene(loader.load());
+            Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+
+
 
     private void changeScene(String fxmlPath, ActionEvent event) {
         try {

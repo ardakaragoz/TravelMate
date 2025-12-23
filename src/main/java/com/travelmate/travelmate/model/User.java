@@ -16,6 +16,7 @@ public class User {
     private String id, username, name, nationality, email, password, gender;
     private int age, levelPoint, monthlyPoints;
     private Profile profile;
+    private String profilePictureUrl;
 
     // Initialize lists immediately to avoid NullPointerException
     private ArrayList<String> trips = new ArrayList<>();
@@ -335,6 +336,15 @@ public class User {
     public void leaveChannel(Channel channel) throws ExecutionException, InterruptedException {
         channels.remove(channel.getId());
         updateUser();
+    }
+
+    public String getProfilePicture() {
+        return profilePictureUrl;
+    }
+
+    public void setProfilePicture(String url) {
+        this.profilePictureUrl = url;
+        updateUser(); // Save to DB automatically
     }
 
     // Getters and Setters

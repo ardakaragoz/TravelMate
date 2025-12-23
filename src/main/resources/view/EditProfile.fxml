@@ -16,7 +16,7 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.EditProfileController">
+<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.EditProfileController">
     <children>
         <BorderPane fx:id="mainContainer" style="-fx-background-color: #FFF7EA;">
 
@@ -51,13 +51,13 @@
                                         </children>
                                         <effect><DropShadow color="#00000033" offsetX="3.0" offsetY="3.0" /></effect>
                                     </StackPane>
-                                    <Button style="-fx-background-color: WHITE; -fx-border-color: #1E3A5F; -fx-border-radius: 10; -fx-background-radius: 10;" text="Change Photo">
+                                    <Button onAction="#handleUploadPhoto" style="-fx-background-color: WHITE; -fx-border-color: #1E3A5F; -fx-border-radius: 10; -fx-background-radius: 10;" text="Change Photo">
                                         <font><Font name="System Bold" size="14.0" /></font>
                                     </Button>
                                 </children>
                             </HBox>
 
-                            <VBox spacing="15.0" maxWidth="800.0">
+                            <VBox maxWidth="800.0" spacing="15.0">
                                 <children>
 
                                     <VBox spacing="5.0">
@@ -85,16 +85,15 @@
                                         <Label text="Hobbies &amp; Interests"><font><Font name="System Bold" size="16.0" /></font></Label>
 
                                         <HBox spacing="10.0">
-                                            <ComboBox fx:id="hobbyComboBox" promptText="Choose a hobby..." maxWidth="Infinity" HBox.hgrow="ALWAYS"
-                                                      style="-fx-background-color: white; -fx-border-color: black; -fx-border-radius: 10; -fx-background-radius: 10; -fx-font-size: 14px;" />
-                                            <Button text="Add" onAction="#handleAddHobby" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-background-radius: 10;">
+                                            <ComboBox fx:id="hobbyComboBox" maxWidth="Infinity" promptText="Choose a hobby..." style="-fx-background-color: white; -fx-border-color: black; -fx-border-radius: 10; -fx-background-radius: 10; -fx-font-size: 14px;" HBox.hgrow="ALWAYS" />
+                                            <Button onAction="#handleAddHobby" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-background-radius: 10;" text="Add">
                                                 <font><Font name="System Bold" size="13.0" /></font>
                                             </Button>
                                         </HBox>
 
                                         <ListView fx:id="selectedHobbiesListView" prefHeight="100.0" style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #DDD;" />
 
-                                        <Button text="Remove Selected Hobby" onAction="#handleRemoveHobby" style="-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-background-radius: 10;">
+                                        <Button onAction="#handleRemoveHobby" style="-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-background-radius: 10;" text="Remove Selected Hobby">
                                             <font><Font size="12.0" /></font>
                                         </Button>
                                     </VBox>
@@ -103,16 +102,15 @@
                                         <Label text="Favorite Trip Types"><font><Font name="System Bold" size="16.0" /></font></Label>
 
                                         <HBox spacing="10.0">
-                                            <ComboBox fx:id="tripTypeComboBox" promptText="Choose a trip type..." maxWidth="Infinity" HBox.hgrow="ALWAYS"
-                                                      style="-fx-background-color: white; -fx-border-color: black; -fx-border-radius: 10; -fx-background-radius: 10; -fx-font-size: 14px;" />
-                                            <Button text="Add" onAction="#handleAddTripType" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-background-radius: 10;">
+                                            <ComboBox fx:id="tripTypeComboBox" maxWidth="Infinity" promptText="Choose a trip type..." style="-fx-background-color: white; -fx-border-color: black; -fx-border-radius: 10; -fx-background-radius: 10; -fx-font-size: 14px;" HBox.hgrow="ALWAYS" />
+                                            <Button onAction="#handleAddTripType" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-background-radius: 10;" text="Add">
                                                 <font><Font name="System Bold" size="13.0" /></font>
                                             </Button>
                                         </HBox>
 
                                         <ListView fx:id="selectedTripTypesListView" prefHeight="100.0" style="-fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #DDD;" />
 
-                                        <Button text="Remove Selected Type" onAction="#handleRemoveTripType" style="-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-background-radius: 10;">
+                                        <Button onAction="#handleRemoveTripType" style="-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-background-radius: 10;" text="Remove Selected Type">
                                             <font><Font size="12.0" /></font>
                                         </Button>
                                     </VBox>
