@@ -1,5 +1,10 @@
 package com.travelmate.travelmate.controller;
 
+import com.travelmate.travelmate.model.Admin;
+import com.travelmate.travelmate.model.Recommendation;
+import com.travelmate.travelmate.session.RecommendationList;
+import com.travelmate.travelmate.session.UserList;
+import com.travelmate.travelmate.session.UserSession;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -14,6 +19,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+
 public class AdminPageController {
     @FXML private SidebarController sidebarController;
     @FXML private VBox approvalsContainer;
@@ -25,18 +33,20 @@ public class AdminPageController {
     }
     private void loadPendingApprovals() {
         if (approvalsContainer == null) return;
-        createApprovalCard(
-                "Paris",
-                "Atakan Polat",
-                "If you're visiting France, be sure to add the Musée d'Orsay to your list. Housed in a stunning former railway station, the museum offers an unforgettable collection of Impressionist art."
-        );
-        createApprovalCard(
-                "Tokyo",
-                "Placide Zigira",
-                "Don't miss the Shibuya Crossing at night! It's chaotic but beautiful."
-        );
+        for (String recoID : RecommendationList.recommendations.keySet()){
+            Recommendation rec = RecommendationList.recommendations.get(recoID);
+            if (Objects.equals(rec.getStatus(), "PENDING")){
+                createApprovalCard(
+                        rec,
+                        rec.getChannel(),
+                        UserList.getUser(rec.getSender()).getUsername(),
+                        rec.getMessage()
+                );
+            }
+        }
+
     }
-    private void createApprovalCard(String channelName, String recommenderName, String content) {
+    private void createApprovalCard(Recommendation rec, String channelName, String recommenderName, String content) {
         HBox card = new HBox(20);
         card.setStyle("-fx-background-color: #FFFFFF; -fx-background-radius: 15; -fx-border-color: #1E3A5F; -fx-border-width: 2; -fx-border-radius: 15;");
         card.setPadding(new Insets(20));
@@ -81,11 +91,27 @@ public class AdminPageController {
         
         approveBtn.setOnAction(e -> {
             System.out.println("Approved recommendation for " + channelName);
+            try {
+                Admin user = new Admin(UserSession.getCurrentUser().getId());
+                user.acceptRecommendation(rec);
+            } catch (ExecutionException ex) {
+                throw new RuntimeException(ex);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
             approvalsContainer.getChildren().remove(card); 
         });
 
         denyBtn.setOnAction(e -> {
             System.out.println("Denied recommendation for " + channelName);
+            try {
+                Admin user = new Admin(UserSession.getCurrentUser().getId());
+                user.rejectRecommendation(rec);
+            } catch (ExecutionException ex) {
+                throw new RuntimeException(ex);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
             approvalsContainer.getChildren().remove(card); 
         });
 

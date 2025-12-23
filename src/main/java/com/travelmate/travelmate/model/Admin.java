@@ -1,5 +1,7 @@
 package com.travelmate.travelmate.model;
 
+import com.travelmate.travelmate.session.UserList;
+
 import java.util.concurrent.ExecutionException;
 
 public class Admin extends User {
@@ -15,10 +17,10 @@ public class Admin extends User {
     public void acceptRecommendation(Recommendation recommendation) throws ExecutionException, InterruptedException {
 
         recommendation.setStatus("ACCEPTED");
-        recommendation.getSender().increaseLevel(10);
+        UserList.getUser(recommendation.getSender()).increaseLevel(10);
     }
 
-    public void rejectRecommendation(Recommendation recommendation) {
+    public void rejectRecommendation(Recommendation recommendation) throws ExecutionException, InterruptedException {
         recommendation.setStatus("REJECTED");
     }
 }

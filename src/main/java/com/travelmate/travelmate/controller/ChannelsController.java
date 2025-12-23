@@ -159,7 +159,7 @@ public class ChannelsController {
         String comment = (recCommentArea != null) ? recCommentArea.getText() : "";
         String link = (recLinkField != null) ? recLinkField.getText() : "";
         if (!comment.isEmpty()) {
-            Recommendation rec = new Recommendation("" + System.currentTimeMillis(), comment, currentUser, ChannelList.getChannel(city), link);
+            Recommendation rec = new Recommendation("" + System.currentTimeMillis(), comment, currentUser.getId(), city, link);
         }
 
         if (recCommentArea != null) recCommentArea.clear();
@@ -175,7 +175,7 @@ public class ChannelsController {
         ArrayList<String> recommendationsList = ChannelList.getChannel(city).getRecommendations();
         for (String reco : recommendationsList){
             Recommendation rec = new Recommendation(reco);
-            addRecItem(rec.getSender().getName(), rec.getMessage(), rec.getLink());
+            addRecItem(UserList.getUser(rec.getSender()).getName(), rec.getMessage(), rec.getLink());
         }
     }
 

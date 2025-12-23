@@ -1,6 +1,7 @@
 package com.travelmate.travelmate;
 
 import com.travelmate.travelmate.firebase.FirebaseService;
+import com.travelmate.travelmate.model.Recommendation;
 import com.travelmate.travelmate.session.*;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -28,7 +29,7 @@ public class Main extends Application {
         ChannelList.loadAllChannels();
         ChatList.loadAllChats();
         TripList.loadAllTrips();
-
+        RecommendationList.loadRecommendations();
         // --- 3. LOAD SCENE ---
         // Ensuring we use the correct path to your sign-in page
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/sign-in-page.fxml"));
