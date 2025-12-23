@@ -202,7 +202,15 @@ public class HomeController {
                     final User finalOwner = owner;
 
                     Platform.runLater(() -> {
-                        if (finalOwner != null) addTripCard(trip, finalOwner);
+                        if (finalOwner != null) {
+                            try {
+                                addTripCard(trip, finalOwner);
+                            } catch (ExecutionException e) {
+                                throw new RuntimeException(e);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
                     });
                 }
             } catch (Exception e) {
@@ -233,7 +241,15 @@ public class HomeController {
                     final User finalOwner = owner;
 
                     Platform.runLater(() -> {
-                        if (finalOwner != null) addTripCard(trip, finalOwner);
+                        if (finalOwner != null) {
+                            try {
+                                addTripCard(trip, finalOwner);
+                            } catch (ExecutionException e) {
+                                throw new RuntimeException(e);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
                     });
                 }
             } catch (Exception e) {
@@ -292,7 +308,7 @@ public class HomeController {
         }).start();
     }
 
-    private void addTripCard(Trip trip, User owner) {
+    private void addTripCard(Trip trip, User owner) throws ExecutionException, InterruptedException {
         HBox card = new HBox();
         card.setPrefHeight(220); card.setPrefWidth(800);
         card.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-border-color: #1E3A5F; -fx-border-width: 3; -fx-border-radius: 20;");
@@ -327,8 +343,9 @@ public class HomeController {
         ((Region) midRow.getChildren().get(1)).prefWidthProperty().bind(infoBox.widthProperty().divide(3));
 
         HBox scoreRow = new HBox(10); scoreRow.setAlignment(Pos.CENTER_LEFT);
-        ProgressBar pBar = new ProgressBar(0.5); pBar.setPrefWidth(120); pBar.setStyle("-fx-accent: #1E3A5F;");
-        scoreRow.getChildren().addAll(new Label("Compatibility Score: %50"), pBar);
+        int compatibility = (currentUser.calculateCompatibility(owner) + currentUser.calculateCompatibility(CityList.getCity(trip.getDestinationName()))) / 2;
+        ProgressBar pBar = new ProgressBar((double) compatibility / 100); pBar.setPrefWidth(120); pBar.setStyle("-fx-accent: #1E3A5F;");
+        scoreRow.getChildren().addAll(new Label("Compatibility Score: %" + compatibility), pBar);
 
         HBox bottomRow = new HBox(15); bottomRow.setAlignment(Pos.CENTER);
         Button viewChannelBtn = createStyledButton("View Channel", 14);

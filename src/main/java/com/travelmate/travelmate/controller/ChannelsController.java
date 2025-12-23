@@ -158,14 +158,15 @@ public class ChannelsController {
     public void sendRecommendation(String city) {
         String comment = (recCommentArea != null) ? recCommentArea.getText() : "";
         String link = (recLinkField != null) ? recLinkField.getText() : "";
-        if (!comment.isEmpty()) {
+        if (!comment.isEmpty() && link.startsWith("https://")) {
             Recommendation rec = new Recommendation("" + System.currentTimeMillis(), comment, currentUser.getId(), city, link);
+            if (recCommentArea != null) recCommentArea.clear();
+            if (recLinkField != null) recLinkField.clear();
+
+            closeAddRecPopup();
         }
 
-        if (recCommentArea != null) recCommentArea.clear();
-        if (recLinkField != null) recLinkField.clear();
 
-        closeAddRecPopup();
     }
 
     private void loadRecommendations(String city) throws ExecutionException, InterruptedException {
@@ -174,7 +175,7 @@ public class ChannelsController {
 
         ArrayList<String> recommendationsList = ChannelList.getChannel(city).getRecommendations();
         for (String reco : recommendationsList){
-            Recommendation rec = new Recommendation(reco);
+            Recommendation rec = RecommendationList.getRecommendation(reco);
             addRecItem(UserList.getUser(rec.getSender()).getName(), rec.getMessage(), rec.getLink());
         }
     }

@@ -84,7 +84,7 @@ public class Trip {
         // This is safe to keep here as it's part of your creation logic
         User userOwner = UserList.getUser(user);
         userOwner.addTripRequest(this);
-        userOwner.increaseLevel(10);
+        userOwner.increaseLevel(25);
         updateTrip();
     }
 
