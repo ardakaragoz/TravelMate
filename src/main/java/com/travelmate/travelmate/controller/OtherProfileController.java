@@ -2,6 +2,7 @@ package com.travelmate.travelmate.controller;
 
 import com.travelmate.travelmate.model.*;
 import com.travelmate.travelmate.session.*;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +20,8 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,16 +68,7 @@ public class OtherProfileController {
         });
 
         try {
-            String cleanName = userProfile.getId().toLowerCase().replaceAll("\\s+", "");
-            String path = "/images/" + cleanName + ".jpg";
-            if (getClass().getResource(path) == null) {
-                path = "/images/" + cleanName + ".png";
-            }
-            if (getClass().getResource(path) != null) {
-                profileImageCircle.setFill(new ImagePattern(new Image(getClass().getResourceAsStream(path))));
-            } else {
-                profileImageCircle.setFill(Color.LIGHTGRAY);
-            }
+            loadProfileImage(user);
         } catch (Exception e) {
             System.out.println("Resim yüklenemedi: " + "");
         }
@@ -101,6 +95,78 @@ public class OtherProfileController {
         }
         if (str.length() > 0){ str = str.substring(0, str.length() - 2); }
         pastTripsLabel.setText(str);
+    }
+
+    private void loadProfileImage(User user) {
+        if (profileImageCircle == null) return;
+        profileImageCircle.setFill(javafx.scene.paint.Color.LIGHTGRAY);
+
+        new Thread(() -> {
+            Image imageToSet = null;
+            try {
+                if (user.getProfile() != null) {
+                    String rawUrl = user.getProfile().getProfilePictureUrl();
+                    String secureUrl = formatToHttps(rawUrl);
+                    if (secureUrl != null && !secureUrl.isEmpty()) {
+                        imageToSet = new Image(secureUrl, false);
+                    }
+                }
+                if (imageToSet == null || imageToSet.isError()) {
+                    var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
+                    if (resource != null) imageToSet = new Image(resource);
+                }
+            } catch (Exception e) {
+                System.out.println("Profile Image Error: " + e.getMessage());
+            }
+
+            if (imageToSet != null) {
+                final Image finalImg = imageToSet;
+                Platform.runLater(() -> profileImageCircle.setFill(new ImagePattern(finalImg)));
+            }
+        }).start();
+    }
+
+    private String formatToHttps(String gsUrl) {
+        if (gsUrl == null || gsUrl.isEmpty()) return null;
+        if (gsUrl.startsWith("http")) return gsUrl;
+        try {
+            if (gsUrl.startsWith("gs://")) {
+                String cleanPath = gsUrl.substring(5);
+                int bucketSeparator = cleanPath.indexOf('/');
+                if (bucketSeparator != -1) {
+                    String bucket = cleanPath.substring(0, bucketSeparator);
+                    String path = cleanPath.substring(bucketSeparator + 1);
+                    String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                    return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
+
+    @FXML
+    public void handleEditProfile(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/EditProfile.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    private void populateComboBoxes() {
+        if (com.travelmate.travelmate.session.HobbyList.hobbies.isEmpty()) {
+            com.travelmate.travelmate.session.HobbyList.loadAllHobbies();
+        }
+        if (hobbyComboBox != null) {
+            // keySet() direkt String seti döndürür, ArrayList'e çevirmene bile gerek yok
+            hobbyComboBox.getItems().setAll(com.travelmate.travelmate.session.HobbyList.hobbies.keySet());
+        }
+        if (com.travelmate.travelmate.session.TripTypeList.triptypes.isEmpty()) {
+            com.travelmate.travelmate.session.TripTypeList.listAllTripTypes();
+        }
+        if (tripTypeComboBox != null) {
+            tripTypeComboBox.getItems().setAll(com.travelmate.travelmate.session.TripTypeList.triptypes.keySet());
+        }
     }
     @FXML
     public void handleBackButton(ActionEvent event) {

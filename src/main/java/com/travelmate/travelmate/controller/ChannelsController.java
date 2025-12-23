@@ -90,7 +90,11 @@ public class ChannelsController {
         if (sidebarController != null) sidebarController.setActivePage("Channels");
 
         loadCityButtons();
-
+        if (searchField != null) {
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                loadCityButtons(newValue); // Her harf girişinde listeyi filtrele
+            });
+        }
         if (channelRecsButton != null) {
             channelRecsButton.setOnAction(e -> {
                 try {
@@ -154,7 +158,6 @@ public class ChannelsController {
     public void sendRecommendation(String city) {
         String comment = (recCommentArea != null) ? recCommentArea.getText() : "";
         String link = (recLinkField != null) ? recLinkField.getText() : "";
-
         if (!comment.isEmpty()) {
             Recommendation rec = new Recommendation("" + System.currentTimeMillis(), comment, currentUser, ChannelList.getChannel(city), link);
         }
@@ -269,6 +272,52 @@ public class ChannelsController {
         addMessageBubble("I highly recommend the Gokyuzu restaurant!", false);
     }
 
+    private void loadCityButtons(String filter) {
+        if (filter.isEmpty()) filter = "";
+        if(citySelectionView == null) return;
+        citySelectionView.getChildren().clear();
+        List<String> addedChannelNames = new ArrayList<>();
+        for (String city : currentUser.getChannels()){
+            if (city.toLowerCase().contains(filter.toLowerCase())){
+                Button btn = new Button(city);
+                btn.setMaxWidth(Double.MAX_VALUE);
+                btn.setAlignment(Pos.CENTER_LEFT);
+                btn.setPadding(new Insets(15, 20, 15, 20));
+                btn.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-text-fill: #1E3A5F; -fx-font-size: 16px; -fx-cursor: hand;");
+                addClickEffect(btn);
+
+                btn.setOnAction(e -> {
+                    updateActiveCityButton(btn);
+                    openChannel(city);
+                });
+
+
+                citySelectionView.getChildren().add(btn);
+                addedChannelNames.add(city);
+            }
+
+        }
+        for (String city : CityList.cities.keySet()) {
+            if (!addedChannelNames.contains(city) && city.toLowerCase().contains(filter.toLowerCase())) {
+                Button btn = new Button(city);
+                btn.setMaxWidth(Double.MAX_VALUE);
+                btn.setAlignment(Pos.CENTER_LEFT);
+                btn.setPadding(new Insets(15, 20, 15, 20));
+                btn.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-text-fill: #1E3A5F; -fx-font-size: 16px; -fx-cursor: hand;");
+                addClickEffect(btn);
+
+                btn.setOnAction(e -> {
+                    updateActiveCityButton(btn);
+                    openChannel(city);
+                });
+
+
+                citySelectionView.getChildren().add(btn);
+                addedChannelNames.add(city);
+            }
+
+        }
+    }
 
     private void loadCityButtons() {
         if(citySelectionView == null) return;
@@ -287,9 +336,7 @@ public class ChannelsController {
                 openChannel(city);
             });
 
-            sendRecommendationButton.setOnAction(e -> {
-                sendRecommendation(city);
-            });
+
             citySelectionView.getChildren().add(btn);
             addedChannelNames.add(city);
         }
@@ -306,9 +353,7 @@ public class ChannelsController {
                     updateActiveCityButton(btn);
                     openChannel(city);
                 });
-                sendRecommendationButton.setOnAction(e -> {
-                    sendRecommendation(city);
-                });
+
 
                 citySelectionView.getChildren().add(btn);
                 addedChannelNames.add(city);
@@ -361,6 +406,9 @@ public class ChannelsController {
                 });
             }
         }
+        sendRecommendationButton.setOnAction(e -> {
+            sendRecommendation(cityName);
+        });
         loadTripsForCity(cityName);
     }
 

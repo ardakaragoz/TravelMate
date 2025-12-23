@@ -7,16 +7,23 @@ import com.travelmate.travelmate.model.User;
 import com.travelmate.travelmate.model.Hobby;
 import com.travelmate.travelmate.model.TripTypes;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -35,6 +42,7 @@ public class EditProfileController {
     // --- GEZİ TÜRÜ SEÇİM ALANLARI ---
     @FXML private ComboBox<String> tripTypeComboBox;    // Tüm gezi türlerinin olduğu kutu
     @FXML private ListView<String> selectedTripTypesListView; // Seçilenlerin listelendiği yer
+    private File selectedImageFile;
 
     public void initialize() {
         // 1. Kutuları doldur (JSON veya DB'den gelen verilerle)
@@ -74,13 +82,67 @@ public class EditProfileController {
                     ArrayList<TripTypes> myTypes = currentUser.getProfile().getFavoriteTripTypes();
                     for (TripTypes t : myTypes) selectedTripTypesListView.getItems().add(t.getName());
                 }
-
+                loadProfileImage(currentUser);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void loadProfileImage(User user) {
+        if (profileImageCircle == null) return;
+        new Thread(() -> {
+            Image imageToSet = null;
+            try {
+                if (user.getProfile() != null) {
+                    String rawUrl = user.getProfile().getProfilePictureUrl();
+                    String secureUrl = formatToHttps(rawUrl);
+                    if (secureUrl != null && !secureUrl.isEmpty()) {
+                        imageToSet = new Image(secureUrl, false);
+                    }
+                }
+                if (imageToSet == null || imageToSet.isError()) {
+                    var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
+                    if (resource != null) imageToSet = new Image(resource);
+                }
+            } catch (Exception e) { System.out.println("EditProfile Image Error: " + e.getMessage()); }
+
+            if (imageToSet != null) {
+                final Image finalImg = imageToSet;
+                Platform.runLater(() -> profileImageCircle.setFill(new ImagePattern(finalImg)));
+            }
+        }).start();
+    }
+
+    private String formatToHttps(String gsUrl) {
+        if (gsUrl == null || gsUrl.isEmpty()) return null;
+        if (gsUrl.startsWith("http")) return gsUrl;
+        try {
+            if (gsUrl.startsWith("gs://")) {
+                String cleanPath = gsUrl.substring(5);
+                int bucketSeparator = cleanPath.indexOf('/');
+                if (bucketSeparator != -1) {
+                    String bucket = cleanPath.substring(0, bucketSeparator);
+                    String path = cleanPath.substring(bucketSeparator + 1);
+                    String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                    return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
+
+    @FXML
+    public void handleUploadPhoto(ActionEvent event) {
+        FileChooser fc = new FileChooser();
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg"));
+        File file = fc.showOpenDialog(((Node) event.getSource()).getScene().getWindow());
+        if (file != null) {
+            this.selectedImageFile = file;
+            profileImageCircle.setFill(new ImagePattern(new Image(file.toURI().toString())));
+        }
+    }
+    
     private void populateComboBoxes() {
         // --- HOBİLERİ YÜKLE ---
         if (HobbyList.hobbies.isEmpty()) {

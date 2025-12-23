@@ -46,9 +46,11 @@ public class ProfileController {
     @FXML private FlowPane tripTypesContainer;
     @FXML private Label pastTripsLabel;
     @FXML private VBox helpPopup;
-
+    private User currentUser;
     public void initialize() throws ExecutionException, InterruptedException {
+        currentUser = UserSession.getCurrentUser();
         loadUserData();
+        loadProfileImage(currentUser);
     }
 
     private void loadUserData() throws ExecutionException, InterruptedException {
@@ -118,22 +120,7 @@ public class ProfileController {
     // --- NEW METHOD: Loads image in background to prevent crashes ---
 
 
-    private String formatToHttps(String url) {
-        if (url == null || !url.startsWith("gs://")) return url;
-        try {
-            String temp = url.substring(5);
-            int firstSlash = temp.indexOf("/");
-            if (firstSlash > 0) {
-                String bucket = temp.substring(0, firstSlash);
-                String path = temp.substring(firstSlash + 1);
-                String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
-                return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return url;
-    }
+
 
     @FXML
     public void handleHelpButton() {
@@ -191,5 +178,59 @@ public class ProfileController {
         } catch (java.io.IOException e) {
             e.printStackTrace();
         }
+    private void loadProfileImage(User user) {
+        if (profileImageCircle == null) return;
+        profileImageCircle.setFill(javafx.scene.paint.Color.LIGHTGRAY);
+
+        new Thread(() -> {
+            Image imageToSet = null;
+            try {
+                if (user.getProfile() != null) {
+                    String rawUrl = user.getProfile().getProfilePictureUrl();
+                    String secureUrl = formatToHttps(rawUrl);
+                    if (secureUrl != null && !secureUrl.isEmpty()) {
+                        imageToSet = new Image(secureUrl, false);
+                    }
+                }
+                if (imageToSet == null || imageToSet.isError()) {
+                    var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
+                    if (resource != null) imageToSet = new Image(resource);
+                }
+            } catch (Exception e) {
+                System.out.println("Profile Image Error: " + e.getMessage());
+            }
+
+            if (imageToSet != null) {
+                final Image finalImg = imageToSet;
+                Platform.runLater(() -> profileImageCircle.setFill(new ImagePattern(finalImg)));
+            }
+        }).start();
+    }
+
+    private String formatToHttps(String gsUrl) {
+        if (gsUrl == null || gsUrl.isEmpty()) return null;
+        if (gsUrl.startsWith("http")) return gsUrl;
+        try {
+            if (gsUrl.startsWith("gs://")) {
+                String cleanPath = gsUrl.substring(5);
+                int bucketSeparator = cleanPath.indexOf('/');
+                if (bucketSeparator != -1) {
+                    String bucket = cleanPath.substring(0, bucketSeparator);
+                    String path = cleanPath.substring(bucketSeparator + 1);
+                    String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                    return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
+
+    @FXML
+    public void handleEditProfile(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/EditProfile.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+        } catch (IOException e) { e.printStackTrace(); }
     }
 }

@@ -29,12 +29,15 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -165,9 +168,10 @@ public class ChatController {
         chatItem.setOnMouseClicked(e -> handleChatClick(chatItem, name, room, otherUser));
 
         Circle clip = new Circle(27.5, 27.5, 27.5);
-        ImageView profilePic = new ImageView();
-        if (defaultUserImage != null) profilePic.setImage(defaultUserImage);
-        profilePic.setFitWidth(55); profilePic.setFitHeight(55); profilePic.setClip(clip);
+        Circle profilePic = new Circle(27.5);
+
+
+        setProfileImage(profilePic, otherUser);
 
         VBox content = new VBox(4);
         Label nameLabel = new Label(name);
@@ -194,12 +198,67 @@ public class ChatController {
         chatItemNodes.add(chatItem);
     }
 
+    private void setProfileImage(Circle circle, User user) {
+        if (circle == null) return;
+        new Thread(() -> {
+            Image img = fetchImage(user);
+            Platform.runLater(() -> circle.setFill(new ImagePattern(img)));
+        }).start();
+    }
+
+    // --- ALGORITHM FOR IMAGEVIEW ---
+    private void setImageForImageView(ImageView view, User user) {
+        if (view == null) return;
+        new Thread(() -> {
+            Image img = fetchImage(user);
+            Platform.runLater(() -> view.setImage(img));
+        }).start();
+    }
+
+    // --- SHARED FETCH LOGIC ---
+    private Image fetchImage(User user) {
+        Image imageToSet = null;
+        try {
+            if (user != null && user.getProfile() != null) {
+                String secureUrl = formatToHttps(user.getProfile().getProfilePictureUrl());
+                if (secureUrl != null && !secureUrl.isEmpty()) {
+                    imageToSet = new Image(secureUrl, false);
+                }
+            }
+            if (imageToSet == null || imageToSet.isError()) {
+                var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
+                if (resource != null) imageToSet = new Image(resource);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return imageToSet;
+    }
+
+    private String formatToHttps(String gsUrl) {
+        if (gsUrl == null || gsUrl.isEmpty()) return null;
+        if (gsUrl.startsWith("http")) return gsUrl;
+        try {
+            if (gsUrl.startsWith("gs://")) {
+                String cleanPath = gsUrl.substring(5);
+                int bucketSeparator = cleanPath.indexOf('/');
+                if (bucketSeparator != -1) {
+                    String bucket = cleanPath.substring(0, bucketSeparator);
+                    String path = cleanPath.substring(bucketSeparator + 1);
+                    String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                    return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
+
     private void handleChatClick(HBox clickedItem, String name, ChatRoom room, User otherUser) {
         for (HBox item : chatItemNodes) updateChatItemStyle(item, false);
         updateChatItemStyle(clickedItem, true);
 
         if (currentChatNameLabel != null) currentChatNameLabel.setText(name);
         if (currentChatImage != null && defaultUserImage != null) currentChatImage.setImage(defaultUserImage);
+
+        setImageForImageView(currentChatImage, otherUser);
 
         this.currentChatRoom = room;
         this.activeChatUser = otherUser;

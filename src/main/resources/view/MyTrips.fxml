@@ -21,7 +21,7 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<StackPane fx:id="rootStackPane" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.MyTripsController">
+<StackPane fx:id="rootStackPane" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.MyTripsController">
     <children>
 
         <BorderPane fx:id="mainContent" style="-fx-background-color: #FFF7EA;">
@@ -56,6 +56,14 @@
                                             <font><Font name="League Spartan ExtraBold" size="24.0" /></font>
                                         </Label>
                                         <FlowPane fx:id="pastTripsContainer" hgap="30.0" prefWrapLength="900.0" style="-fx-background-color: transparent;" vgap="30.0" />
+                                    </children>
+                                </VBox>
+                                <VBox spacing="15.0">
+                                    <children>
+                                        <Label text="Pending Trips" textFill="#253A63">
+                                            <font><Font name="League Spartan ExtraBold" size="24.0" /></font>
+                                        </Label>
+                                        <FlowPane fx:id="pendingTripsContainer" hgap="30.0" prefWrapLength="900.0" style="-fx-background-color: transparent;" vgap="30.0" />
                                     </children>
                                 </VBox>
                             </children>
@@ -113,7 +121,7 @@
                                     <Label text="Description" textFill="BLACK" underline="true"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
                                     <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="100.0" style="-fx-background-color: transparent; -fx-background: transparent;">
                                         <content>
-                                            <Label fx:id="detailNotes" text="Description goes here..." textFill="BLACK" style="-fx-text-fill: black;" wrapText="true" />
+                                            <Label fx:id="detailNotes" style="-fx-text-fill: black;" text="Description goes here..." textFill="BLACK" wrapText="true" />
                                         </content>
                                     </ScrollPane>
                                     <Label fx:id="detailBudget" text="BUDGET 500 $" textFill="BLACK"><font><Font name="League Spartan Bold" size="16.0" /></font></Label>
@@ -124,7 +132,7 @@
                                         <Label text="ITINERARY" textFill="BLACK"><font><Font name="League Spartan Bold" size="12.0" /></font></Label>
                                         <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent;" VBox.vgrow="ALWAYS">
                                             <content>
-                                                <Label fx:id="detailItinerary" text="Buda Castle&#10;Parliament..." textFill="BLACK" style="-fx-text-fill: black;" wrapText="true" />
+                                                <Label fx:id="detailItinerary" style="-fx-text-fill: black;" text="Buda Castle&#10;Parliament..." textFill="BLACK" wrapText="true" />
                                             </content>
                                         </ScrollPane>
                                     </children>
@@ -207,19 +215,19 @@
                         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
                             <Label text="Destination" textFill="BLACK"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
                             <TextField fx:id="editDestination" style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;">
-                                <effect><DropShadow color="#CCFF00" radius="0.0" offsetX="0.0" offsetY="5.0" /></effect>
+                                <effect><DropShadow color="#CCFF00" offsetX="0.0" offsetY="5.0" radius="0.0" /></effect>
                             </TextField>
                         </VBox>
-                        <VBox spacing="5.0" minWidth="90.0">
+                        <VBox minWidth="90.0" spacing="5.0">
                             <Label text="Days" textFill="BLACK"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
                             <Spinner fx:id="editDays" editable="true" prefWidth="90.0" style="-fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: white;">
-                                <effect><DropShadow color="#CCFF00" radius="0.0" offsetX="0.0" offsetY="5.0" /></effect>
+                                <effect><DropShadow color="#CCFF00" offsetX="0.0" offsetY="5.0" radius="0.0" /></effect>
                             </Spinner>
                         </VBox>
                         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
                             <Label text="Departure Location" textFill="BLACK"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
                             <TextField fx:id="editDeparture" style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;">
-                                <effect><DropShadow color="#CCFF00" radius="0.0" offsetX="0.0" offsetY="5.0" /></effect>
+                                <effect><DropShadow color="#CCFF00" offsetX="0.0" offsetY="5.0" radius="0.0" /></effect>
                             </TextField>
                         </VBox>
                     </HBox>
@@ -228,39 +236,39 @@
                         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
                             <Label text="Average Budget" textFill="BLACK"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
                             <HBox spacing="5.0">
-                                <TextField fx:id="editBudget" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;">
-                                    <effect><DropShadow color="#CCFF00" radius="0.0" offsetX="0.0" offsetY="5.0" /></effect>
+                                <TextField fx:id="editBudget" style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
+                                    <effect><DropShadow color="#CCFF00" offsetX="0.0" offsetY="5.0" radius="0.0" /></effect>
                                 </TextField>
                                 <ChoiceBox fx:id="editCurrency" prefWidth="65.0" style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;">
-                                    <effect><DropShadow color="#CCFF00" radius="0.0" offsetX="0.0" offsetY="5.0" /></effect>
+                                    <effect><DropShadow color="#CCFF00" offsetX="0.0" offsetY="5.0" radius="0.0" /></effect>
                                 </ChoiceBox>
                             </HBox>
                         </VBox>
-                        <VBox spacing="5.0" minWidth="90.0">
+                        <VBox minWidth="90.0" spacing="5.0">
                             <Label text="Mates" textFill="BLACK"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
                             <Spinner fx:id="editMates" editable="true" prefWidth="90.0" style="-fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10; -fx-background-color: white;">
-                                <effect><DropShadow color="#CCFF00" radius="0.0" offsetX="0.0" offsetY="5.0" /></effect>
+                                <effect><DropShadow color="#CCFF00" offsetX="0.0" offsetY="5.0" radius="0.0" /></effect>
                             </Spinner>
                         </VBox>
                         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
                             <Label text="Date" textFill="BLACK"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
                             <DatePicker fx:id="editDate" maxWidth="Infinity" style="-fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;">
-                                <effect><DropShadow color="#CCFF00" radius="0.0" offsetX="0.0" offsetY="5.0" /></effect>
+                                <effect><DropShadow color="#CCFF00" offsetX="0.0" offsetY="5.0" radius="0.0" /></effect>
                             </DatePicker>
                         </VBox>
                     </HBox>
 
                     <VBox spacing="5.0">
                         <Label text="Additional Notes" textFill="BLACK"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
-                        <TextArea fx:id="editNotes" prefHeight="120.0" wrapText="true" style="-fx-control-inner-background: white; -fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;">
-                            <effect><DropShadow color="#CCFF00" radius="0.0" offsetX="0.0" offsetY="5.0" /></effect>
+                        <TextArea fx:id="editNotes" prefHeight="120.0" style="-fx-control-inner-background: white; -fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;" wrapText="true">
+                            <effect><DropShadow color="#CCFF00" offsetX="0.0" offsetY="5.0" radius="0.0" /></effect>
                         </TextArea>
                     </VBox>
 
                     <VBox spacing="5.0">
                         <Label text="Add Itineraries" textFill="BLACK"><font><Font name="League Spartan Bold" size="14.0" /></font></Label>
                         <TextField fx:id="editItinerary" style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10;">
-                            <effect><DropShadow color="#CCFF00" radius="0.0" offsetX="0.0" offsetY="5.0" /></effect>
+                            <effect><DropShadow color="#CCFF00" offsetX="0.0" offsetY="5.0" radius="0.0" /></effect>
                         </TextField>
                     </VBox>
                 </VBox>
