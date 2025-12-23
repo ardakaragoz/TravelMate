@@ -333,11 +333,9 @@ public class ChannelsController {
         if(recsTitleLabel != null) recsTitleLabel.setText(cityName + " Recommendations");
 
         if (channelJoinButton != null) {
-            // DURUM 1: ZATEN ÜYEYSE -> "LEAVE" BUTONU OLSUN
             if (currentUser.getChannels().contains(cityName)) {
                 channelJoinButton.setText("Leave Channel");
                 channelJoinButton.setDisable(false);
-                // Kırmızımsı bir renk ile ayrılma butonu
                 channelJoinButton.setStyle("-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-background-radius: 15; -fx-cursor: hand; -fx-font-weight: bold;");
 
                 channelJoinButton.setOnAction(e -> {
@@ -349,11 +347,9 @@ public class ChannelsController {
                 });
 
             }
-            // DURUM 2: ÜYE DEĞİLSE -> "JOIN" BUTONU OLSUN
             else {
                 channelJoinButton.setText("Join Channel");
                 channelJoinButton.setDisable(false);
-                // Yeşilimsi renk ile katılma butonu
                 channelJoinButton.setStyle("-fx-background-color: #CCFF00; -fx-text-fill: #1E3A5F; -fx-background-radius: 15; -fx-cursor: hand; -fx-font-weight: bold;");
 
                 channelJoinButton.setOnAction(e -> {

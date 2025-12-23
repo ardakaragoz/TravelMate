@@ -67,7 +67,7 @@
                                                     <ProgressBar fx:id="levelProgressBar" prefWidth="100.0" progress="0.75" style="-fx-accent: #CCFF00; -fx-control-inner-background: white; -fx-border-color: #1E3A5F; -fx-border-radius: 5; -fx-background-radius: 5;" />
                                                 </children>
                                             </HBox>
-                                            <Label fx:id="reviewScoreLabel" text="Review Score: (9) ★★★★★" textFill="#1e3a5f">
+                                            <Label fx:id="reviewScoreLabel" text="Review Score: (9) ★★★★★" textFill="#1e3a5f" onMouseClicked="#handleReviewClick" style="-fx-cursor: hand;">
                                                 <font><Font name="League Spartan Bold" size="16.0" /></font>
                                             </Label>
                                         </children>

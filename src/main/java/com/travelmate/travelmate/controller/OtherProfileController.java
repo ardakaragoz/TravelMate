@@ -39,14 +39,14 @@ public class OtherProfileController {
     @FXML private ComboBox hobbyComboBox;
     @FXML private ComboBox tripTypeComboBox;
     @FXML private Button messageButton;
-
+    private String currentProfileName = "Unknown";
     private Scene previousScene;
 
     public void setProfileData(Scene prevScene, String userID) throws ExecutionException, InterruptedException {
         this.previousScene = prevScene;
-
         User user = UserList.getUser(userID);
         fullNameLabel.setText(user.getName());
+        this.currentProfileName = user.getName();
         usernameLabel.setText("@" + user.getUsername() + ", " + user.getAge());
         levelLabel.setText("Level " + user.getLevel());
         levelProgressBar.setProgress((user.getLevelPoint() % 10) / 10.0);
@@ -179,6 +179,24 @@ public class OtherProfileController {
             stage.setScene(scene);
             stage.show();
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    @FXML
+    public void handleReviewClick(javafx.scene.input.MouseEvent event) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/view/Review.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            ReviewController controller = loader.getController();
+
+            javafx.scene.Scene currentScene = ((javafx.scene.Node) event.getSource()).getScene();
+            controller.setReviewsContext(currentScene, currentProfileName);
+
+            javafx.stage.Stage stage = (javafx.stage.Stage) currentScene.getWindow();
+            stage.setScene(new javafx.scene.Scene(root));
+
+        } catch (java.io.IOException e) {
             e.printStackTrace();
         }
     }
