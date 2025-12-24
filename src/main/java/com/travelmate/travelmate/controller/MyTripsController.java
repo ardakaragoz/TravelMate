@@ -107,6 +107,7 @@ public class MyTripsController implements Initializable {
         pastTripsContainer.getChildren().clear();
         pendingTripsContainer.getChildren().clear();
 
+        // Refresh user to ensure latest data
         try {
             currentUser = UserList.getUser(currentUser.getId());
         } catch (Exception e) { e.printStackTrace(); }
@@ -114,18 +115,22 @@ public class MyTripsController implements Initializable {
         CompletableFuture.runAsync(() -> {
             ArrayList<String> currentIds = new ArrayList<>();
             ArrayList<String> pastIds = new ArrayList<>();
+            List<PendingTripData> pendingDataList = new ArrayList<>();
 
-            // 1. Process Active/Past Trips
-            // (Assuming User has a list of trip IDs they are part of)
-            ArrayList<String> trips = currentUser.getTrips();
-            // Also check pastTrips list if your model has it separately
+            // --- CHANGE 1: Track IDs to prevent duplicates ---
+            Set<String> processedIds = new HashSet<>();
+            Date today = new Date();
 
-            if (trips != null) {
-                Date today = new Date();
-                for (String tripId : trips) {
+            // 1. Process Existing Trips from User Profile
+            ArrayList<String> userTrips = currentUser.getTrips();
+            if (userTrips != null) {
+                for (String tripId : userTrips) {
+                    if (processedIds.contains(tripId)) continue;
+
                     Trip valTrip = TripList.getTrip(tripId);
                     if (valTrip != null) {
-                        if (valTrip.getDepartureDate() != null && valTrip.getDepartureDate().before(today)){
+                        processedIds.add(tripId);
+                        if (valTrip.getDepartureDate() != null && valTrip.getDepartureDate().before(today)) {
                             pastIds.add(valTrip.getId());
                         } else {
                             currentIds.add(valTrip.getId());
@@ -134,10 +139,8 @@ public class MyTripsController implements Initializable {
                 }
             }
 
-            // 2. Process Pending Requests (The Fix)
-            List<PendingTripData> pendingDataList = new ArrayList<>();
+            // 2. Process Join Requests
             try {
-                // Query Firestore: "Find all requests where I am the requester"
                 QuerySnapshot query = FirebaseService.getFirestore()
                         .collection("join_requests")
                         .whereEqualTo("requester", currentUser.getId())
@@ -145,34 +148,35 @@ public class MyTripsController implements Initializable {
 
                 for (DocumentSnapshot doc : query.getDocuments()) {
                     String status = doc.getString("status");
-                    String tripId = doc.getString("trip"); // This is the ID of the trip I want to join
+                    String tripId = doc.getString("trip");
 
-                    if (tripId == null) {
-                        // You could add logic here to fetch trip doc if needed, skipping for now to prevent freeze
-                        continue;
-                    }
+                    if (tripId == null) continue;
 
-                    // --- CRITICAL LOGIC FIX ---
+                    // --- CHANGE 2: Handle APPROVED requests immediately ---
                     if ("APPROVED".equalsIgnoreCase(status) || "ACCEPTED".equalsIgnoreCase(status)) {
-                        // If approved, it BELONGS in Active/Upcoming, NOT Pending.
-                        // Only add if not already processed from User object
-                        if (!trips.contains(tripId)) {
-
-                            trips.add(tripId);
+                        // If approved but NOT in our processed list yet, fetch it and add to active/past
+                        if (!processedIds.contains(tripId)) {
+                            Trip trip = TripList.getTrip(tripId);
+                            if (trip != null) {
+                                processedIds.add(tripId);
+                                // Sort into correct list based on date
+                                if (trip.getDepartureDate() != null && trip.getDepartureDate().before(today)) {
+                                    pastIds.add(tripId);
+                                } else {
+                                    currentIds.add(tripId);
+                                }
+                            }
                         }
                     }
-                    if (status.equalsIgnoreCase("PENDING") || status.equalsIgnoreCase("DENIED")) {
+                    else if ("PENDING".equalsIgnoreCase(status) || "DENIED".equalsIgnoreCase(status)) {
                         Trip trip = TripList.getTrip(tripId);
                         if (trip != null) {
-                            // Double check: If I'm already in the trip's mate list, don't show as pending
-                            // This handles cases where status update might lag or desync
+                            // Verify we aren't already joined to avoid UI confusion
                             boolean alreadyJoined = trip.getJoinedMates() != null && trip.getJoinedMates().contains(currentUser.getId());
-
                             if (!alreadyJoined) {
                                 pendingDataList.add(new PendingTripData(trip, status.toUpperCase()));
                             }
                         }
-
                     }
                 }
             } catch (Exception e) {
@@ -536,14 +540,13 @@ public class MyTripsController implements Initializable {
                 // 3. Update Target User
                 // We don't need 'new Review(reviewId)' here, just the ID string.
                 if (targetUser.getReviews() == null) {
-                    // Handle case where list might be null
-                    // (This depends on your User model setter access, but assuming direct list access:)
-                    // If direct access isn't possible, you might need a safe getter.
+                    // Log warning or handle gracefully.
+                    // Since we can't easily "set" the list if there's no setter,
+                    // we at least prevent the app from crashing here.
+                    System.err.println("Warning: Target user reviews list is null. Review saved to DB but local user object not updated.");
+                } else {
+                    targetUser.getReviews().add(reviewId);
                 }
-
-                // Safely add ID
-                targetUser.getReviews().add(reviewId);
-
                 // Update stats locally if possible, or just save the ID
                 targetUser.setReviewCount(targetUser.getReviewCount() + 1);
 
