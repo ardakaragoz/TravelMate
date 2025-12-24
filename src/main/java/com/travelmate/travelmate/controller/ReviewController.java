@@ -246,17 +246,19 @@ public class ReviewController {
     @FXML
     public void handleBackButton(ActionEvent event) {
         try {
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
             if (previousScene != null) {
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(previousScene);
             } else {
+                // Fallback if previous scene is lost
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/Home.fxml"));
                 Parent root = loader.load();
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            System.err.println("Failed to navigate back.");
         }
     }
 

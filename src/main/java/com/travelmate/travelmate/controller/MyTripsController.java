@@ -82,6 +82,8 @@ public class MyTripsController implements Initializable {
     // Requests
     @FXML private VBox requestsListContainer;
 
+    @FXML private Button openForumBtn;
+
     private User currentUser;
     private Trip selectedTrip;
     private final ExecutorService networkExecutor = Executors.newCachedThreadPool();
@@ -829,7 +831,23 @@ public class MyTripsController implements Initializable {
                 }
             });
         });
-        showPopup(detailsPopup);
+        boolean isOwner = currentUser.getId().equals(trip.getUser());
+        boolean isJoined = trip.getJoinedMates() != null && trip.getJoinedMates().contains(currentUser.getId());
+
+        if (openForumBtn != null) {
+            if (isOwner || isJoined) {
+                openForumBtn.setVisible(true);
+                openForumBtn.setManaged(true);
+            } else {
+                openForumBtn.setVisible(false);
+                openForumBtn.setManaged(false);
+            }
+        }
+        // ----------------------------------------------------
+
+        if (mainContent != null) mainContent.setEffect(new GaussianBlur(10));
+        detailsPopup.setVisible(true);
+        detailsPopup.toFront();
     }
 
     @FXML public void handleOpenForum() {
