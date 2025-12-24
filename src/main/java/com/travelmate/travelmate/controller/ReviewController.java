@@ -301,7 +301,7 @@ public class ReviewController {
         scoreBox.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
 
 
-        Label scoreLbl = new Label(String.valueOf(userScore));
+        Label scoreLbl = new Label(String.format("%.1f", userScore));
         scoreLbl.setFont(Font.font("System", FontWeight.BOLD, 18));
         scoreLbl.setTextFill(Color.web("#1E3A5F"));
 
