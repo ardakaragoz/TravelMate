@@ -111,17 +111,17 @@ public class ChannelsController {
         }
     }
 
-    public void openSpecificChannel(String cityName) {
-        String fixedName = cityName;
-        if (cityName != null && cityName.length() > 1) {
-            fixedName = cityName.substring(0, 1).toUpperCase() + cityName.substring(1).toLowerCase();
-        }
-        try {
-            openChannel(fixedName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public void openSpecificChannel(String cityName) {
+//        String fixedName = cityName;
+//        if (cityName != null && cityName.length() > 1) {
+//            fixedName = cityName.substring(0, 1).toUpperCase() + cityName.substring(1).toLowerCase();
+//        }
+//        try {
+//            openChannel(fixedName);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @FXML
     public void handleOpenRecommendations() {
@@ -383,9 +383,6 @@ public class ChannelsController {
             chatScrollPane.layout();
             chatScrollPane.setVvalue(1.0); // 1.0 = Bottom
         }
-    @FXML public void closeChatPopup() {
-        if (mainContainer != null) mainContainer.setEffect(null);
-        if (channelChatPopup != null) channelChatPopup.setVisible(false);
     }
 
     @FXML public void handleSendPopupMessage() {
@@ -780,71 +777,6 @@ public class ChannelsController {
         if(channelTripsContainer != null) channelTripsContainer.getChildren().add(card);
     }
 
-    // FIXED: Profile image loading method
-// Add this method if you don't have it, or replace existing one:
-    private void setProfileImage(Circle targetCircle, User user) {
-        if (targetCircle == null) return;
-        Platform.runLater(() -> targetCircle.setFill(Color.LIGHTGRAY));
-
-        CompletableFuture.runAsync(() -> {
-            Image imageToSet = null;
-            try {
-                if (user != null && user.getProfile() != null) {
-                    String rawUrl = user.getProfile().getProfilePictureUrl();
-                    String secureUrl = formatToHttps(rawUrl);
-
-                    if (secureUrl != null && !secureUrl.isEmpty()) {
-                        imageToSet = new Image(secureUrl, false);
-                    }
-                }
-            } catch (Exception e) {
-                System.out.println("URL Error: " + e.getMessage());
-            }
-
-            if (imageToSet == null || imageToSet.isError()) {
-                try {
-                    var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
-                    if (resource != null) {
-                        imageToSet = new Image(resource);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            if (imageToSet != null && !imageToSet.isError()) {
-                final Image finalImg = imageToSet;
-                Platform.runLater(() -> {
-                    try {
-                        targetCircle.setFill(new ImagePattern(finalImg));
-                    } catch (Exception e) {
-                        System.out.println("Pattern Error: " + e.getMessage());
-                        targetCircle.setFill(Color.DARKGRAY);
-                    }
-                });
-            }
-        }, networkExecutor);
-    }
-
-    private String formatToHttps(String gsUrl) {
-        if (gsUrl == null || gsUrl.isEmpty()) return null;
-        if (gsUrl.startsWith("http")) return gsUrl;
-        try {
-            if (gsUrl.startsWith("gs://")) {
-                String cleanPath = gsUrl.substring(5);
-                int bucketSeparator = cleanPath.indexOf('/');
-                if (bucketSeparator != -1) {
-                    String bucket = cleanPath.substring(0, bucketSeparator);
-                    String path = cleanPath.substring(bucketSeparator + 1);
-                    String encodedPath = java.net.URLEncoder.encode(path, java.nio.charset.StandardCharsets.UTF_8);
-                    return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     @FXML public void closeTripDetailsPopup() {
         if (mainContainer != null) mainContainer.setEffect(null);
