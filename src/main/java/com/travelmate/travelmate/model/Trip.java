@@ -33,7 +33,6 @@ public class Trip {
     private TripChat tripChat;
     private Firestore db = FirebaseService.getFirestore();
 
-    // --- CRITICAL FIX: Empty Constructor ---
     public Trip() {
         this.joinedMates = new ArrayList<>();
         this.pendingMates = new ArrayList<>();
@@ -81,7 +80,6 @@ public class Trip {
         this.itinerary = itinerary;
         this.additionalNotes = additionalNotes;
 
-        // This is safe to keep here as it's part of your creation logic
         User userOwner = UserList.getUser(user);
         userOwner.addTripRequest(this);
         userOwner.increaseLevel(25);
@@ -110,7 +108,6 @@ public class Trip {
             this.joinedMates = (ArrayList<String>) data.get("joinedMates");
             this.pendingMates = (ArrayList<String>) data.get("pendingMates");
 
-            // Safety checks
             if (this.joinedMates == null) this.joinedMates = new ArrayList<>();
             if (this.pendingMates == null) this.pendingMates = new ArrayList<>();
 

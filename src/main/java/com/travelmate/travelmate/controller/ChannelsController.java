@@ -103,7 +103,7 @@ public class ChannelsController {
         loadCityButtons();
         if (searchField != null) {
             searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-                loadCityButtons(newValue); // Her harf girişinde listeyi filtrele
+                loadCityButtons(newValue);
             });
         }
         if (channelRecsButton != null) channelRecsButton.setOnAction(e -> handleOpenRecommendations());
@@ -115,17 +115,6 @@ public class ChannelsController {
         }
     }
 
-//    public void openSpecificChannel(String cityName) {
-//        String fixedName = cityName;
-//        if (cityName != null && cityName.length() > 1) {
-//            fixedName = cityName.substring(0, 1).toUpperCase() + cityName.substring(1).toLowerCase();
-//        }
-//        try {
-//            openChannel(fixedName);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     @FXML
     public void handleOpenRecommendations() {
@@ -254,18 +243,15 @@ public class ChannelsController {
             channelChatPopup.setVisible(true);
             channelChatPopup.toFront();
 
-            // 1. Ensure Channel Object is Found
             if (selectedChannel == null) {
                 selectedChannel = ChannelList.getChannel(currentCity);
             }
 
-            // 2. Load Messages Safely
             if (selectedChannel != null) {
                 String chatId = selectedChannel.getChannelChat();
                 if (chatId != null && !chatId.isEmpty()) {
                     loadChatMessages(chatId);
                 } else {
-                    // Handle channels without a chat ID yet
                     chatMessagesContainer.getChildren().clear();
                     chatMessagesContainer.getChildren().add(new Label("Chat not active for this channel."));
                 }
@@ -279,7 +265,6 @@ public class ChannelsController {
     private void loadChatMessages(String chatRoomId) {
         if (chatMessagesContainer == null) return;
 
-        // Reset UI
         chatMessagesContainer.getChildren().clear();
         Label loadingLabel = new Label("Loading messages...");
         loadingLabel.setStyle("-fx-text-fill: #555;");
@@ -292,7 +277,6 @@ public class ChannelsController {
 
                 DocumentSnapshot roomDoc = FirebaseService.getFirestore().collection("chatrooms").document(chatRoomId).get().get();
 
-                // Fallback for legacy channels
                 if (!roomDoc.exists()) {
                     DocumentSnapshot chanDoc = FirebaseService.getFirestore().collection("channels").document(chatRoomId).get().get();
                     if (chanDoc.exists() && chanDoc.contains("messages")) {
@@ -305,7 +289,6 @@ public class ChannelsController {
                 List<String> messageIds = (List<String>) roomDoc.get("messages");
                 if (messageIds == null || messageIds.isEmpty()) return new ArrayList<>();
 
-                // Load last 50 messages
                 int total = messageIds.size();
                 int start = Math.max(0, total - 50);
                 List<String> recentIds = messageIds.subList(start, total);
@@ -330,7 +313,6 @@ public class ChannelsController {
                     }
                 }
 
-                // SORT: Oldest at Top, Newest at Bottom (Standard Chat)
                 loadedMessages.sort(Comparator.comparing(m -> m.getCreatedAt() != null ? m.getCreatedAt() : new Date(0)));
 
                 return loadedMessages;
@@ -351,17 +333,11 @@ public class ChannelsController {
                     boolean isSelf = (sender != null && currentUser != null) && sender.getId().equals(currentUser.getId());
                     String senderName = (sender != null) ? sender.getName() : "Unknown";
 
-                    // Add bubble
                     addForumBubble(msg.getMessage(), senderName, isSelf, sender);
                 }
             }
-
-            // --- SCROLL FIX ---
-            // We run this TWICE: Once immediately, and once after a tiny delay
-            // to ensure the VBox height calculation is complete.
             scrollToBottom();
 
-            // Extra insurance delay to force scroll to bottom after layout render
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
@@ -379,13 +355,12 @@ public class ChannelsController {
         new Thread(loadTask).start();
     }
 
-    // Helper method to force scroll to bottom
     private void scrollToBottom() {
         if (chatScrollPane != null) {
             chatMessagesContainer.applyCss();
             chatMessagesContainer.layout();
             chatScrollPane.layout();
-            chatScrollPane.setVvalue(1.0); // 1.0 = Bottom
+            chatScrollPane.setVvalue(1.0);
         }
     }
 
@@ -394,13 +369,11 @@ public class ChannelsController {
         String text = chatInputPopup.getText().trim();
 
         if (!text.isEmpty() && selectedChannel != null) {
-            // 1. Instant UI update
             String myName = (currentUser != null && currentUser.getName() != null) ? currentUser.getName() : "Me";
             addForumBubble(text, myName, true, currentUser);
 
             chatInputPopup.clear();
 
-            // 2. Send to Firebase in background
             new Thread(() -> {
                 try {
                     String msgId = UUID.randomUUID().toString();
@@ -412,7 +385,6 @@ public class ChannelsController {
                     if (roomRef.get().get().exists()) {
                         roomRef.update("messages", FieldValue.arrayUnion(msgId));
                     } else {
-                        // Create chatroom if missing
                         Map<String, Object> data = new HashMap<>();
                         data.put("messages", Arrays.asList(msgId));
                         data.put("type", "channelChat");
@@ -432,22 +404,16 @@ public class ChannelsController {
         VBox bubble = new VBox(5);
         bubble.setMaxWidth(300);
         bubble.setPadding(new Insets(10, 15, 10, 15));
-
-        // Background Colors
         if (isSelf) {
             bubble.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
         } else {
             bubble.setStyle("-fx-background-color: #FFCB7B; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
         }
-
-        // Sender Name
         Label nameLbl = new Label(senderName != null ? senderName : "User");
-        // Use "System" font to ensure visibility if custom font fails
         nameLbl.setFont(Font.font("System", FontWeight.BOLD, 12));
         nameLbl.setTextFill(Color.BLACK);
         nameLbl.setStyle("-fx-text-fill: black;");
 
-        // Message Text
         Label msgLbl = new Label(text != null ? text : "");
         msgLbl.setWrapText(true);
         msgLbl.setTextFill(Color.BLACK);
@@ -456,18 +422,15 @@ public class ChannelsController {
 
         bubble.getChildren().addAll(nameLbl, msgLbl);
 
-        // Profile Picture
         Circle pic = new Circle(18, isSelf ? Color.LIGHTBLUE : Color.LIGHTGRAY);
         pic.setStroke(Color.BLACK);
         setProfileImage(pic, user);
 
         if (isSelf) row.getChildren().addAll(bubble, pic); else row.getChildren().addAll(pic, bubble);
 
-        // Add to UI on correct thread
         Platform.runLater(() -> {
             if (chatMessagesContainer != null) {
                 chatMessagesContainer.getChildren().add(row);
-                // Force scroll to bottom whenever a single message is added (like when sending)
                 scrollToBottom();
             }
         });
@@ -690,9 +653,6 @@ public class ChannelsController {
     }
 
 
-    // COMPLETE FIXED addTripCard method for ChannelsController.java
-// Replace your existing addTripCard method with this:
-
     private void addTripCard(Trip trip, User owner) {
         HBox card = new HBox();
         card.setPrefHeight(220);
@@ -703,13 +663,11 @@ public class ChannelsController {
         VBox infoBox = new VBox(8);
         infoBox.setPadding(new Insets(12, 8, 12, 15));
         HBox.setHgrow(infoBox, Priority.ALWAYS);
-
-        // Top Row - Profile and Name
         HBox topRow = new HBox(10);
         topRow.setAlignment(Pos.CENTER_LEFT);
         Circle profilePic = new Circle(20, Color.LIGHTGRAY);
         profilePic.setStroke(Color.BLACK);
-        // FIXED: Now properly loads profile pictures
+
         setProfileImage(profilePic, owner);
 
         VBox nameBox = new VBox(2);
@@ -728,12 +686,11 @@ public class ChannelsController {
         Button viewProfileBtn = new Button("View Profile");
         viewProfileBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-text-fill: black; -fx-font-weight: bold; -fx-cursor: hand;");
         viewProfileBtn.setFont(Font.font("System", FontWeight.BOLD, 12));
-        addClickEffect(viewProfileBtn); // Only button gets effect
+        addClickEffect(viewProfileBtn);
         viewProfileBtn.setOnAction(e -> switchToOtherProfile(e, owner.getId()));
 
         topRow.getChildren().addAll(profilePic, nameBox, r1, viewProfileBtn);
 
-        // Info Label - Compact format
         String dateStr = (trip.getDepartureDate() != null ? trip.getDepartureDate().toString() : "TBD");
         String depLocation = trip.getDepartureLocation();
         if (depLocation != null && depLocation.length() > 12) {
@@ -744,7 +701,6 @@ public class ChannelsController {
         infoLbl.setStyle("-fx-text-fill: black;");
         infoLbl.setWrapText(false);
 
-        // Middle Row - Mates and Budget
         int joined = (trip.getJoinedMates() != null ? trip.getJoinedMates().size() : 0);
         HBox midRow = new HBox(15);
         midRow.setAlignment(Pos.CENTER_LEFT);
@@ -762,10 +718,9 @@ public class ChannelsController {
 
         midRow.getChildren().addAll(matesLbl, midSpacer, budgetLbl);
 
-        // Score Row - Compatibility
         HBox scoreRow = new HBox(8);
         scoreRow.setAlignment(Pos.CENTER_LEFT);
-        int compatibility = 70; // Default
+        int compatibility = 70;
         try {
             compatibility = (currentUser.calculateCompatibility(owner) + currentUser.calculateCompatibility(CityList.getCity(trip.getDestinationName()))) / 2;
         } catch (Exception e) {}
@@ -781,7 +736,6 @@ public class ChannelsController {
 
         scoreRow.getChildren().addAll(compatLbl, pBar);
 
-        // Bottom Row - City Name and Details Button
         HBox bottomRow = new HBox(12);
         bottomRow.setAlignment(Pos.CENTER);
 
@@ -792,12 +746,11 @@ public class ChannelsController {
         Label cityLbl = new Label(cityName.toUpperCase());
         cityLbl.setFont(Font.font("System", FontWeight.BOLD, 22));
         cityLbl.setStyle("-fx-text-fill: black;");
-        // FIXED: NO click effect on label
 
         Button detailsBtn = new Button("View Details");
         detailsBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-text-fill: black; -fx-font-weight: bold; -fx-cursor: hand;");
         detailsBtn.setFont(Font.font("System", FontWeight.BOLD, 13));
-        addClickEffect(detailsBtn); // Only button gets effect
+        addClickEffect(detailsBtn);
         detailsBtn.setOnAction(e -> openTripDetailsPopup(trip, owner));
 
         Region s1 = new Region(); HBox.setHgrow(s1, Priority.ALWAYS);
@@ -806,7 +759,6 @@ public class ChannelsController {
 
         infoBox.getChildren().addAll(topRow, infoLbl, midRow, scoreRow, bottomRow);
 
-        // Image Pane - Perfectly centered and sized
         StackPane imagePane = new StackPane();
         imagePane.setMinSize(250, 206);
         imagePane.setMaxSize(250, 206);
@@ -829,7 +781,6 @@ public class ChannelsController {
         card.getChildren().addAll(infoBox, imagePane);
         if(channelTripsContainer != null) channelTripsContainer.getChildren().add(card);
     }
-
 
     @FXML public void closeTripDetailsPopup() {
         if (mainContainer != null) mainContainer.setEffect(null);
@@ -893,7 +844,6 @@ public class ChannelsController {
         }
     }
 
-    // --- HOME ILE AYNI RESİM YÜKLEME MANTIĞI ---
     private void setCircleImage(Circle targetCircle, String imageIdentifier) {
         if (targetCircle == null) return;
         CompletableFuture.runAsync(() -> {
@@ -902,7 +852,6 @@ public class ChannelsController {
                 if (imageIdentifier != null && (imageIdentifier.startsWith("http") || imageIdentifier.startsWith("gs://"))) {
                     image = new Image(imageIdentifier, true);
                 } else {
-                    // Boşlukları sil ve küçük harfe çevir (Home mantığı)
                     String cleanName = (imageIdentifier != null)
                             ? imageIdentifier.toLowerCase().replace("ı", "i").replaceAll("\\s+", "")
                             : "user_icon";

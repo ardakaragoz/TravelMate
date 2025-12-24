@@ -164,7 +164,6 @@ public class OtherProfileController {
             com.travelmate.travelmate.session.HobbyList.loadAllHobbies();
         }
         if (hobbyComboBox != null) {
-            // keySet() direkt String seti döndürür, ArrayList'e çevirmene bile gerek yok
             hobbyComboBox.getItems().setAll(com.travelmate.travelmate.session.HobbyList.hobbies.keySet());
         }
         if (com.travelmate.travelmate.session.TripTypeList.triptypes.isEmpty()) {
@@ -223,14 +222,14 @@ public class OtherProfileController {
 
         button.setOnMousePressed(e -> {
             javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
-            st.setToX(0.90); // %90'a küçül
+            st.setToX(0.90);
             st.setToY(0.90);
             st.play();
         });
 
         button.setOnMouseReleased(e -> {
             javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
-            st.setToX(1.0); // %100'e geri dön
+            st.setToX(1.0);
             st.setToY(1.0);
             st.play();
         });

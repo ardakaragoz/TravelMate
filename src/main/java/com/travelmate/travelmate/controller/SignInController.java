@@ -39,8 +39,7 @@ public class SignInController {
             }
             return;
         }
-
-        // Disable button to prevent double-clicking while loading
+        
         if (loginButton != null) loginButton.setDisable(true);
         if (statusLabel != null) {
             statusLabel.setText("Logging in...");
@@ -52,21 +51,17 @@ public class SignInController {
             try {
                 Firestore db = FirebaseService.getFirestore();
 
-                // 1. Fetch the user document (The ONLY network call needed)
                 DocumentSnapshot doc = db.collection("users").document(email).get().get();
 
-                // 2. Verify Credentials
                 if (doc.exists() && password.equals(doc.getString("password"))) {
 
-                    // 3. CRITICAL OPTIMIZATION:
-                    // Pass the 'doc' we just downloaded into the User constructor.
-                    // This prevents the User class from re-downloading the same data.
+                    
                     User user = new User(doc.getString("email"), doc);
 
-                    // 4. Update Session
+                    
                     UserSession.setCurrentUser(user);
 
-                    // 3. Switch Scene (Must be on UI Thread)
+                    
                     Platform.runLater(() -> {
                         if (statusLabel != null) {
                             statusLabel.setText("Login Successful! Redirecting...");
@@ -76,7 +71,7 @@ public class SignInController {
                         changeScene("/view/Home.fxml", event);
                     });
                 } else {
-                    // Login Failed
+                    
                     Platform.runLater(() -> {
                         System.out.println("Login Failed: Incorrect credentials.");
                         if (statusLabel != null) {
