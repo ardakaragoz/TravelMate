@@ -150,7 +150,7 @@
                                     <HBox fx:id="detailFriendsContainer" spacing="-10.0" />
                                 </VBox>
                                 <Region HBox.hgrow="ALWAYS" />
-                                <Button onAction="#handleOpenForum" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: black; -fx-border-radius: 20; -fx-border-width: 1.5; -fx-cursor: hand;" text="Open Forum">
+                                <Button fx:id="openForumBtn" onAction="#handleOpenForum" style="-fx-background-color: #CCFF00; -fx-background-radius: 20; -fx-border-color: black; -fx-border-radius: 20; -fx-border-width: 1.5; -fx-cursor: hand;" text="Open Forum">
                                     <font><Font name="League Spartan Bold" size="16.0" /></font>
                                     <padding><Insets bottom="10.0" left="25.0" right="25.0" top="10.0" /></padding>
                                     <effect><DropShadow color="#00000030" offsetX="3.0" offsetY="3.0" /></effect>
