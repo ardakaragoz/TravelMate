@@ -1,10 +1,14 @@
 package com.travelmate.travelmate.controller;
 
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.FieldValue;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.*;
 import com.travelmate.travelmate.session.*;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -28,6 +32,9 @@ import javafx.stage.Stage;
 
 import java.awt.Desktop;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +88,8 @@ public class ChannelsController {
     @FXML private VBox addRecPopup;
     @FXML private TextArea recCommentArea;
     @FXML private TextField recLinkField;
+
+    private Channel selectedChannel;
 
     public void initialize() {
         try {
@@ -226,6 +235,12 @@ public class ChannelsController {
     }
 
     @FXML
+    public void closeChatPopup() {
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (channelChatPopup != null) channelChatPopup.setVisible(false);
+    }
+
+    @FXML
     public void handleOpenChatPopup() {
         if (channelChatPopup != null) {
             String currentCity = (channelTitleLabel != null) ? channelTitleLabel.getText() : "Chat";
@@ -235,10 +250,139 @@ public class ChannelsController {
             channelChatPopup.setVisible(true);
             channelChatPopup.toFront();
 
-            loadDummyMessages();
+            // 1. Ensure Channel Object is Found
+            if (selectedChannel == null) {
+                selectedChannel = ChannelList.getChannel(currentCity);
+            }
+
+            // 2. Load Messages Safely
+            if (selectedChannel != null) {
+                String chatId = selectedChannel.getChannelChat();
+                if (chatId != null && !chatId.isEmpty()) {
+                    loadChatMessages(chatId);
+                } else {
+                    // Handle channels without a chat ID yet
+                    chatMessagesContainer.getChildren().clear();
+                    chatMessagesContainer.getChildren().add(new Label("Chat not active for this channel."));
+                }
+            } else {
+                chatMessagesContainer.getChildren().clear();
+                chatMessagesContainer.getChildren().add(new Label("Channel data not found."));
+            }
         }
     }
 
+    private void loadChatMessages(String chatRoomId) {
+        if (chatMessagesContainer == null) return;
+
+        // Reset UI
+        chatMessagesContainer.getChildren().clear();
+        Label loadingLabel = new Label("Loading messages...");
+        loadingLabel.setStyle("-fx-text-fill: #555;");
+        chatMessagesContainer.getChildren().add(loadingLabel);
+
+        Task<List<Message>> loadTask = new Task<>() {
+            @Override
+            protected List<Message> call() throws Exception {
+                if (chatRoomId == null) return new ArrayList<>();
+
+                DocumentSnapshot roomDoc = FirebaseService.getFirestore().collection("chatrooms").document(chatRoomId).get().get();
+
+                // Fallback for legacy channels
+                if (!roomDoc.exists()) {
+                    DocumentSnapshot chanDoc = FirebaseService.getFirestore().collection("channels").document(chatRoomId).get().get();
+                    if (chanDoc.exists() && chanDoc.contains("messages")) {
+                        roomDoc = chanDoc;
+                    } else {
+                        return new ArrayList<>();
+                    }
+                }
+
+                List<String> messageIds = (List<String>) roomDoc.get("messages");
+                if (messageIds == null || messageIds.isEmpty()) return new ArrayList<>();
+
+                // Load last 50 messages
+                int total = messageIds.size();
+                int start = Math.max(0, total - 50);
+                List<String> recentIds = messageIds.subList(start, total);
+
+                List<DocumentReference> refs = new ArrayList<>();
+                for (String msgId : recentIds) {
+                    if (msgId != null && !msgId.trim().isEmpty()) {
+                        refs.add(FirebaseService.getFirestore().collection("messages").document(msgId));
+                    }
+                }
+
+                if (refs.isEmpty()) return new ArrayList<>();
+
+                List<DocumentSnapshot> snapshots = FirebaseService.getFirestore().getAll(refs.toArray(new DocumentReference[0])).get();
+
+                List<Message> loadedMessages = new ArrayList<>();
+                for (DocumentSnapshot doc : snapshots) {
+                    if (doc.exists()) {
+                        try {
+                            loadedMessages.add(new Message(doc));
+                        } catch (Exception e) { }
+                    }
+                }
+
+                // SORT: Oldest at Top, Newest at Bottom (Standard Chat)
+                loadedMessages.sort(Comparator.comparing(m -> m.getCreatedAt() != null ? m.getCreatedAt() : new Date(0)));
+
+                return loadedMessages;
+            }
+        };
+
+        loadTask.setOnSucceeded(event -> {
+            chatMessagesContainer.getChildren().clear();
+            List<Message> messages = loadTask.getValue();
+
+            if (messages == null || messages.isEmpty()) {
+                Label emptyLabel = new Label("No messages yet.");
+                emptyLabel.setStyle("-fx-text-fill: #888; -fx-padding: 10;");
+                chatMessagesContainer.getChildren().add(emptyLabel);
+            } else {
+                for (Message msg : messages) {
+                    User sender = msg.getSender();
+                    boolean isSelf = (sender != null && currentUser != null) && sender.getId().equals(currentUser.getId());
+                    String senderName = (sender != null) ? sender.getName() : "Unknown";
+
+                    // Add bubble
+                    addForumBubble(msg.getMessage(), senderName, isSelf, sender);
+                }
+            }
+
+            // --- SCROLL FIX ---
+            // We run this TWICE: Once immediately, and once after a tiny delay
+            // to ensure the VBox height calculation is complete.
+            scrollToBottom();
+
+            // Extra insurance delay to force scroll to bottom after layout render
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> scrollToBottom());
+                }
+            }, 100);
+        });
+
+        loadTask.setOnFailed(e -> {
+            chatMessagesContainer.getChildren().clear();
+            chatMessagesContainer.getChildren().add(new Label("Unable to load messages."));
+            e.getSource().getException().printStackTrace();
+        });
+
+        new Thread(loadTask).start();
+    }
+
+    // Helper method to force scroll to bottom
+    private void scrollToBottom() {
+        if (chatScrollPane != null) {
+            chatMessagesContainer.applyCss();
+            chatMessagesContainer.layout();
+            chatScrollPane.layout();
+            chatScrollPane.setVvalue(1.0); // 1.0 = Bottom
+        }
     @FXML public void closeChatPopup() {
         if (mainContainer != null) mainContainer.setEffect(null);
         if (channelChatPopup != null) channelChatPopup.setVisible(false);
@@ -246,40 +390,129 @@ public class ChannelsController {
 
     @FXML public void handleSendPopupMessage() {
         if (chatInputPopup == null) return;
-        String msg = chatInputPopup.getText();
-        if (msg != null && !msg.isEmpty()) {
-            addMessageBubble(msg, true);
+        String text = chatInputPopup.getText().trim();
+
+        if (!text.isEmpty() && selectedChannel != null) {
+            // 1. Instant UI update
+            String myName = (currentUser != null && currentUser.getName() != null) ? currentUser.getName() : "Me";
+            addForumBubble(text, myName, true, currentUser);
+
             chatInputPopup.clear();
+
+            // 2. Send to Firebase in background
+            new Thread(() -> {
+                try {
+                    String msgId = UUID.randomUUID().toString();
+                    Message msg = new Message(msgId, text, currentUser);
+
+                    String chatRoomId = selectedChannel.getChannelChat();
+                    DocumentReference roomRef = FirebaseService.getFirestore().collection("chatrooms").document(chatRoomId);
+
+                    if (roomRef.get().get().exists()) {
+                        roomRef.update("messages", FieldValue.arrayUnion(msgId));
+                    } else {
+                        // Create chatroom if missing
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("messages", Arrays.asList(msgId));
+                        data.put("type", "channelChat");
+                        roomRef.set(data);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
     }
 
-    private void addMessageBubble(String text, boolean isMe) {
-        if (chatMessagesContainer == null) return;
-        HBox bubble = new HBox();
-        bubble.setAlignment(isMe ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+    private void addForumBubble(String text, String senderName, boolean isSelf, User user) {
+        HBox row = new HBox(10);
+        row.setAlignment(isSelf ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
 
-        Label lbl = new Label(text);
-        lbl.setWrapText(true);
-        lbl.setMaxWidth(350);
-        lbl.setPadding(new Insets(10));
-        lbl.setFont(Font.font("System", 14));
+        VBox bubble = new VBox(5);
+        bubble.setMaxWidth(300);
+        bubble.setPadding(new Insets(10, 15, 10, 15));
 
-        if (isMe) {
-            lbl.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15 15 0 15; -fx-text-fill: #1E3A5F;");
+        // Background Colors
+        if (isSelf) {
+            bubble.setStyle("-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
         } else {
-            lbl.setStyle("-fx-background-color: WHITE; -fx-background-radius: 15 15 15 0; -fx-text-fill: black; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 0);");
+            bubble.setStyle("-fx-background-color: #FFCB7B; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 1);");
         }
 
-        bubble.getChildren().add(lbl);
-        chatMessagesContainer.getChildren().add(bubble);
-        if(chatScrollPane != null) chatScrollPane.setVvalue(1.0);
+        // Sender Name
+        Label nameLbl = new Label(senderName != null ? senderName : "User");
+        // Use "System" font to ensure visibility if custom font fails
+        nameLbl.setFont(Font.font("System", FontWeight.BOLD, 12));
+        nameLbl.setTextFill(Color.BLACK);
+        nameLbl.setStyle("-fx-text-fill: black;");
+
+        // Message Text
+        Label msgLbl = new Label(text != null ? text : "");
+        msgLbl.setWrapText(true);
+        msgLbl.setTextFill(Color.BLACK);
+        msgLbl.setFont(Font.font("System", 14));
+        msgLbl.setStyle("-fx-text-fill: black;");
+
+        bubble.getChildren().addAll(nameLbl, msgLbl);
+
+        // Profile Picture
+        Circle pic = new Circle(18, isSelf ? Color.LIGHTBLUE : Color.LIGHTGRAY);
+        pic.setStroke(Color.BLACK);
+        setProfileImage(pic, user);
+
+        if (isSelf) row.getChildren().addAll(bubble, pic); else row.getChildren().addAll(pic, bubble);
+
+        // Add to UI on correct thread
+        Platform.runLater(() -> {
+            if (chatMessagesContainer != null) {
+                chatMessagesContainer.getChildren().add(row);
+                // Force scroll to bottom whenever a single message is added (like when sending)
+                scrollToBottom();
+            }
+        });
     }
 
-    private void loadDummyMessages() {
-        if(chatMessagesContainer == null) return;
-        chatMessagesContainer.getChildren().clear();
-        addMessageBubble("Hey! Is there anyone staying at Covent Garden?", false);
-        addMessageBubble("I highly recommend the Gokyuzu restaurant!", false);
+    private void setProfileImage(Circle circle, User user) {
+        if (circle == null) return;
+        new Thread(() -> {
+            Image img = fetchImage(user);
+            Platform.runLater(() -> circle.setFill(new ImagePattern(img)));
+        }).start();
+    }
+
+    private Image fetchImage(User user) {
+        Image imageToSet = null;
+        try {
+            if (user != null && user.getProfile() != null) {
+                String secureUrl = formatToHttps(user.getProfile().getProfilePictureUrl());
+                if (secureUrl != null && !secureUrl.isEmpty()) {
+                    imageToSet = new Image(secureUrl, false);
+                }
+            }
+            if (imageToSet == null || imageToSet.isError()) {
+                var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
+                if (resource != null) imageToSet = new Image(resource);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return imageToSet;
+    }
+
+    private String formatToHttps(String gsUrl) {
+        if (gsUrl == null || gsUrl.isEmpty()) return null;
+        if (gsUrl.startsWith("http")) return gsUrl;
+        try {
+            if (gsUrl.startsWith("gs://")) {
+                String cleanPath = gsUrl.substring(5);
+                int bucketSeparator = cleanPath.indexOf('/');
+                if (bucketSeparator != -1) {
+                    String bucket = cleanPath.substring(0, bucketSeparator);
+                    String path = cleanPath.substring(bucketSeparator + 1);
+                    String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
+                    return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
     }
 
     private void loadCityButtons() {
@@ -342,6 +575,7 @@ public class ChannelsController {
         if (channelTitleLabel != null) channelTitleLabel.setText(cityName);
         if(chatPopupTitle != null) chatPopupTitle.setText(cityName + " Chat");
         if(recsTitleLabel != null) recsTitleLabel.setText(cityName + " Recommendations");
+        selectedChannel = ChannelList.getChannel(cityName);
 
         if (channelJoinButton != null) {
             boolean isParticipant = currentUser != null && currentUser.getChannels() != null && currentUser.getChannels().contains(cityName);
