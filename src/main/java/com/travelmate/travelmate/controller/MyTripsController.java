@@ -323,14 +323,44 @@ public class MyTripsController implements Initializable {
             for (CompletableFuture<Trip> f : futures) {
                 try { if (f.get() != null) loadedTrips.add(f.get()); } catch (Exception e) {}
             }
+
             Platform.runLater(() -> {
                 container.getChildren().clear();
                 if (loadedTrips.isEmpty()) {
                     container.getChildren().add(new Label(emptyMsg));
                 } else {
-                    for (Trip trip : loadedTrips) {
-                        // Fix: Pass the 'isPast' flag to the card creator
-                        container.getChildren().add(createTripCard(trip, isPast));
+                    // --- FEATURE: SHOW ONLY 2 INITIALLY ---
+                    int limit = 2;
+
+                    // 1. Render the first 2 trips (or fewer if list is small)
+                    for (int i = 0; i < Math.min(loadedTrips.size(), limit); i++) {
+                        container.getChildren().add(createTripCard(loadedTrips.get(i), isPast));
+                    }
+
+                    // 2. If there are more trips, add a "See More" button
+                    if (loadedTrips.size() > limit) {
+                        int remaining = loadedTrips.size() - limit;
+                        Button seeMoreBtn = new Button("See More (" + remaining + ")");
+
+                        // Style the button to match your app (Blue with White text)
+                        seeMoreBtn.setStyle("-fx-background-color: #253A63; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand; -fx-padding: 10 20; -fx-font-size: 14px;");
+
+                        // Add effect for hover (optional)
+                        seeMoreBtn.setOnMouseEntered(e -> seeMoreBtn.setStyle("-fx-background-color: #1E2E4E; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand; -fx-padding: 10 20; -fx-font-size: 14px;"));
+                        seeMoreBtn.setOnMouseExited(e -> seeMoreBtn.setStyle("-fx-background-color: #253A63; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand; -fx-padding: 10 20; -fx-font-size: 14px;"));
+
+                        seeMoreBtn.setOnAction(e -> {
+                            // 3. Remove the button
+                            container.getChildren().remove(seeMoreBtn);
+
+                            // 4. Load the rest of the trips
+                            for (int i = limit; i < loadedTrips.size(); i++) {
+                                container.getChildren().add(createTripCard(loadedTrips.get(i), isPast));
+                            }
+                        });
+
+                        // Add button to the layout
+                        container.getChildren().add(seeMoreBtn);
                     }
                 }
             });
