@@ -59,17 +59,44 @@ public class Review {
     public Review(String id) throws ExecutionException, InterruptedException {
         this.id = id;
         DocumentSnapshot data = db.collection("reviews").document(id).get().get();
-        this.friendlinessPoint = data.getLong("friendlinessPoint").intValue();
-        this.reliabilityPoint = data.getLong("reliabilityPoint").intValue();
-        this.communicationPoint = data.getLong("communicationPoint").intValue();
-        this.adaptationPoint = data.getLong("adaptationPoint").intValue();
-        this.budgetPoint = data.getLong("budgetPoint").intValue();
-        this.helpfulnessPoint = data.getLong("helpfulnessPoint").intValue();
-        this.comments = data.get("comments").toString();
-        this.evaluatedUser = UserList.getUser(data.get("evaluatedUser").toString());
-        this.evaluatorUser = UserList.getUser(data.get("evaluatorUser").toString());
-        this.trip = TripList.getTrip(data.get("trip").toString());
-        calculateOverall();
+
+        if (data.exists()) {
+            this.friendlinessPoint = data.getLong("friendlinessPoint").intValue();
+            this.reliabilityPoint = data.getLong("reliabilityPoint").intValue();
+            this.communicationPoint = data.getLong("communicationPoint").intValue();
+            this.adaptationPoint = data.getLong("adaptationPoint").intValue();
+            this.budgetPoint = data.getLong("budgetPoint").intValue();
+            this.helpfulnessPoint = data.getLong("helpfulnessPoint").intValue();
+
+            // Safe string retrieval
+            this.comments = data.getString("comments");
+
+            // --- FIX: Check BOTH naming conventions (Legacy Support) ---
+
+            // 1. Handle "Evaluated" User
+            Object evaluatedObj = data.get("evaluatedUser");
+            if (evaluatedObj == null) evaluatedObj = data.get("evaluated"); // Fallback to old key
+
+            if (evaluatedObj != null) {
+                this.evaluatedUser = UserList.getUser(evaluatedObj.toString());
+            }
+
+            // 2. Handle "Evaluator" User
+            Object evaluatorObj = data.get("evaluatorUser");
+            if (evaluatorObj == null) evaluatorObj = data.get("evaluator"); // Fallback to old key
+
+            if (evaluatorObj != null) {
+                this.evaluatorUser = UserList.getUser(evaluatorObj.toString());
+            }
+
+            // 3. Handle Trip
+            Object tripObj = data.get("trip");
+            if (tripObj != null) {
+                this.trip = TripList.getTrip(tripObj.toString());
+            }
+
+            calculateOverall();
+        }
     }
 
     public void calculateOverall() {
