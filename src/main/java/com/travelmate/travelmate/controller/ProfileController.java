@@ -89,6 +89,7 @@ public class ProfileController {
         List<String> citiesList = new ArrayList<>();
         for (String id : user.getTrips()){
             Trip trip = TripList.getTrip(id);
+
             if (trip.isFinished() && !(citiesList.contains(trip.getDestinationName()))){
                 citiesList.add(trip.getDestinationName());
             }

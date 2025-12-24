@@ -120,9 +120,9 @@ public class Trip {
     public boolean isFinished(){
         if (this.endDate == null) return false;
 
-        long currentTime = System.currentTimeMillis();
+        Date today = new Date();
 
-        return this.endDate.getTime() < currentTime;
+        return this.getDepartureDate().before(today);
     }
 
     public void updateTrip() {
