@@ -330,7 +330,7 @@
                             </font>
                         </Label>
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button mnemonicParsing="false" onAction="#closePopups" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;" text="X" />
+                        <Button mnemonicParsing="false" onAction="#closePopups" style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;" text="X" />
                     </children>
                 </HBox>
 
