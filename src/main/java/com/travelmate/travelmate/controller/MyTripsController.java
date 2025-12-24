@@ -430,6 +430,7 @@ public class MyTripsController implements Initializable {
 
                                     Label name = new Label(u.getName());
                                     name.setFont(Font.font("System", 14));
+                                    name.setStyle("-fx-text-fill: black;");
                                     HBox.setHgrow(name, Priority.ALWAYS);
                                     name.setMaxWidth(Double.MAX_VALUE);
 
@@ -473,7 +474,7 @@ public class MyTripsController implements Initializable {
     private void openRateUserForm(User targetUser, Trip trip) {
         reviewListContainer.getChildren().clear();
         Label title = new Label("Rate " + targetUser.getName());
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: black;");
 
         VBox form = new VBox(10);
         form.setPadding(new Insets(10));
@@ -967,6 +968,7 @@ public class MyTripsController implements Initializable {
         requestsPopup.setVisible(false);
         editPopup.setVisible(false);
         forumPopup.setVisible(false);
+        reviewPopup.setVisible(false);
     }
 
     private void loadImage(ImageView view, String cityName) {
