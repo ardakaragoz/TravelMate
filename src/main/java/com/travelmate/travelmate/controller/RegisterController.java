@@ -71,7 +71,7 @@ public class RegisterController {
 
 
                 int ageVal = (age != null && !age.isEmpty()) ? Integer.parseInt(age) : 0;
-                User user = new User(email, name, name + " " + surname, "", email, password, gender, ageVal);
+                User user = new User(email, name, name + " " + surname, "", email, password, gender, ageVal, false);
                 UserSession.setCurrentUser(user);
                 UserList.addUser(user);
 

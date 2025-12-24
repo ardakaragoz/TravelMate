@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutionException;
 public class Admin extends User {
     public Admin(String id, String username, String name, String nationality, String email,
                  String password, String gender, int age) throws ExecutionException, InterruptedException {
-        super(id, username, name, nationality, email, password, gender, age);
+        super(id, username, name, nationality, email, password, gender, age, true);
     }
 
     public Admin(String id) throws ExecutionException, InterruptedException {
