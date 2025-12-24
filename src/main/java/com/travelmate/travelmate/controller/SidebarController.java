@@ -46,7 +46,6 @@ public class SidebarController {
         resetStyles();
         checkAdminStatus(); 
 
-        
         String activeStyle = "-fx-background-color: #253A63, #CCFF00; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
         String activeChatStyle = "-fx-background-color: #253A63, #CCFF00; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER_LEFT; -fx-text-fill: #253A63; -fx-font-family: 'League Spartan Black'; -fx-font-size: 20px; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;";
 

@@ -16,11 +16,9 @@ import java.util.concurrent.ExecutionException;
 public class Main extends Application {
     @Override
     public void start(Stage stage) throws IOException, ExecutionException, InterruptedException {
-        // --- 1. LOAD ALL CUSTOM FONTS ---
-        // Note: The folder name in your project is 'LeaugeSpartan' (with the typo)
+        
         loadCustomFonts();
 
-        // --- 2. INITIALIZE SERVICES ---
         FirebaseService.initialize();
         UserList.loadAllUsers();
         CityList.loadAllCities();
@@ -30,8 +28,7 @@ public class Main extends Application {
         ChatList.loadAllChats();
         TripList.loadAllTrips();
         RecommendationList.loadRecommendations();
-        // --- 3. LOAD SCENE ---
-        // Ensuring we use the correct path to your sign-in page
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/sign-in-page.fxml"));
         Parent root = loader.load();
 
@@ -43,10 +40,9 @@ public class Main extends Application {
 
     private void loadCustomFonts() {
         try {
-            // BE CAREFUL: Your folder is named 'LeaugeSpartan' (typo), not 'LeagueSpartan'
+            
             String fontPath = "/fonts/LeaugeSpartan/";
 
-            // Load specific weights
             Font.loadFont(getClass().getResourceAsStream(fontPath + "LeagueSpartan-Thin.ttf"), 12);
             Font.loadFont(getClass().getResourceAsStream(fontPath + "LeagueSpartan-ExtraLight.ttf"), 12);
             Font.loadFont(getClass().getResourceAsStream(fontPath + "LeagueSpartan-Light.ttf"), 12);
@@ -57,8 +53,8 @@ public class Main extends Application {
             Font.loadFont(getClass().getResourceAsStream(fontPath + "LeagueSpartan-ExtraBold.ttf"), 12);
             Font.loadFont(getClass().getResourceAsStream(fontPath + "LeagueSpartan-Black.ttf"), 12);
 
-            // DEBUG: Print names so you know what to put in FXML
-            // System.out.println("Loaded Fonts: " + Font.getFontNames("League Spartan"));
+            
+            
 
         } catch (Exception e) {
             System.err.println("Failed to load fonts: " + e.getMessage());

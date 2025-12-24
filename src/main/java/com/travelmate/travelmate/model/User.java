@@ -18,7 +18,6 @@ public class User {
     private Profile profile;
     private String profilePictureUrl;
 
-    // Initialize lists immediately to avoid NullPointerException
     private ArrayList<String> trips = new ArrayList<>();
     private ArrayList<String> channels = new ArrayList<>();
     private ArrayList<String> reviews = new ArrayList<>();
@@ -31,12 +30,9 @@ public class User {
     private int reviewCount;
     private double reviewPoints;
 
-    // --- CRITICAL FIX: Empty Constructor for Firestore ---
     public User() {
-        // Firestore needs this to create the object before filling fields
     }
 
-    // --- Constructor 1: Create New User (Registration) ---
     public User(String id, String username, String name, String nationality, String email,
                 String password, String gender, int age, boolean admin) throws ExecutionException, InterruptedException {
         this.id = id;
@@ -52,27 +48,21 @@ public class User {
         this.reviewCount = 0;
         this.reviewPoints = 0;
         this.admin = admin;
-        // For new users, create profile immediately (one-time cost)
         this.profile = new Profile(id);
 
         updateUser();
     }
 
-    // --- Constructor 2: Optimized Loader (Login) ---
-    // This receives the data directly from SignInController
     public User(String id, DocumentSnapshot doc) {
         this.id = id;
-        // Load data directly from the doc we already have!
         loadFromDoc(doc);
     }
 
-    // --- Constructor 3: Legacy Loader (Slow) ---
     public User(String id) throws ExecutionException, InterruptedException {
         this.id = id;
         setCurrentUser();
     }
 
-    // Helper to parse data (Used by both Optimized and Legacy loaders)
     private void loadFromDoc(DocumentSnapshot doc) {
         if (!doc.exists()) return;
         this.username = doc.getString("username");
@@ -100,7 +90,7 @@ public class User {
 
     public void setCurrentUser() throws ExecutionException, InterruptedException {
         Firestore db = FirebaseService.getFirestore();
-        DocumentSnapshot doc = db.collection("users").document(id).get().get(); // Still blocks, but used less often
+        DocumentSnapshot doc = db.collection("users").document(id).get().get();
         loadFromDoc(doc);
     }
 
@@ -132,7 +122,7 @@ public class User {
             FirebaseService.getFirestore().collection("users").document(this.id).set(data);
         });
     }
-    // --- LAZY LOADING PROFILE GETTER ---
+
     public Profile getProfile() {
         if (this.profile == null) {
             try { this.profile = new Profile(this.id); } catch (Exception e) { e.printStackTrace(); }
@@ -224,7 +214,6 @@ public class User {
     public int calculateCompatibility(User otherUser) throws ExecutionException, InterruptedException {
         int score = 0;
 
-        // Ensure profiles are loaded before calculation
         if (this.getProfile() != null && otherUser.getProfile() != null) {
             double funPoint = 0;
             double funPoint2 = 0;
@@ -344,7 +333,7 @@ public class User {
 
     public void setProfilePicture(String url) {
         this.profilePictureUrl = url;
-        updateUser(); // Save to DB automatically
+        updateUser();
     }
 
     // Getters and Setters
@@ -360,7 +349,6 @@ public class User {
     public int getLevel() { return  1 + levelPoint / 10; }
     public int getLevelPoint() { return levelPoint; }
     public int getMonthlyPoints() { return monthlyPoints; }
-    // Note: getProfile is defined above as a lazy loader
     public ArrayList<String> getTrips() { return trips; }
     public ArrayList<String> getChannels() { return channels; }
     public ArrayList<String> getReviews() { return reviews; }

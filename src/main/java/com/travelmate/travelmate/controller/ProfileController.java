@@ -75,11 +75,9 @@ public class ProfileController {
 
         String rawUrl = profile.getProfilePictureUrl();
         String secureUrl = formatToHttps(rawUrl);
-        System.out.println("DEBUG - Trying to load image from: " + rawUrl); // <--- Add this
-        // 2. Load Image
+        System.out.println("DEBUG - Trying to load image from: " + rawUrl);
         if (secureUrl != null && !secureUrl.isEmpty()) {
             try {
-                // 'true' allows background loading
                 Image img = new Image(secureUrl, true);
                 profileImageCircle.setFill(new ImagePattern(img));
             } catch (Exception e) {
@@ -120,10 +118,6 @@ public class ProfileController {
             e.printStackTrace();
         }
     }
-
-    // --- NEW METHOD: Loads image in background to prevent crashes ---
-
-
 
 
     @FXML

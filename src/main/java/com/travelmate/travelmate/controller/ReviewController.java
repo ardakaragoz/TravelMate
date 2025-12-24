@@ -135,7 +135,6 @@ public class ReviewController {
         }).start();
     }
 
-    // --- ALGORITHM FOR IMAGEVIEW ---
     private void setImageForImageView(ImageView view, User user) {
         if (view == null) return;
         new Thread(() -> {
@@ -143,8 +142,6 @@ public class ReviewController {
             Platform.runLater(() -> view.setImage(img));
         }).start();
     }
-
-    // --- SHARED FETCH LOGIC ---
     private Image fetchImage(User user) {
         Image imageToSet = null;
         try {
@@ -251,7 +248,6 @@ public class ReviewController {
             if (previousScene != null) {
                 stage.setScene(previousScene);
             } else {
-                // Fallback if previous scene is lost
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/Home.fxml"));
                 Parent root = loader.load();
                 stage.setScene(new Scene(root));
