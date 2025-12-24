@@ -370,7 +370,15 @@ public class HomeController {
         Label cityLbl = createBoldLabel(trip.getDestinationName().toUpperCase(), 28); cityLbl.setTextFill(Color.web("#1e3a5f"));
         Button detailsBtn = createStyledButton("View Details", 14);
         addClickEffect(detailsBtn);
-        detailsBtn.setOnAction(e -> openDetailsPopup(trip, owner));
+        detailsBtn.setOnAction(e -> {
+            try {
+                openDetailsPopup(trip, owner);
+            } catch (ExecutionException ex) {
+                throw new RuntimeException(ex);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         Region s1 = new Region(); HBox.setHgrow(s1, Priority.ALWAYS);
         Region s2 = new Region(); HBox.setHgrow(s2, Priority.ALWAYS);
@@ -394,8 +402,9 @@ public class HomeController {
         if(tripsContainer != null) tripsContainer.getChildren().add(card);
     }
 
-    private void openDetailsPopup(Trip trip, User owner) {
+    private void openDetailsPopup(Trip trip, User owner) throws ExecutionException, InterruptedException {
         if (detailsPopup == null) return;
+        ownTripLabel.setText("You're the organizer of the trip!");
 
         this.selectedTripForDetails = trip;
         this.selectedTripOwnerForDetails = owner;
@@ -406,6 +415,7 @@ public class HomeController {
 
         boolean isMyTrip = currentUser != null && currentUser.getId().equals(owner.getId());
 
+
         if (sendRequestBtn != null) {
             sendRequestBtn.setVisible(!isMyTrip);
             sendRequestBtn.setManaged(!isMyTrip);
@@ -414,6 +424,28 @@ public class HomeController {
         if (ownTripLabel != null) {
             ownTripLabel.setVisible(isMyTrip);
             ownTripLabel.setManaged(isMyTrip);
+        }
+
+        boolean already = false;
+        for (String reqID: currentUser.getJoinRequests()){
+            JoinRequest req = new JoinRequest(reqID);
+            if (req.getTrip().getId().equals(trip.getId())) {
+                already = true;
+                break;
+            }
+        }
+
+        if (already) {
+            if (sendRequestBtn != null) {
+                sendRequestBtn.setVisible(false);
+                sendRequestBtn.setManaged(false);
+            }
+
+            if (ownTripLabel != null) {
+                ownTripLabel.setVisible(true);
+                ownTripLabel.setManaged(true);
+                ownTripLabel.setText("You've already sent a request!");
+            }
         }
 
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
