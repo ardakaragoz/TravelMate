@@ -7,7 +7,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="450.0" prefWidth="232.0" spacing="20.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.SidebarController">
+<VBox prefHeight="450.0" prefWidth="232.0" spacing="20.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.SidebarController">
     <children>
 
         <Button fx:id="channelsButton" focusTraversable="false" maxWidth="Infinity" mnemonicParsing="false" onAction="#handleChannelsButton" onMousePressed="#handleMousePressed" onMouseReleased="#handleMouseReleased" prefHeight="55.0" prefWidth="232.0" style="-fx-background-color: #253A63, WHITE; -fx-background-insets: 0, 3; -fx-background-radius: 30, 27; -fx-alignment: CENTER; -fx-text-fill: #253A63; -fx-focus-color: transparent; -fx-faint-focus-color: transparent;" text="Channels     &gt;" textFill="#253a63">

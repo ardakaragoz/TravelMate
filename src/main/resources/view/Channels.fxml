@@ -7,6 +7,8 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -15,7 +17,7 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.ChannelsController">
+<StackPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.travelmate.travelmate.controller.ChannelsController">
     <children>
         <BorderPane fx:id="mainContainer" style="-fx-background-color: #FFF7EA;">
 
@@ -28,6 +30,14 @@
                     <padding><Insets bottom="20.0" left="20.0" right="20.0" top="30.0" /></padding>
                     <children>
                         <fx:include fx:id="sidebar" source="Sidebar.fxml" />
+                  <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/logoBlue.png" />
+                     </image>
+                     <VBox.margin>
+                        <Insets left="25.0" top="189.0" />
+                     </VBox.margin>
+                  </ImageView>
                     </children>
                 </VBox>
             </left>
@@ -52,7 +62,7 @@
                         </children>
                     </VBox>
 
-                    <VBox fx:id="channelDetailView" HBox.hgrow="ALWAYS" spacing="15.0" visible="true">
+                    <VBox fx:id="channelDetailView" spacing="15.0" visible="true" HBox.hgrow="ALWAYS">
 
                         <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: #FFCB7B; -fx-background-radius: 20; -fx-padding: 15 30 15 30;">
                             <effect><DropShadow color="#00000020" offsetX="5.0" offsetY="5.0" /></effect>
@@ -62,12 +72,12 @@
                                 </Label>
                                 <Region HBox.hgrow="ALWAYS" />
 
-                                <VBox spacing="10.0" alignment="CENTER_RIGHT">
+                                <VBox alignment="CENTER_RIGHT" spacing="10.0">
                                     <HBox spacing="10.0">
-                                        <Button fx:id="channelJoinButton" text="Join" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 100px; -fx-cursor: hand;"/>
-                                        <Button fx:id="channelChatButton" text="Chat" onAction="#handleOpenChatPopup" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 100px; -fx-cursor: hand;"/>
+                                        <Button fx:id="channelJoinButton" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 100px; -fx-cursor: hand;" text="Join" />
+                                        <Button fx:id="channelChatButton" onAction="#handleOpenChatPopup" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 100px; -fx-cursor: hand;" text="Chat" />
                                     </HBox>
-                                    <Button fx:id="channelRecsButton" text="Recommendations" onAction="#handleOpenRecommendations" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 210px; -fx-cursor: hand;"/>
+                                    <Button fx:id="channelRecsButton" onAction="#handleOpenRecommendations" style="-fx-background-color: WHITE; -fx-background-radius: 15; -fx-font-weight: bold; -fx-min-width: 210px; -fx-cursor: hand;" text="Recommendations" />
                                 </VBox>
                             </children>
                         </HBox>
@@ -159,7 +169,7 @@
                             <font><Font name="System Bold" size="20.0" /></font>
                         </Label>
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button text="Back" onAction="#closeChatPopup" style="-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                        <Button onAction="#closeChatPopup" style="-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-font-weight: bold; -fx-cursor: hand;" text="Back" />
                     </children>
                 </HBox>
 
@@ -171,8 +181,8 @@
                 </ScrollPane>
 
                 <HBox alignment="CENTER" spacing="10.0" style="-fx-padding: 15; -fx-background-color: #FFF0D1; -fx-background-radius: 0 0 20 20;">
-                    <TextField fx:id="chatInputPopup" promptText="Type a message..." style="-fx-background-radius: 20; -fx-padding: 10;" HBox.hgrow="ALWAYS"/>
-                    <Button onAction="#handleSendPopupMessage" text="➤" style="-fx-background-color: #1E2A47; -fx-text-fill: white; -fx-background-radius: 20; -fx-min-width: 40px; -fx-min-height: 40px; -fx-cursor: hand;"/>
+                    <TextField fx:id="chatInputPopup" promptText="Type a message..." style="-fx-background-radius: 20; -fx-padding: 10;" HBox.hgrow="ALWAYS" />
+                    <Button onAction="#handleSendPopupMessage" style="-fx-background-color: #1E2A47; -fx-text-fill: white; -fx-background-radius: 20; -fx-min-width: 40px; -fx-min-height: 40px; -fx-cursor: hand;" text="➤" />
                 </HBox>
             </children>
         </VBox>
@@ -216,19 +226,19 @@
                     <font><Font name="System Bold" size="24.0" /></font>
                 </Label>
 
-                <VBox spacing="5.0" alignment="CENTER_LEFT">
-                    <Label text="Your Comments:" style="-fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
-                    <TextArea fx:id="recCommentArea" prefRowCount="4" promptText="Write your experience..." wrapText="true" style="-fx-background-color: transparent; -fx-border-color: #1E3A5F; -fx-border-radius: 10;"/>
+                <VBox alignment="CENTER_LEFT" spacing="5.0">
+                    <Label style="-fx-font-weight: bold; -fx-text-fill: #1e3a5f;" text="Your Comments:" />
+                    <TextArea fx:id="recCommentArea" prefRowCount="4" promptText="Write your experience..." style="-fx-background-color: transparent; -fx-border-color: #1E3A5F; -fx-border-radius: 10;" wrapText="true" />
                 </VBox>
 
-                <VBox spacing="5.0" alignment="CENTER_LEFT">
-                    <Label text="Google Maps Link:" style="-fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
-                    <TextField fx:id="recLinkField" promptText="http://maps.google.com/..." style="-fx-background-radius: 10; -fx-border-color: #1E3A5F; -fx-border-radius: 10;"/>
+                <VBox alignment="CENTER_LEFT" spacing="5.0">
+                    <Label style="-fx-font-weight: bold; -fx-text-fill: #1e3a5f;" text="Google Maps Link:" />
+                    <TextField fx:id="recLinkField" promptText="http://maps.google.com/..." style="-fx-background-radius: 10; -fx-border-color: #1E3A5F; -fx-border-radius: 10;" />
                 </VBox>
 
                 <Region VBox.vgrow="ALWAYS" />
 
-                <HBox spacing="20.0" alignment="CENTER">
+                <HBox alignment="CENTER" spacing="20.0">
                     <Button onAction="#closeAddRecPopup" style="-fx-background-color: #FF6B6B; -fx-background-radius: 20;" text="Back" textFill="WHITE">
                         <font><Font name="System Bold" size="16.0" /></font>
                         <padding><Insets bottom="10.0" left="30.0" right="30.0" top="10.0" /></padding>
