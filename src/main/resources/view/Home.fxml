@@ -153,7 +153,7 @@
                 <VBox alignment="CENTER_LEFT" maxWidth="450.0" spacing="10.0">
                     <children>
                         <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Joining to an existing trip:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+20" textFill="#2ecc71" /></HBox>
-                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Receiving a 4-5 star review:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="Up to +20" textFill="#2ecc71" /></HBox>
+                        <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Receiving a 4-5 star review:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="Up to +40" textFill="#2ecc71" /></HBox>
                         <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Writing a review for a mate:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+15" textFill="#2ecc71" /></HBox>
                         <HBox spacing="10"><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="• Posting a trip request:" /><Region HBox.hgrow="ALWAYS" /><Label style="-fx-font-family: 'League Spartan Bold'; -fx-font-size: 16px;" text="+25" textFill="#2ecc71" /></HBox>
                     </children>

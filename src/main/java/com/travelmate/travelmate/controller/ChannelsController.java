@@ -101,7 +101,11 @@ public class ChannelsController {
         if (sidebarController != null) sidebarController.setActivePage("Channels");
 
         loadCityButtons();
-
+        if (searchField != null) {
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                loadCityButtons(newValue); // Her harf girişinde listeyi filtrele
+            });
+        }
         if (channelRecsButton != null) channelRecsButton.setOnAction(e -> handleOpenRecommendations());
 
         if(sendRecommendationButton != null) {
@@ -511,7 +515,52 @@ public class ChannelsController {
         } catch (Exception e) { e.printStackTrace(); }
         return null;
     }
+    private void loadCityButtons(String filter) {
+        if (filter.isEmpty()) filter = "";
+        if(citySelectionView == null) return;
+        citySelectionView.getChildren().clear();
+        List<String> addedChannelNames = new ArrayList<>();
+        for (String city : currentUser.getChannels()){
+            if (city.toLowerCase().contains(filter.toLowerCase())){
+                Button btn = new Button(city);
+                btn.setMaxWidth(Double.MAX_VALUE);
+                btn.setAlignment(Pos.CENTER_LEFT);
+                btn.setPadding(new Insets(15, 20, 15, 20));
+                btn.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-text-fill: #1E3A5F; -fx-font-size: 16px; -fx-cursor: hand;");
+                addClickEffect(btn);
 
+                btn.setOnAction(e -> {
+                    updateActiveCityButton(btn);
+                    openChannel(city);
+                });
+
+
+                citySelectionView.getChildren().add(btn);
+                addedChannelNames.add(city);
+            }
+
+        }
+        for (String city : CityList.cities.keySet()) {
+            if (!addedChannelNames.contains(city) && city.toLowerCase().contains(filter.toLowerCase())) {
+                Button btn = new Button(city);
+                btn.setMaxWidth(Double.MAX_VALUE);
+                btn.setAlignment(Pos.CENTER_LEFT);
+                btn.setPadding(new Insets(15, 20, 15, 20));
+                btn.setStyle("-fx-background-color: #FFE6CC; -fx-background-radius: 20; -fx-text-fill: #1E3A5F; -fx-font-size: 16px; -fx-cursor: hand;");
+                addClickEffect(btn);
+
+                btn.setOnAction(e -> {
+                    updateActiveCityButton(btn);
+                    openChannel(city);
+                });
+
+
+                citySelectionView.getChildren().add(btn);
+                addedChannelNames.add(city);
+            }
+
+        }
+    }
     private void loadCityButtons() {
         if(citySelectionView == null) return;
         citySelectionView.getChildren().clear();
@@ -580,10 +629,12 @@ public class ChannelsController {
                 channelJoinButton.setText("Leave Channel");
                 channelJoinButton.setStyle("-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-background-radius: 15; -fx-font-weight: bold;");
                 channelJoinButton.setOnAction(e -> handleLeave(cityName));
+                channelChatButton.setDisable(false);
             } else {
                 channelJoinButton.setText("Join Channel");
                 channelJoinButton.setStyle("-fx-background-color: #CCFF00; -fx-text-fill: #1E3A5F; -fx-background-radius: 15; -fx-font-weight: bold;");
                 channelJoinButton.setOnAction(e -> handleJoin(cityName));
+                channelChatButton.setDisable(true);
             }
             addClickEffect(channelJoinButton);
         }

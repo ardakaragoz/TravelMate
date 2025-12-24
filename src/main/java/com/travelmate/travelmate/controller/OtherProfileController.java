@@ -57,7 +57,7 @@ public class OtherProfileController {
         levelProgressBar.setProgress((user.getLevelPoint() % 10) / 10.0);
         Profile userProfile = user.getProfile();
         String str_ = "Review Score: (" + user.getReviews().size() + ") ";
-        for (int i = 0; i < (user.getReviewPoints() / user.getReviewCount()); i++) {
+        for (int i = 1; i < (user.getReviewPoints() / user.getReviewCount()); i++) {
             str_ += "★";
         }
         reviewScoreLabel.setText(str_);

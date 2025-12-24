@@ -123,7 +123,7 @@ public class ReviewController {
             renderSummaryStars(point1, point2, point3, point4, point5, point6);
             loadReviews(reviewsList);
         } else {
-            averageRatingLabel.setText("No Reviews Received Yet.");
+            averageRatingLabel.setText("No Reviews.");
         }
 
     }

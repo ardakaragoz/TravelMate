@@ -446,31 +446,34 @@ public class MyTripsController implements Initializable {
                     try {
                         User u = UserList.getUser(uid);
                         if (u != null) {
-                            Platform.runLater(() -> {
-                                HBox row = new HBox(10);
-                                row.setAlignment(Pos.CENTER_LEFT);
-                                row.setPadding(new Insets(10));
-                                row.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
+                            if (!u.getReviews().contains(trip.getId() + "-" + currentUser.getId())){
+                                Platform.runLater(() -> {
+                                    HBox row = new HBox(10);
+                                    row.setAlignment(Pos.CENTER_LEFT);
+                                    row.setPadding(new Insets(10));
+                                    row.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
 
-                                Circle av = new Circle(20, Color.LIGHTGRAY);
-                                setProfileImage(av, u);
+                                    Circle av = new Circle(20, Color.LIGHTGRAY);
+                                    setProfileImage(av, u);
 
-                                Label name = new Label(u.getName());
-                                name.setFont(Font.font("System", 14));
-                                HBox.setHgrow(name, Priority.ALWAYS);
-                                name.setMaxWidth(Double.MAX_VALUE);
+                                    Label name = new Label(u.getName());
+                                    name.setFont(Font.font("System", 14));
+                                    HBox.setHgrow(name, Priority.ALWAYS);
+                                    name.setMaxWidth(Double.MAX_VALUE);
 
-                                Button rateBtn = new Button("Rate");
-                                rateBtn.setStyle("-fx-background-color: #28A745; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 10;");
-                                rateBtn.setOnAction(e -> openRateUserForm(u, trip));
+                                    Button rateBtn = new Button("Rate");
+                                    rateBtn.setStyle("-fx-background-color: #28A745; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 10;");
+                                    rateBtn.setOnAction(e -> openRateUserForm(u, trip));
 
-                                Button seeReviewsBtn = new Button("Reviews");
-                                seeReviewsBtn.setStyle("-fx-background-color: #17a2b8; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 10;");
-                                seeReviewsBtn.setOnAction(e -> openReviewPage(u));
+                                    Button seeReviewsBtn = new Button("Reviews");
+                                    seeReviewsBtn.setStyle("-fx-background-color: #17a2b8; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 10;");
+                                    seeReviewsBtn.setOnAction(e -> openReviewPage(u));
 
-                                row.getChildren().addAll(av, name, rateBtn, seeReviewsBtn);
-                                reviewListContainer.getChildren().add(row);
-                            });
+                                    row.getChildren().addAll(av, name, rateBtn, seeReviewsBtn);
+                                    reviewListContainer.getChildren().add(row);
+                                });
+                            }
+
                         }
                     } catch (Exception e) {}
                 }
@@ -559,10 +562,9 @@ public class MyTripsController implements Initializable {
                 reviewData.put("createdAt", new Date());
 
                 // 2. Save Review to Firestore
-                DocumentReference ref = FirebaseService.getFirestore().collection("reviews").document();
-                String reviewId = ref.getId();
+                DocumentReference ref = FirebaseService.getFirestore().collection("reviews").document(trip.getId() + "-" + currentUser.getId());
                 // Some models require the ID to be stored inside the document too
-                reviewData.put("id", reviewId);
+                reviewData.put("id", trip.getId() + "-" + currentUser.getId());
 
                 // Blocking write to ensure it exists before we link it
                 ref.set(reviewData).get();
@@ -575,7 +577,8 @@ public class MyTripsController implements Initializable {
                     // we at least prevent the app from crashing here.
                     System.err.println("Warning: Target user reviews list is null. Review saved to DB but local user object not updated.");
                 } else {
-                    targetUser.getReviews().add(reviewId);
+                    targetUser.getReviews().add(trip.getId() + "-" + currentUser.getId());
+
                 }
                 // Update stats locally if possible, or just save the ID
                 targetUser.setReviewCount(targetUser.getReviewCount() + 1);
@@ -589,9 +592,14 @@ public class MyTripsController implements Initializable {
 
                 // Add to user's total points (assuming reviewPoints tracks sum of averages or similar)
                 targetUser.setReviewPoints(targetUser.getReviewPoints() + (int)thisReviewAvg);
-
+                boolean edited = false;
+                if (thisReviewAvg >= 4.0){
+                    edited = true;
+                    targetUser.increaseLevel((int) Math.floor(25 * (thisReviewAvg - 3.4)));
+                }
+                currentUser.increaseLevel(15);
                 // Save User Changes
-                targetUser.updateUser();
+                if (!edited) targetUser.updateUser();
 
                 Platform.runLater(() -> {
                     closePopups();

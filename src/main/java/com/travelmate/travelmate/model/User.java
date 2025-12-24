@@ -321,7 +321,6 @@ public class User {
     public void addCurrentTrip(String id) throws ExecutionException, InterruptedException {
         trips.add(id);
         increaseLevel(20);
-        updateUser();
     }
 
     public void denyRequest(JoinRequest request) throws ExecutionException, InterruptedException {
