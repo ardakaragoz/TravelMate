@@ -258,27 +258,26 @@ public class ChatController {
         if (activeChatListener != null) {
             activeChatListener.remove();
             activeChatListener = null;
-        if (localMessageCache.containsKey(room.getId())) {
-            renderMessages(localMessageCache.get(room.getId()));
-        } else {
-            loadMessagesForChat(room);
-        }
+            if (localMessageCache.containsKey(room.getId())) {
+                renderMessages(localMessageCache.get(room.getId()));
+            }
 
-        // 1. Clear UI and Cache manually here ONE TIME
-        messageBubbleContainer.getChildren().clear();
-        loadedMessageIds.clear();
-        lastTotalMessageCount = 0;
+            // 1. Clear UI and Cache manually here ONE TIME
+            messageBubbleContainer.getChildren().clear();
+            loadedMessageIds.clear();
+            lastTotalMessageCount = 0;
 
-        // 2. Start Listener
-        // automatically fetch the initial history (Last 25 messages).
-        startChatListener(room.getId());
+            // 2. Start Listener
+            // automatically fetch the initial history (Last 25 messages).
+            startChatListener(room.getId());
 
-        // 3. (Optional) Instant load from local cache if available
-        // This makes it feel instant while the listener connects
-        if (localMessageCache.containsKey(room.getId())) {
-            List<Message> cached = localMessageCache.get(room.getId());
-            for(Message m : cached) loadedMessageIds.add(m.getId());
-            renderMessages(cached);
+            // 3. (Optional) Instant load from local cache if available
+            // This makes it feel instant while the listener connects
+            if (localMessageCache.containsKey(room.getId())) {
+                List<Message> cached = localMessageCache.get(room.getId());
+                for (Message m : cached) loadedMessageIds.add(m.getId());
+                renderMessages(cached);
+            }
         }
     }
 
