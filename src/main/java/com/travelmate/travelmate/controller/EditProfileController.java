@@ -216,7 +216,7 @@ public class EditProfileController {
                 currentUser.getProfile().setBiography(newBio);
                 currentUser.setName(fullName);
                 currentUser.setUsername(username);
-                currentUser.updateUser();
+                currentUser.updateBasicInfo();
                 currentUser.getProfile().resetHobby();
                 currentUser.getProfile().resetTripType();
 

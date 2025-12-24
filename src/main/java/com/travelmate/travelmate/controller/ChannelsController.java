@@ -109,7 +109,15 @@ public class ChannelsController {
                 loadCityButtons(newValue);
             });
         }
-        if (channelRecsButton != null) channelRecsButton.setOnAction(e -> handleOpenRecommendations());
+        if (channelRecsButton != null) channelRecsButton.setOnAction(e -> {
+            try {
+                handleOpenRecommendations();
+            } catch (ExecutionException ex) {
+                throw new RuntimeException(ex);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         if(sendRecommendationButton != null) {
             sendRecommendationButton.setOnAction(e -> {
@@ -120,7 +128,7 @@ public class ChannelsController {
 
 
     @FXML
-    public void handleOpenRecommendations() {
+    public void handleOpenRecommendations() throws ExecutionException, InterruptedException {
         if (recommendationsPopup != null) {
             String city = (channelTitleLabel != null) ? channelTitleLabel.getText() : "City";
             if (recsTitleLabel != null) recsTitleLabel.setText(city + " Recommendations");
@@ -156,8 +164,10 @@ public class ChannelsController {
         String link = (recLinkField != null) ? recLinkField.getText() : "";
 
         if (!comment.isEmpty()) {
-            System.out.println("Sending recommendation: " + comment);
+            Recommendation rec = new Recommendation("" + System.currentTimeMillis(), comment, currentUser.getId(), (city), link);
         }
+
+
 
         if (recCommentArea != null) recCommentArea.clear();
         if (recLinkField != null) recLinkField.clear();
@@ -165,41 +175,15 @@ public class ChannelsController {
         closeAddRecPopup();
     }
 
-    private void loadRecommendations(String city) {
+    private void loadRecommendations(String city) throws ExecutionException, InterruptedException {
         if (recommendationsContainer == null) return;
+        recommendationsContainer.getChildren().clear();
 
-        Platform.runLater(() -> recommendationsContainer.getChildren().clear());
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                Channel ch = ChannelList.getChannel(city);
-                if (ch != null && ch.getRecommendations() != null) {
-                    ArrayList<String> recommendationsList = ch.getRecommendations();
-                    for (String reco : recommendationsList){
-                        Recommendation rec = new Recommendation(reco);
-
-                        String senderKey = rec.getSender();
-                        String finalSenderName = "Unknown User";
-
-                        if (senderKey != null) {
-                            try {
-                                User u = UserList.getUser(senderKey);
-                                if (u != null) {
-                                    finalSenderName = u.getUsername();
-                                } else {
-                                    finalSenderName = senderKey;
-                                }
-                            } catch (Exception e) {
-                                finalSenderName = senderKey;
-                            }
-                        }
-
-                        final String nameToShow = finalSenderName;
-                        Platform.runLater(() -> addRecItem(nameToShow, rec.getMessage(), rec.getLink()));
-                    }
-                }
-            } catch(Exception e) { e.printStackTrace(); }
-        }, networkExecutor);
+        ArrayList<String> recommendationsList = ChannelList.getChannel(city).getRecommendations();
+        for (String reco : recommendationsList){
+            Recommendation rec = new Recommendation(reco);
+            addRecItem(rec.getSender(), rec.getMessage(), rec.getLink());
+        }
     }
 
     private void addRecItem(String name, String comment, String link) {

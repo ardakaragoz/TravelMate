@@ -94,6 +94,15 @@ public class User {
         loadFromDoc(doc);
     }
 
+    public void updateBasicInfo() {
+        CompletableFuture.runAsync(() -> {
+            Map<String, Object> data = new HashMap<>();
+            data.put("name", this.name);
+            data.put("username", this.username);
+            FirebaseService.getFirestore().collection("users").document(this.id).update(data);
+        });
+    }
+
     public void updateUser() {
         CompletableFuture.runAsync(() -> {
             Map<String, Object> data = new HashMap<>();
