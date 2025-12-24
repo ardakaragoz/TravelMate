@@ -3,6 +3,7 @@ package com.travelmate.travelmate.controller;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.ListenerRegistration;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.*;
 import com.travelmate.travelmate.session.ChatList;
@@ -59,6 +60,10 @@ public class ChatController {
     private ChatRoom currentChatRoom = null;
     private User currentUser;
     private User activeChatUser;
+
+    private ListenerRegistration activeChatListener; // Stores the active connection
+    private Set<String> loadedMessageIds = new HashSet<>();
+    private int lastTotalMessageCount = 0;
 
     // Image Cache (Load once, use everywhere)
     private static Image defaultUserImage;
@@ -263,72 +268,74 @@ public class ChatController {
         this.currentChatRoom = room;
         this.activeChatUser = otherUser;
 
-        // Instant load from cache if available
+        if (activeChatListener != null) {
+            activeChatListener.remove();
+            activeChatListener = null;
+        }
+
+        // 1. Clear UI and Cache manually here ONE TIME
+        messageBubbleContainer.getChildren().clear();
+        loadedMessageIds.clear();
+        lastTotalMessageCount = 0;
+
+        // 2. Start Listener
+        // automatically fetch the initial history (Last 25 messages).
+        startChatListener(room.getId());
+
+        // 3. (Optional) Instant load from local cache if available
+        // This makes it feel instant while the listener connects
         if (localMessageCache.containsKey(room.getId())) {
-            renderMessages(localMessageCache.get(room.getId()));
-        } else {
-            loadMessagesForChat(room);
+            List<Message> cached = localMessageCache.get(room.getId());
+            for(Message m : cached) loadedMessageIds.add(m.getId());
+            renderMessages(cached);
         }
     }
 
-    private void loadMessagesForChat(ChatRoom room) {
-        messageBubbleContainer.getChildren().clear();
-        if (room == null || room.getMessages() == null) return;
+    private void startChatListener(String chatRoomId) {
+        activeChatListener = FirebaseService.getFirestore().collection("chatrooms").document(chatRoomId)
+                .addSnapshotListener((snapshot, e) -> {
+                    Platform.runLater(() -> {
+                        if (e != null) return;
+                        if (snapshot != null && snapshot.exists()) {
+                            List<String> allMsgIds = (List<String>) snapshot.get("messages");
+                            if (allMsgIds == null) allMsgIds = new ArrayList<>();
 
-        // Background Task for Messages
-        Task<List<Message>> loadMessagesTask = new Task<>() {
-            @Override
-            protected List<Message> call() throws Exception {
-                List<String> messageIds = room.getMessages();
-                if (messageIds.isEmpty()) return new ArrayList<>();
+                            List<String> idsToFetch = new ArrayList<>();
 
-                // Optimization: Load only last 25 messages
-                int total = messageIds.size();
-                int limit = 25;
-                int start = Math.max(0, total - limit);
-                List<String> recentIds = messageIds.subList(start, total);
+                            if (loadedMessageIds.isEmpty()) {
+                                // CASE 1: Initial Load (Last 25)
+                                int start = Math.max(0, allMsgIds.size() - 25);
+                                idsToFetch.addAll(allMsgIds.subList(start, allMsgIds.size()));
+                            } else {
+                                // CASE 2: Live Update (New IDs only)
+                                // [FIX] Only look at messages added AFTER our last known count
+                                if (allMsgIds.size() > lastTotalMessageCount) {
+                                    int start = lastTotalMessageCount;
+                                    if (start < allMsgIds.size()) {
+                                        List<String> newMessages = allMsgIds.subList(start, allMsgIds.size());
+                                        for (String id : newMessages) {
+                                            // Only add if not already loaded
+                                            if (!loadedMessageIds.contains(id)) {
+                                                idsToFetch.add(id);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            lastTotalMessageCount = allMsgIds.size();
 
-                List<DocumentReference> refs = new ArrayList<>();
-                for (String msgId : recentIds) {
-                    if (msgId != null && !msgId.trim().isEmpty()) {
-                        refs.add(FirebaseService.getFirestore().collection("messages").document(msgId));
-                    }
-                }
-                if (refs.isEmpty()) return new ArrayList<>();
-
-                // Batch Fetch
-                ApiFuture<List<DocumentSnapshot>> future = FirebaseService.getFirestore().getAll(refs.toArray(new DocumentReference[0]));
-                List<DocumentSnapshot> snapshots = future.get();
-
-                List<Message> loadedMessages = new ArrayList<>();
-                for (DocumentSnapshot doc : snapshots) {
-                    if (doc.exists()) {
-                        loadedMessages.add(new Message(doc)); // Efficient Constructor
-                    }
-                }
-
-                // Sort
-                loadedMessages.sort(Comparator.comparing(m -> m.getCreatedAt() != null ? m.getCreatedAt() : new Date(0)));
-                return loadedMessages;
-            }
-        };
-
-        loadMessagesTask.setOnSucceeded(event -> {
-            List<Message> messages = loadMessagesTask.getValue();
-            localMessageCache.put(room.getId(), messages);
-            renderMessages(messages);
-        });
-
-        loadMessagesTask.setOnFailed(e -> {
-            System.err.println("Failed to load messages safely.");
-            loadMessagesTask.getException().printStackTrace();
-        });
-
-        new Thread(loadMessagesTask).start();
+                            if (!idsToFetch.isEmpty()) {
+                                loadedMessageIds.addAll(idsToFetch);
+                                fetchAndRenderMessages(idsToFetch);
+                            }
+                        }
+                    });
+                });
     }
 
+
+
     private void renderMessages(List<Message> messages) {
-        messageBubbleContainer.getChildren().clear();
         for (Message msg : messages) {
             boolean isSentByMe = false;
             if (msg.getSender() != null && currentUser != null) {
@@ -346,33 +353,74 @@ public class ChatController {
     private void handleSendMessage(ActionEvent event) {
         String text = messageInput.getText().trim();
         if (!text.isEmpty() && currentChatRoom != null) {
-
-            // 1. UI UPDATE FIRST (Instant)
             messageInput.clear();
+
+            String msgId = UUID.randomUUID().toString();
+
+            // 1. Safe Add on UI Thread
+            loadedMessageIds.add(msgId);
+
             addMessageBubble(text, "Just now", true);
             messageScrollPane.layout();
             messageScrollPane.setVvalue(1.0);
 
-            // 2. BACKGROUND DB WORK
-            String chatId = currentChatRoom.getId();
             User sender = currentUser;
-
             new Thread(() -> {
                 try {
-                    String msgId = UUID.randomUUID().toString();
                     Message newMessage = new Message(msgId, text, sender);
+
+                    // --- CHANGED: REMOVED "loadedMessageIds.add(msgId)" FROM HERE ---
+
                     currentChatRoom.addMessage(newMessage);
 
                     Platform.runLater(() -> {
-                        if (localMessageCache.containsKey(chatId)) {
-                            localMessageCache.get(chatId).add(newMessage);
+                        if (localMessageCache.containsKey(currentChatRoom.getId())) {
+                            localMessageCache.get(currentChatRoom.getId()).add(newMessage);
                         }
                     });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                } catch (Exception e) { e.printStackTrace(); }
             }).start();
         }
+    }
+
+    private void fetchAndRenderMessages(List<String> ids) {
+        Task<List<Message>> task = new Task<>() {
+            @Override
+            protected List<Message> call() throws Exception {
+                List<DocumentReference> refs = new ArrayList<>();
+
+                // --- FIX: Filter out null or empty IDs to prevent crash ---
+                for (String id : ids) {
+                    if (id != null && !id.trim().isEmpty()) {
+                        refs.add(FirebaseService.getFirestore().collection("messages").document(id));
+                    }
+                }
+
+                if (refs.isEmpty()) return new ArrayList<>();
+
+                ApiFuture<List<DocumentSnapshot>> future = FirebaseService.getFirestore().getAll(refs.toArray(new DocumentReference[0]));
+                List<DocumentSnapshot> snapshots = future.get();
+
+                List<Message> messages = new ArrayList<>();
+                for (DocumentSnapshot doc : snapshots) {
+                    if (doc.exists()) messages.add(new Message(doc));
+                }
+
+                // Sort by time so they appear in order
+                messages.sort(Comparator.comparing(m -> m.getCreatedAt() != null ? m.getCreatedAt() : new Date(0)));
+                return messages;
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            renderMessages(task.getValue());
+        });
+
+        task.setOnFailed(e -> {
+            e.getSource().getException().printStackTrace();
+        });
+
+        new Thread(task).start();
     }
 
     private void addMessageBubble(String text, String time, boolean isSentByMe) {
