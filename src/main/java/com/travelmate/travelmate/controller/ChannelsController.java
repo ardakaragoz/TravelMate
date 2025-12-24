@@ -675,10 +675,12 @@ public class ChannelsController {
                 if (reqs != null) {
                     for (String req : reqs) {
                         Trip t = TripList.getTrip(req);
-                        if (t != null) {
-                            User u = UserList.getUser(t.getUser());
-                            if (u != null) {
-                                Platform.runLater(() -> addTripCard(t, u));
+                        if (!t.isFinished()) {
+                            if (t != null) {
+                                User u = UserList.getUser(t.getUser());
+                                if (u != null) {
+                                    Platform.runLater(() -> addTripCard(t, u));
+                                }
                             }
                         }
                     }
@@ -874,9 +876,6 @@ public class ChannelsController {
                     JoinRequest req = new JoinRequest(reqId, currentUser, selectedTripOwnerForDetails, message, currentDetailTrip);
                     currentUser.addRequest(req);
                     currentDetailTrip.addPendingMate(currentUser);
-
-                    Firestore db = FirebaseService.getFirestore();
-                    db.collection("join_requests").add(req);
 
                     Platform.runLater(() -> {
                         if(messageInputArea != null) messageInputArea.clear();
