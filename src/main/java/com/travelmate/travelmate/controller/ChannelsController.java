@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -50,10 +51,11 @@ public class ChannelsController {
 
     @FXML private VBox citySelectionView;
     @FXML private TextField searchField;
-
+    @FXML private Label detailsDescription;
     @FXML private VBox channelDetailView;
     @FXML private Label channelTitleLabel;
     @FXML private VBox channelTripsContainer;
+    @FXML private Circle detailsProfilePic;
 
     @FXML private Button channelJoinButton;
     @FXML private Button channelChatButton;
@@ -65,6 +67,7 @@ public class ChannelsController {
     @FXML private Label detailBudgetLabel;
     @FXML private Label detailDescLabel;
     @FXML private Label detailItineraryLabel;
+    @FXML private Label detailsOwnerName;
     @FXML private TextArea messageInputArea;
     @FXML private Label ownTripLabel;
     @FXML private Button sendRequestBtn;
@@ -798,7 +801,15 @@ public class ChannelsController {
         detailsBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-text-fill: black; -fx-font-weight: bold; -fx-cursor: hand;");
         detailsBtn.setFont(Font.font("System", FontWeight.BOLD, 13));
         addClickEffect(detailsBtn); // Only button gets effect
-        detailsBtn.setOnAction(e -> openTripDetailsPopup(trip, owner));
+        detailsBtn.setOnAction(e -> {
+            try {
+                openTripDetailsPopup(trip, owner);
+            } catch (ExecutionException ex) {
+                throw new RuntimeException(ex);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         Region s1 = new Region(); HBox.setHgrow(s1, Priority.ALWAYS);
         Region s2 = new Region(); HBox.setHgrow(s2, Priority.ALWAYS);
@@ -836,29 +847,48 @@ public class ChannelsController {
         if (tripDetailsPopup != null) tripDetailsPopup.setVisible(false);
     }
 
-    private void openTripDetailsPopup(Trip trip, User owner) {
+    private void openTripDetailsPopup(Trip trip, User owner) throws ExecutionException, InterruptedException {
         if (tripDetailsPopup == null) return;
         this.currentDetailTrip = trip;
         this.selectedTripOwnerForDetails = owner;
 
-        if (detailDestinationLabel != null) detailDestinationLabel.setText(trip.getDestinationName());
-        if (detailDateLabel != null) detailDateLabel.setText(trip.getDepartureDate() != null ? trip.getDepartureDate().toString() : "TBD");
-        if (detailBudgetLabel != null) detailBudgetLabel.setText(trip.getAverageBudget() + " " + trip.getCurrency());
-        if (detailDescLabel != null) detailDescLabel.setText(trip.getAdditionalNotes() != null && !trip.getAdditionalNotes().isEmpty() ? trip.getAdditionalNotes() : "No description provided.");
-        if (detailItineraryLabel != null) detailItineraryLabel.setText(trip.getItinerary() != null && !trip.getItinerary().isEmpty() ? trip.getItinerary() : "No itinerary details.");
+        if (detailsOwnerName != null) detailsOwnerName.setText(owner.getUsername());
+        if (detailsProfilePic != null) setCircleImage(detailsProfilePic, owner.getUsername());
+        if (detailsDescription != null) detailsDescription.setText(trip.getAdditionalNotes());
 
-        boolean isOwn = currentUser != null && currentUser.getId().equals(owner.getId());
+        boolean isMyTrip = currentUser != null && currentUser.getId().equals(owner.getId());
 
-        if (isOwn) {
-            if (sendRequestBtn != null) { sendRequestBtn.setVisible(false); sendRequestBtn.setManaged(false); }
-            if (messageInputArea != null) { messageInputArea.setVisible(false); messageInputArea.setManaged(false); }
-            if (ownTripLabel != null) { ownTripLabel.setVisible(true); ownTripLabel.setManaged(true); }
-        } else {
-            if (sendRequestBtn != null) { sendRequestBtn.setVisible(true); sendRequestBtn.setManaged(true); }
-            if (messageInputArea != null) { messageInputArea.setVisible(true); messageInputArea.setManaged(true); }
-            if (ownTripLabel != null) { ownTripLabel.setVisible(false); ownTripLabel.setManaged(false); }
+        if (sendRequestBtn != null) {
+            sendRequestBtn.setVisible(!isMyTrip);
+            sendRequestBtn.setManaged(!isMyTrip);
         }
 
+        if (ownTripLabel != null) {
+            ownTripLabel.setVisible(isMyTrip);
+            ownTripLabel.setManaged(isMyTrip);
+        }
+
+        boolean already = false;
+        for (String reqID: currentUser.getJoinRequests()){
+            JoinRequest req = new JoinRequest(reqID);
+            if (req.getTrip().getId().equals(trip.getId())) {
+                already = true;
+                break;
+            }
+        }
+
+        if (already) {
+            if (sendRequestBtn != null) {
+                sendRequestBtn.setVisible(false);
+                sendRequestBtn.setManaged(false);
+            }
+
+            if (ownTripLabel != null) {
+                ownTripLabel.setVisible(true);
+                ownTripLabel.setManaged(true);
+                ownTripLabel.setText("You've already sent a request!");
+            }
+        }
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
         tripDetailsPopup.setVisible(true);
         tripDetailsPopup.toFront();
