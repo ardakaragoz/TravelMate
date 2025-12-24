@@ -43,22 +43,18 @@ public class EditProfileController {
     @FXML private TextField usernameField;
     @FXML private TextArea bioArea;
 
-    // --- HOBİ SEÇİM ALANLARI ---
-    @FXML private ComboBox<String> hobbyComboBox;       // Tüm hobilerin olduğu kutu
-    @FXML private ListView<String> selectedHobbiesListView; // Seçilenlerin listelendiği yer
+    @FXML private ComboBox<String> hobbyComboBox;
+    @FXML private ListView<String> selectedHobbiesListView;
 
-    // --- GEZİ TÜRÜ SEÇİM ALANLARI ---
-    @FXML private ComboBox<String> tripTypeComboBox;    // Tüm gezi türlerinin olduğu kutu
-    @FXML private ListView<String> selectedTripTypesListView; // Seçilenlerin listelendiği yer
+    @FXML private ComboBox<String> tripTypeComboBox;
+    @FXML private ListView<String> selectedTripTypesListView;
     private File selectedImageFile;
     private User currentUser;
 
     public void initialize() {
         currentUser = UserSession.getCurrentUser();
-        // 1. Kutuları doldur (JSON veya DB'den gelen verilerle)
         populateComboBoxes();
 
-        // 2. Mevcut kullanıcı verilerini ekrana bas
         try {
             User currentUser = UserSession.getCurrentUser();
             if (currentUser != null) {
@@ -67,16 +63,8 @@ public class EditProfileController {
                 if (fullNameField != null) fullNameField.setText(name);
                 if (usernameField != null) usernameField.setText(currentUser.getUsername());
 
-                // Eğer User modelinde 'getBiography' varsa:
-                // if (bioArea != null) bioArea.setText(currentUser.getProfile().getBiography());
-                if (bioArea != null) bioArea.setText(currentUser.getProfile().getBiography()); // Placeholder
-
-                // --- MEVCUT HOBİLERİ YÜKLE ---
-                // Kullanıcının daha önce kaydettiği hobileri varsa ListView'e ekle
+                if (bioArea != null) bioArea.setText(currentUser.getProfile().getBiography());
                 if (currentUser.getProfile() != null) {
-                    // Not: Profil sınıfındaki getHobbies() metodun ArrayList<Hobby> dönüyorsa isimlerini almalısın
-                    // Örnek kullanım:
-
                     try {
                         ArrayList<Hobby> myHobbies = currentUser.getProfile().getHobbies();
                         for (Hobby h : myHobbies) {
@@ -86,7 +74,6 @@ public class EditProfileController {
 
                 }
 
-                // --- MEVCUT GEZİ TÜRLERİNİ YÜKLE ---
 
                 if (currentUser.getProfile() != null) {
                     ArrayList<TripTypes> myTypes = currentUser.getProfile().getFavoriteTripTypes();
@@ -155,14 +142,10 @@ public class EditProfileController {
         if (file != null) {
             this.selectedImageFile = file;
 
-            // Immediate Local Preview (No upload yet)
-//            Image localImage = new Image(file.toURI().toString());
-//            profileImageCircle.setFill(new ImagePattern(localImage));
         }
     }
     
     private void populateComboBoxes() {
-        // --- HOBİLERİ YÜKLE ---
         if (HobbyList.hobbies.isEmpty()) {
             HobbyList.loadAllHobbies();
         }
@@ -170,7 +153,6 @@ public class EditProfileController {
             hobbyComboBox.getItems().setAll(HobbyList.hobbies.keySet());
         }
 
-        // --- GEZİ TÜRLERİNİ YÜKLE ---
         if (TripTypeList.triptypes.isEmpty()) {
             TripTypeList.listAllTripTypes();
         }
@@ -179,14 +161,9 @@ public class EditProfileController {
         }
     }
 
-    // =========================================================
-    // HOBİ EKLEME / ÇIKARMA İŞLEMLERİ
-    // =========================================================
-
     @FXML
     public void handleAddHobby(ActionEvent event) {
         String selected = hobbyComboBox.getValue();
-        // Null değilse ve listede zaten yoksa ekle
         if (selected != null && !selectedHobbiesListView.getItems().contains(selected)) {
             selectedHobbiesListView.getItems().add(selected);
         }
@@ -200,9 +177,6 @@ public class EditProfileController {
         }
     }
 
-    // =========================================================
-    // GEZİ TÜRÜ EKLEME / ÇIKARMA İŞLEMLERİ
-    // =========================================================
 
     @FXML
     public void handleAddTripType(ActionEvent event) {
@@ -220,10 +194,6 @@ public class EditProfileController {
         }
     }
 
-    // =========================================================
-    // KAYDETME VE ÇIKIŞ İŞLEMLERİ
-    // =========================================================
-
     @FXML
     public void handleSaveButton(ActionEvent event) {
         System.out.println("Kaydet butonuna basıldı...");
@@ -231,7 +201,6 @@ public class EditProfileController {
             User currentUser = UserSession.getCurrentUser();
             String username = (String) usernameField.getText();
             String fullName = (String) fullNameField.getText();
-            // 1. Yeni verileri al
             String newBio = bioArea.getText();
             List<String> finalHobbies = new ArrayList<>(selectedHobbiesListView.getItems());
             List<String> finalTripTypes = new ArrayList<>(selectedTripTypesListView.getItems());
@@ -244,14 +213,10 @@ public class EditProfileController {
                 if (selectedImageFile != null) {
                     uploadImageFixedName(selectedImageFile);
                 }
-
-                // B. Save Bio
-
-                // 2. Profil nesnesini güncelle
                 currentUser.getProfile().setBiography(newBio);
                 currentUser.setName(fullName);
                 currentUser.setUsername(username);
-                currentUser.updateUser();
+                currentUser.updateBasicInfo();
                 currentUser.getProfile().resetHobby();
                 currentUser.getProfile().resetTripType();
 
@@ -263,18 +228,12 @@ public class EditProfileController {
                 }
                 currentUser.getProfile().updateHobby_TripType();
 
-                // NOT: Profile.java içinde setHobbies(List<String> names) gibi bir metodun olmalı.
-                // Eğer yoksa, Hobby nesnelerine çevirip eklemen gerekebilir.
-                // Örn: currentUser.getProfile().updateHobbiesFromNames(finalHobbies);
-
-                // Şimdilik konsola bastık, User/Profile sınıflarında ilgili setter'ları açmalısın.
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // İşlem bitince Profil sayfasına dön
         changeScene("/view/Profile.fxml", event);
     }
 
@@ -287,25 +246,17 @@ public class EditProfileController {
             return;
         }
 
-        // --- OVERWRITE LOGIC ---
-        // By using the username directly without UUID, we force overwrite.
-        // e.g. "profile_pics/john_doe.jpg"
         String blobName = "profile_images/" + currentUser.getId() + ".png";
 
         try (FileInputStream fis = new FileInputStream(file)) {
-            // 1. Upload (This replaces the existing file if it exists)
             Blob blob = bucket.create(blobName, fis, "image/png");
 
-            // 2. Make Public
             blob.createAcl(Acl.of(Acl.User.ofAllUsers(), Acl.Role.READER));
 
-            // 3. Generate Link
-            // Adding a timestamp query param (?t=...) forces JavaFX to ignore its old cache
             String publicUrl = "https://storage.googleapis.com/" + bucket.getName() + "/" + blobName + "?t=" + System.currentTimeMillis();
 
             System.out.println("Uploaded & Overwritten: " + publicUrl);
 
-            // 4. Update User
             currentUser.setProfilePicture(publicUrl);
             if (currentUser.getProfile() != null) {
                 currentUser.getProfile().setProfilePictureUrl(publicUrl);

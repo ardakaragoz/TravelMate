@@ -45,8 +45,6 @@ public class TopBarController {
             userLevelLabel.setText("");
         }
     }
-
-    // --- BUTTON ANIMATIONS ---
     @FXML
     private void handleMousePressed(MouseEvent event) {
         if (event.getSource() instanceof Button) {
@@ -78,18 +76,14 @@ public class TopBarController {
                 if (user.getProfile() != null) {
                     String rawUrl = user.getProfile().getProfilePictureUrl();
 
-                    // CONVERSION STEP: Fix the gs:// link
                     String secureUrl = formatToHttps(rawUrl);
 
                     if (secureUrl != null && !secureUrl.isEmpty()) {
-                        // Load in background (false = synchronous in this thread)
                         imageToSet = new Image(secureUrl, false);
                     }
                 }
 
-                // Fallback to local default if URL failed
                 if (imageToSet == null || imageToSet.isError()) {
-                    // Using the file we know exists in your project
                     var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
                     if (resource != null) imageToSet = new Image(resource);
                 }
@@ -104,18 +98,14 @@ public class TopBarController {
         }).start();
     }
 
-    // COPY THIS HELPER METHOD INTO THE CLASS
     private String formatToHttps(String url) {
         if (url == null || !url.startsWith("gs://")) return url;
         try {
-            // Remove "gs://"
             String temp = url.substring(5);
-            // Find the first slash separating bucket from path
             int firstSlash = temp.indexOf("/");
             if (firstSlash > 0) {
                 String bucket = temp.substring(0, firstSlash);
                 String path = temp.substring(firstSlash + 1);
-                // Encode the path (fixes spaces and @ symbols)
                 String encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8);
                 return "https://firebasestorage.googleapis.com/v0/b/" + bucket + "/o/" + encodedPath + "?alt=media";
             }

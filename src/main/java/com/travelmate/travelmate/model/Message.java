@@ -4,7 +4,7 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.session.UserList;
-import com.google.cloud.Timestamp; // Required for Firestore dates
+import com.google.cloud.Timestamp;
 
 
 import java.util.Date;
@@ -20,7 +20,6 @@ public class Message {
 
     public Message() {}
 
-    // --- Sending Constructor (Saves to DB) ---
     public Message(String id, String message, User sender) {
         this.id = id;
         this.message = message;
@@ -31,25 +30,22 @@ public class Message {
         Map<String, Object> messageMap = new HashMap<>();
         messageMap.put("message", message);
         messageMap.put("sender", sender.getId());
-        messageMap.put("createdAt", createdAt); // Firestore saves this as Timestamp
+        messageMap.put("createdAt", createdAt);
 
         db.collection("messages").document(id).set(messageMap);
     }
-
-    // --- Loading Constructor (Fixes the Crash) ---
     public Message(DocumentSnapshot data) {
         this.id = data.getId();
         if (data.exists()) {
             this.message = data.getString("message");
 
-            // --- FIX: Safely handle Timestamp vs Long ---
             Object createdObj = data.get("createdAt");
             if (createdObj instanceof Timestamp) {
                 this.createdAt = ((Timestamp) createdObj).toDate();
             } else if (createdObj instanceof Number) {
                 this.createdAt = new Date(((Number) createdObj).longValue());
             } else {
-                this.createdAt = new Date(); // Fallback
+                this.createdAt = new Date();
             }
 
             String senderId = data.getString("sender");

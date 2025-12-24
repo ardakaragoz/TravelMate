@@ -56,7 +56,7 @@ public class HomeController {
     @FXML private VBox leaderboardContainer;
     @FXML private VBox tripsContainer;
     @FXML private SidebarController sidebarController;
-    @FXML private TextField searchField;
+    @FXML private Button searchButton;
 
     @FXML private VBox filterPopup;
     @FXML private Slider budgetSlider;
@@ -75,8 +75,6 @@ public class HomeController {
     @FXML private Label compalibilityScoreLabel;
 
 
-
-    // --- DETAILS POPUP ---
     @FXML private VBox detailsPopup;
     @FXML private Circle detailsProfilePic;
     @FXML private Label detailsOwnerName;
@@ -117,6 +115,9 @@ public class HomeController {
         promotedCityNameLabel.setStyle("-fx-cursor: hand; -fx-background-color: #253A63; -fx-background-radius: 10; -fx-padding: 5 20 5 20; -fx-text-fill: #CCFF00;");
 
         setupFilterComponents();
+        if (searchButton != null) {
+            searchButton.setOnAction(e -> handleOpenFilters());
+        }
     }
 
     private void setupFilterComponents() {
@@ -281,10 +282,8 @@ public class HomeController {
     private void setProfileImage(Circle targetCircle, User user) {
         if (targetCircle == null) return;
 
-        // 1. Önce bir placeholder (gri renk) koy ki boş durmasın
         Platform.runLater(() -> targetCircle.setFill(Color.LIGHTGRAY));
 
-        // 2. Arka plan thread'i başlat
         new Thread(() -> {
             Image imageToSet = null;
             try {
@@ -293,38 +292,29 @@ public class HomeController {
                     String secureUrl = formatToHttps(rawUrl);
 
                     if (secureUrl != null && !secureUrl.isEmpty()) {
-                        // DÜZELTME BURADA: 'false' kullanıyoruz.
-                        // Zaten background thread'deyiz, thread'in resmi indirmesini beklemesini istiyoruz.
-                        // Böylece alt satıra geçtiğinde resim HAZIR olacak.
                         imageToSet = new Image(secureUrl, false);
                     }
                 }
             } catch (Exception e) {
                 System.out.println("URL Error: " + e.getMessage());
             }
-
-            // 3. Hata kontrolü ve Fallback (Varsayılan resim)
-            // Eğer resim null ise veya indirme sırasında hata oluştuysa (404 vs.)
             if (imageToSet == null || imageToSet.isError()) {
                 try {
                     var resource = getClass().getResourceAsStream("/images/user_icons/img.png");
                     if (resource != null) {
-                        imageToSet = new Image(resource); // Local resource olduğu için anında yüklenir
+                        imageToSet = new Image(resource);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
 
-            // 4. UI Güncellemesi
             if (imageToSet != null && !imageToSet.isError()) {
                 final Image finalImg = imageToSet;
                 Platform.runLater(() -> {
                     try {
-                        // Artık resim tamamen indiği için ImagePattern hata vermez
                         targetCircle.setFill(new ImagePattern(finalImg));
                     } catch (Exception e) {
-                        // Çok nadir durumlarda (örn: resim dosyası bozuksa) yine hata olabilir
                         System.out.println("Pattern Error: " + e.getMessage());
                         targetCircle.setFill(Color.DARKGRAY);
                     }
@@ -380,7 +370,15 @@ public class HomeController {
         Label cityLbl = createBoldLabel(trip.getDestinationName().toUpperCase(), 28); cityLbl.setTextFill(Color.web("#1e3a5f"));
         Button detailsBtn = createStyledButton("View Details", 14);
         addClickEffect(detailsBtn);
-        detailsBtn.setOnAction(e -> openDetailsPopup(trip, owner));
+        detailsBtn.setOnAction(e -> {
+            try {
+                openDetailsPopup(trip, owner);
+            } catch (ExecutionException ex) {
+                throw new RuntimeException(ex);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         Region s1 = new Region(); HBox.setHgrow(s1, Priority.ALWAYS);
         Region s2 = new Region(); HBox.setHgrow(s2, Priority.ALWAYS);
@@ -404,8 +402,9 @@ public class HomeController {
         if(tripsContainer != null) tripsContainer.getChildren().add(card);
     }
 
-    private void openDetailsPopup(Trip trip, User owner) {
+    private void openDetailsPopup(Trip trip, User owner) throws ExecutionException, InterruptedException {
         if (detailsPopup == null) return;
+        ownTripLabel.setText("You're the organizer of the trip!");
 
         this.selectedTripForDetails = trip;
         this.selectedTripOwnerForDetails = owner;
@@ -416,6 +415,7 @@ public class HomeController {
 
         boolean isMyTrip = currentUser != null && currentUser.getId().equals(owner.getId());
 
+
         if (sendRequestBtn != null) {
             sendRequestBtn.setVisible(!isMyTrip);
             sendRequestBtn.setManaged(!isMyTrip);
@@ -424,6 +424,28 @@ public class HomeController {
         if (ownTripLabel != null) {
             ownTripLabel.setVisible(isMyTrip);
             ownTripLabel.setManaged(isMyTrip);
+        }
+
+        boolean already = false;
+        for (String reqID: currentUser.getJoinRequests()){
+            JoinRequest req = new JoinRequest(reqID);
+            if (req.getTrip().getId().equals(trip.getId())) {
+                already = true;
+                break;
+            }
+        }
+
+        if (already) {
+            if (sendRequestBtn != null) {
+                sendRequestBtn.setVisible(false);
+                sendRequestBtn.setManaged(false);
+            }
+
+            if (ownTripLabel != null) {
+                ownTripLabel.setVisible(true);
+                ownTripLabel.setManaged(true);
+                ownTripLabel.setText("You've already sent a request!");
+            }
         }
 
         if (mainContainer != null) mainContainer.setEffect(new GaussianBlur(10));
@@ -615,7 +637,7 @@ public class HomeController {
 
         button.setOnMouseReleased(e -> {
             javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(javafx.util.Duration.millis(100), button);
-            st.setToX(1.0); // %100'e geri dön
+            st.setToX(1.0);
             st.setToY(1.0);
             st.play();
         });

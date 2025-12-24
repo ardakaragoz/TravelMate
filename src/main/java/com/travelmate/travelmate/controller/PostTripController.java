@@ -35,7 +35,6 @@ public class PostTripController {
         currencyChoiceBox.getItems().addAll("$", "€", "₺", "£");
         currencyChoiceBox.setValue("$");
 
-     //(Gün: 1-365, Arkadaş: 1-10)
         daysSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 365, 4));
         mateCountSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 2));
     }
@@ -54,7 +53,6 @@ public class PostTripController {
                 statusLabel.setText("Trip Request Created Successfully!");
                 statusLabel.setTextFill(Color.web("#1E3A5F"));
                 statusLabel.setVisible(true);
-                // destinationField.clear();
             } else {
                 statusLabel.setText("Please fill in the destination!");
                 statusLabel.setTextFill(Color.RED);

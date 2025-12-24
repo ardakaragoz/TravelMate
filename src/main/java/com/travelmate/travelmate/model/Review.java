@@ -68,28 +68,22 @@ public class Review {
             this.budgetPoint = data.getLong("budgetPoint").intValue();
             this.helpfulnessPoint = data.getLong("helpfulnessPoint").intValue();
 
-            // Safe string retrieval
             this.comments = data.getString("comments");
 
-            // --- FIX: Check BOTH naming conventions (Legacy Support) ---
-
-            // 1. Handle "Evaluated" User
             Object evaluatedObj = data.get("evaluatedUser");
-            if (evaluatedObj == null) evaluatedObj = data.get("evaluated"); // Fallback to old key
+            if (evaluatedObj == null) evaluatedObj = data.get("evaluated");
 
             if (evaluatedObj != null) {
                 this.evaluatedUser = UserList.getUser(evaluatedObj.toString());
             }
 
-            // 2. Handle "Evaluator" User
             Object evaluatorObj = data.get("evaluatorUser");
-            if (evaluatorObj == null) evaluatorObj = data.get("evaluator"); // Fallback to old key
+            if (evaluatorObj == null) evaluatorObj = data.get("evaluator");
 
             if (evaluatorObj != null) {
                 this.evaluatorUser = UserList.getUser(evaluatorObj.toString());
             }
 
-            // 3. Handle Trip
             Object tripObj = data.get("trip");
             if (tripObj != null) {
                 this.trip = TripList.getTrip(tripObj.toString());
@@ -98,7 +92,6 @@ public class Review {
             calculateOverall();
         }
     }
-
     public void calculateOverall() {
         this.overallPoints = (friendlinessPoint + reliabilityPoint + communicationPoint +
                              adaptationPoint + budgetPoint + helpfulnessPoint) / 6.0;

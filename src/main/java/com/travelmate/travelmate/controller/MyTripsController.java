@@ -54,32 +54,31 @@ public class MyTripsController implements Initializable {
     @FXML private SidebarController sidebarController;
     @FXML private BorderPane mainContent;
 
-    // --- POPUPS ---
     @FXML private VBox detailsPopup, forumPopup, editPopup, requestsPopup;
 
     @FXML private VBox reviewPopup;
     @FXML private VBox reviewListContainer;
 
-    // Details
+
     @FXML private ImageView detailsBannerImage;
     @FXML private Label detailHeaderDest, detailHeaderTitle, detailCreatorName, detailNotes, detailBudget, detailDate, detailItinerary, detailFriendsLabel;
     @FXML private Circle detailCreatorImage;
     @FXML private HBox detailFriendsContainer;
 
-    // Forum
+
     @FXML private Label forumTitleDest, forumSubtitle;
     @FXML private VBox forumListContainer;
     @FXML private TextField forumInputField;
     @FXML private ScrollPane forumScrollPane;
 
-    // Edit
+
     @FXML private TextField editDestination, editDeparture, editBudget, editItinerary;
     @FXML private TextArea editNotes;
     @FXML private Spinner<Integer> editDays, editMates;
     @FXML private DatePicker editDate;
     @FXML private ChoiceBox<String> editCurrency;
 
-    // Requests
+
     @FXML private VBox requestsListContainer;
 
     @FXML private Button openForumBtn;
@@ -109,7 +108,6 @@ public class MyTripsController implements Initializable {
         pastTripsContainer.getChildren().clear();
         pendingTripsContainer.getChildren().clear();
 
-        // Refresh user to ensure latest data
         try {
             currentUser = UserList.getUser(currentUser.getId());
         } catch (Exception e) { e.printStackTrace(); }
@@ -119,11 +117,9 @@ public class MyTripsController implements Initializable {
             ArrayList<String> pastIds = new ArrayList<>();
             List<PendingTripData> pendingDataList = new ArrayList<>();
 
-            // --- CHANGE 1: Track IDs to prevent duplicates ---
             Set<String> processedIds = new HashSet<>();
             Date today = new Date();
 
-            // 1. Process Existing Trips from User Profile
             ArrayList<String> userTrips = currentUser.getTrips();
             if (userTrips != null) {
                 for (String tripId : userTrips) {
@@ -141,7 +137,6 @@ public class MyTripsController implements Initializable {
                 }
             }
 
-            // 2. Process Join Requests
             try {
                 QuerySnapshot query = FirebaseService.getFirestore()
                         .collection("join_requests")
@@ -154,14 +149,11 @@ public class MyTripsController implements Initializable {
 
                     if (tripId == null) continue;
 
-                    // --- CHANGE 2: Handle APPROVED requests immediately ---
                     if ("APPROVED".equalsIgnoreCase(status) || "ACCEPTED".equalsIgnoreCase(status)) {
-                        // If approved but NOT in our processed list yet, fetch it and add to active/past
                         if (!processedIds.contains(tripId)) {
                             Trip trip = TripList.getTrip(tripId);
                             if (trip != null) {
                                 processedIds.add(tripId);
-                                // Sort into correct list based on date
                                 if (trip.getDepartureDate() != null && trip.getDepartureDate().before(today)) {
                                     pastIds.add(tripId);
                                 } else {
@@ -173,7 +165,6 @@ public class MyTripsController implements Initializable {
                     else if ("PENDING".equalsIgnoreCase(status) || "DENIED".equalsIgnoreCase(status)) {
                         Trip trip = TripList.getTrip(tripId);
                         if (trip != null) {
-                            // Verify we aren't already joined to avoid UI confusion
                             boolean alreadyJoined = trip.getJoinedMates() != null && trip.getJoinedMates().contains(currentUser.getId());
                             if (!alreadyJoined) {
                                 pendingDataList.add(new PendingTripData(trip, status.toUpperCase()));
@@ -185,7 +176,6 @@ public class MyTripsController implements Initializable {
                 e.printStackTrace();
             }
 
-            // 3. Render Results
             if (!pendingDataList.isEmpty()) {
                 Platform.runLater(() -> {
                     pendingTripsContainer.getChildren().clear();
@@ -200,7 +190,6 @@ public class MyTripsController implements Initializable {
             if (!currentIds.isEmpty())
                 fetchAndRenderTrips(currentIds, upcomingTripsContainer, "No upcoming trips.", false);
 
-// For Past Trips -> Pass TRUE
             if (!pastIds.isEmpty())
                 fetchAndRenderTrips(pastIds, pastTripsContainer, "No past trips.", true);
 
@@ -223,17 +212,14 @@ public class MyTripsController implements Initializable {
         card.setPadding(new Insets(15));
         card.setAlignment(Pos.CENTER_LEFT);
         card.setPrefWidth(420);
-        // SAME STYLE AS ACTIVE CARD
         card.setStyle("-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 2; -fx-border-radius: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 8, 0, 0, 4);");
 
-        // Image
         ImageView cityImage = new ImageView();
         cityImage.setFitWidth(100); cityImage.setFitHeight(90);
         loadImage(cityImage, trip.getDestinationName());
         Rectangle clip = new Rectangle(100, 90); clip.setArcWidth(20); clip.setArcHeight(20);
         cityImage.setClip(clip);
 
-        // Info
         VBox infoBox = new VBox(5);
         HBox.setHgrow(infoBox, Priority.ALWAYS);
 
@@ -243,7 +229,6 @@ public class MyTripsController implements Initializable {
         Label dateLabel = new Label(trip.getDepartureDate() != null ? dateFormat.format(trip.getDepartureDate()) : "TBD");
         dateLabel.setStyle("-fx-text-fill: #253A63;");
 
-        // Status Badge instead of Budget
         Label statusBadge = new Label(status);
         statusBadge.setFont(Font.font("System", 12));
         statusBadge.setPadding(new Insets(2, 8, 2, 8));
@@ -256,11 +241,9 @@ public class MyTripsController implements Initializable {
 
         infoBox.getChildren().addAll(destLabel, dateLabel, statusBadge);
 
-        // Button Box (Right Side)
         VBox buttonBox = new VBox(8);
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
 
-        // VIEW TRIP DETAILS BUTTON
         Button detailsBtn = createActionButton("View Details", "#CCFF00");
         detailsBtn.setOnAction(e -> openDetailsPopup(trip));
         buttonBox.getChildren().add(detailsBtn);
@@ -275,10 +258,8 @@ public class MyTripsController implements Initializable {
         for (JoinRequest req : requests) {
             futures.add(CompletableFuture.supplyAsync(() -> {
                 try {
-                    // Fetch the Trip object using the ID stored in the Request
                     Trip trip = TripList.getTrip(req.getId());
                     if (trip != null) {
-                        // Return both the Trip and the Status
                         return new PendingTripData(trip, req.getStatus());
                     }
                 } catch (Exception e) {
@@ -302,7 +283,6 @@ public class MyTripsController implements Initializable {
                     container.getChildren().add(new Label(emptyMsg));
                 } else {
                     for (PendingTripData data : loadedData) {
-                        // Call the specialized card creator
                         container.getChildren().add(createPendingTripCard(data.trip, data.status));
                     }
                 }
@@ -331,37 +311,29 @@ public class MyTripsController implements Initializable {
                 if (loadedTrips.isEmpty()) {
                     container.getChildren().add(new Label(emptyMsg));
                 } else {
-                    // --- FEATURE: SHOW ONLY 2 INITIALLY ---
                     int limit = 2;
 
-                    // 1. Render the first 2 trips (or fewer if list is small)
                     for (int i = 0; i < Math.min(loadedTrips.size(), limit); i++) {
                         container.getChildren().add(createTripCard(loadedTrips.get(i), isPast));
                     }
 
-                    // 2. If there are more trips, add a "See More" button
                     if (loadedTrips.size() > limit) {
                         int remaining = loadedTrips.size() - limit;
                         Button seeMoreBtn = new Button("See More (" + remaining + ")");
 
-                        // Style the button to match your app (Blue with White text)
                         seeMoreBtn.setStyle("-fx-background-color: #253A63; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand; -fx-padding: 10 20; -fx-font-size: 14px;");
 
-                        // Add effect for hover (optional)
                         seeMoreBtn.setOnMouseEntered(e -> seeMoreBtn.setStyle("-fx-background-color: #1E2E4E; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand; -fx-padding: 10 20; -fx-font-size: 14px;"));
                         seeMoreBtn.setOnMouseExited(e -> seeMoreBtn.setStyle("-fx-background-color: #253A63; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 15; -fx-cursor: hand; -fx-padding: 10 20; -fx-font-size: 14px;"));
 
                         seeMoreBtn.setOnAction(e -> {
-                            // 3. Remove the button
                             container.getChildren().remove(seeMoreBtn);
 
-                            // 4. Load the rest of the trips
                             for (int i = limit; i < loadedTrips.size(); i++) {
                                 container.getChildren().add(createTripCard(loadedTrips.get(i), isPast));
                             }
                         });
 
-                        // Add button to the layout
                         container.getChildren().add(seeMoreBtn);
                     }
                 }
@@ -399,14 +371,12 @@ public class MyTripsController implements Initializable {
         detailsBtn.setOnAction(e -> openDetailsPopup(trip));
         buttonBox.getChildren().add(detailsBtn);
 
-        // --- BUTTON LOGIC USING 'isPast' ---
         if (isPast) {
-            // PAST TRIPS: Show Review, Hide Edit/Requests
-            Button reviewBtn = createActionButton("Review Mates", "#FFD700"); // Gold color
+
+            Button reviewBtn = createActionButton("Review Mates", "#FFD700");
             reviewBtn.setOnAction(e -> openReviewPopup(trip));
             buttonBox.getChildren().add(reviewBtn);
         } else {
-            // UPCOMING TRIPS: Show Edit/Requests if owner
             if (currentUser.getId().equals(trip.getUser())) {
                 Button editBtn = createActionButton("Edit Trip", "#CCFF00");
                 editBtn.setOnAction(e -> openEditPopup(trip));
@@ -488,7 +458,6 @@ public class MyTripsController implements Initializable {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/Review.fxml"));
             Parent root = loader.load();
 
-            // USE YOUR EXACT PROFILE LOGIC HERE
             ReviewController controller = loader.getController();
             Scene currentScene = mainContent.getScene();
             controller.setReviewsContext(currentScene, user);
@@ -543,14 +512,11 @@ public class MyTripsController implements Initializable {
 
         CompletableFuture.runAsync(() -> {
             try {
-                // 1. Prepare Data with CORRECT KEYS
                 Map<String, Object> reviewData = new HashMap<>();
-                // FIX: Use "trip" instead of "tripId" to match your Schema
                 reviewData.put("trip", trip.getId());
                 reviewData.put("evaluator", currentUser.getId());
                 reviewData.put("evaluated", targetUser.getId());
 
-                // Scores
                 reviewData.put("friendlinessPoint", (int) sliders[0].getValue());
                 reviewData.put("reliabilityPoint", (int) sliders[1].getValue());
                 reviewData.put("communicationPoint", (int) sliders[2].getValue());
@@ -559,40 +525,25 @@ public class MyTripsController implements Initializable {
                 reviewData.put("helpfulnessPoint", (int) sliders[5].getValue());
 
                 reviewData.put("comments", comment);
-                // Save Date as String or Date object depending on your model.
-                // Using Date is standard for Firestore.
                 reviewData.put("createdAt", new Date());
-
-                // 2. Save Review to Firestore
                 DocumentReference ref = FirebaseService.getFirestore().collection("reviews").document(trip.getId() + "-" + currentUser.getId());
-                // Some models require the ID to be stored inside the document too
                 reviewData.put("id", trip.getId() + "-" + currentUser.getId());
 
-                // Blocking write to ensure it exists before we link it
                 ref.set(reviewData).get();
 
-                // 3. Update Target User
-                // We don't need 'new Review(reviewId)' here, just the ID string.
                 if (targetUser.getReviews() == null) {
-                    // Log warning or handle gracefully.
-                    // Since we can't easily "set" the list if there's no setter,
-                    // we at least prevent the app from crashing here.
                     System.err.println("Warning: Target user reviews list is null. Review saved to DB but local user object not updated.");
                 } else {
                     targetUser.getReviews().add(trip.getId() + "-" + currentUser.getId());
 
                 }
-                // Update stats locally if possible, or just save the ID
                 targetUser.setReviewCount(targetUser.getReviewCount() + 1);
 
-                // Calculate new total points (simplified logic)
                 double totalNewPoints = sliders[0].getValue() + sliders[1].getValue() +
                         sliders[2].getValue() + sliders[3].getValue() +
                         sliders[4].getValue() + sliders[5].getValue();
-                // Average of the 6 categories for this single review
                 double thisReviewAvg = totalNewPoints / 6.0;
 
-                // Add to user's total points (assuming reviewPoints tracks sum of averages or similar)
                 targetUser.setReviewPoints(targetUser.getReviewPoints() + (int)thisReviewAvg);
                 boolean edited = false;
                 if (thisReviewAvg >= 4.0){
@@ -600,7 +551,6 @@ public class MyTripsController implements Initializable {
                     targetUser.increaseLevel((int) Math.floor(25 * (thisReviewAvg - 3.4)));
                 }
                 currentUser.increaseLevel(15);
-                // Save User Changes
                 if (!edited) targetUser.updateUser();
 
                 Platform.runLater(() -> {
@@ -628,7 +578,6 @@ public class MyTripsController implements Initializable {
         return btn;
     }
 
-    // --- REQUESTS LOGIC (Background Thread for Freezing Fix) ---
     private void openRequestsPopup(Trip trip) {
         selectedTrip = trip;
         requestsListContainer.getChildren().clear();
@@ -703,7 +652,7 @@ public class MyTripsController implements Initializable {
 
             Label nameLbl = new Label(req.user.getUsername());
             nameLbl.setFont(Font.font("League Spartan Bold", 14));
-            nameLbl.setTextFill(Color.BLACK); // --- FIX: Explicit Black Text
+            nameLbl.setTextFill(Color.BLACK);
 
             Button viewProfileBtn = new Button("View Profile");
             viewProfileBtn.setStyle("-fx-background-color: #CCFF00; -fx-background-radius: 15; -fx-text-fill: black; -fx-font-size: 10px; -fx-font-weight: bold; -fx-cursor: hand;");
@@ -724,7 +673,7 @@ public class MyTripsController implements Initializable {
             Label msgLbl = new Label(req.message);
             msgLbl.setWrapText(true);
             msgLbl.setFont(Font.font("League Spartan", 13));
-            msgLbl.setTextFill(Color.BLACK); // --- FIX: Explicit Black Text
+            msgLbl.setTextFill(Color.BLACK);
             msgScroll.setContent(msgLbl);
 
             messageSection.getChildren().add(msgScroll);
@@ -749,18 +698,16 @@ public class MyTripsController implements Initializable {
             requestsListContainer.getChildren().add(card);
         }
     }
-
-    // --- FIX: Run Database operations in background to prevent freezing ---
     private void handleApprove(RequestData req) {
         requestsListContainer.getChildren().clear();
-        requestsListContainer.getChildren().add(new Label("Processing...")); // Immediate feedback
+        requestsListContainer.getChildren().add(new Label("Processing..."));
 
         CompletableFuture.runAsync(() -> {
             try {
-                selectedTrip.addMate(req.user); // Heavy DB operation
+                selectedTrip.addMate(req.user);
                 FirebaseService.getFirestore().collection("join_requests").document(req.requestId).update("status", "APPROVED");
 
-                Platform.runLater(() -> openRequestsPopup(selectedTrip)); // Refresh UI after done
+                Platform.runLater(() -> openRequestsPopup(selectedTrip));
             } catch (Exception e) {
                 e.printStackTrace();
                 Platform.runLater(() -> openRequestsPopup(selectedTrip));
@@ -774,7 +721,7 @@ public class MyTripsController implements Initializable {
 
         CompletableFuture.runAsync(() -> {
             try {
-                selectedTrip.removePendingMate(req.user); // Heavy DB operation
+                selectedTrip.removePendingMate(req.user);
                 FirebaseService.getFirestore().collection("join_requests").document(req.requestId).update("status", "DENIED");
 
                 Platform.runLater(() -> openRequestsPopup(selectedTrip));
@@ -843,7 +790,6 @@ public class MyTripsController implements Initializable {
                 openForumBtn.setManaged(false);
             }
         }
-        // ----------------------------------------------------
 
         if (mainContent != null) mainContent.setEffect(new GaussianBlur(10));
         detailsPopup.setVisible(true);
@@ -935,8 +881,6 @@ public class MyTripsController implements Initializable {
             Platform.runLater(() -> circle.setFill(new ImagePattern(img)));
         }).start();
     }
-
-    // --- ALGORITHM FOR IMAGEVIEW ---
     private void setImageForImageView(ImageView view, User user) {
         if (view == null) return;
         new Thread(() -> {
@@ -945,7 +889,6 @@ public class MyTripsController implements Initializable {
         }).start();
     }
 
-    // --- SHARED FETCH LOGIC ---
     private Image fetchImage(User user) {
         Image imageToSet = null;
         try {
