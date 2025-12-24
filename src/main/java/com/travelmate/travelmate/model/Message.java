@@ -1,5 +1,6 @@
 package com.travelmate.travelmate.model;
 
+import com.google.cloud.Timestamp; // Import this
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
@@ -20,6 +21,7 @@ public class Message {
     public Message() {}
 
     // --- Sending Constructor ---
+    // This constructor AUTOMATICALLY saves to Firestore.
     public Message(String id, String message, User sender) {
         this.id = id;
         this.message = message;
@@ -29,8 +31,9 @@ public class Message {
         Firestore db = FirebaseService.getFirestore();
         Map<String, Object> messageMap = new HashMap<>();
         messageMap.put("message", message);
+        // We only save the sender ID, not the whole User object (prevents array errors)
         messageMap.put("sender", sender.getId());
-        messageMap.put("createdAt", (long) createdAt.getTime());
+        messageMap.put("createdAt", createdAt); // Save as Date object (Firestore handles conversion)
 
         db.collection("messages").document(id).set(messageMap);
     }
@@ -43,26 +46,40 @@ public class Message {
 
         if (data.exists()) {
             this.message = data.getString("message");
-            if (data.getLong("createdAt") != null) {
-                this.createdAt = new Date(data.getLong("createdAt"));
-            }
+            parseCreatedAt(data);
             if (data.getString("sender") != null) {
                 this.sender = UserList.getUser(data.getString("sender"));
             }
         }
     }
 
-    // --- NEW: Fast Loading Constructor (REQUIRED FOR FIX) ---
+    // --- NEW: Fast Loading Constructor (FIXED) ---
     public Message(DocumentSnapshot data) {
         this.id = data.getId();
         if (data.exists()) {
             this.message = data.getString("message");
-            if (data.getLong("createdAt") != null) {
-                this.createdAt = new Date(data.getLong("createdAt"));
-            }
+            parseCreatedAt(data);
             if (data.getString("sender") != null) {
                 this.sender = UserList.getUser(data.getString("sender"));
             }
+        }
+    }
+
+    // Helper to safely parse date
+    private void parseCreatedAt(DocumentSnapshot data) {
+        try {
+            Timestamp timestamp = data.getTimestamp("createdAt");
+            if (timestamp != null) {
+                this.createdAt = timestamp.toDate();
+            } else {
+                Long time = data.getLong("createdAt");
+                if (time != null) {
+                    this.createdAt = new Date(time);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error parsing date for message " + id);
+            this.createdAt = new Date();
         }
     }
 

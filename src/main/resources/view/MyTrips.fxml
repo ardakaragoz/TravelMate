@@ -315,5 +315,39 @@
             </children>
         </VBox>
 
+        <VBox fx:id="reviewPopup" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity"
+              prefHeight="500.0" prefWidth="450.0" spacing="15.0" visible="false"
+              style="-fx-background-color: #253A63; -fx-background-radius: 20; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 5);"
+              xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+
+            <children>
+                <HBox alignment="CENTER_LEFT" prefWidth="200.0" spacing="10.0">
+                    <children>
+                        <Label text="Review Travel Mates" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="22.0" />
+                            </font>
+                        </Label>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button mnemonicParsing="false" onAction="#closePopups" text="X"
+                                style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14; -fx-cursor: hand;" />
+                    </children>
+                </HBox>
+
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+                    <content>
+                        <VBox fx:id="reviewListContainer" spacing="10.0" style="-fx-background-color: transparent;">
+                            <padding>
+                                <Insets top="5" right="5" bottom="5" left="5"/>
+                            </padding>
+                        </VBox>
+                    </content>
+                </ScrollPane>
+
+                <Button mnemonicParsing="false" onAction="#closePopups" prefWidth="120.0" text="Close"
+                        style="-fx-background-color: #FF4500; -fx-text-fill: white; -fx-background-radius: 15; -fx-font-weight: bold; -fx-cursor: hand;" />
+            </children>
+        </VBox>
+
     </children>
 </StackPane>

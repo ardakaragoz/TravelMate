@@ -57,6 +57,9 @@ public class MyTripsController implements Initializable {
     // --- POPUPS ---
     @FXML private VBox detailsPopup, forumPopup, editPopup, requestsPopup;
 
+    @FXML private VBox reviewPopup;
+    @FXML private VBox reviewListContainer;
+
     // Details
     @FXML private ImageView detailsBannerImage;
     @FXML private Label detailHeaderDest, detailHeaderTitle, detailCreatorName, detailNotes, detailBudget, detailDate, detailItinerary, detailFriendsLabel;
@@ -102,41 +105,208 @@ public class MyTripsController implements Initializable {
     private void loadTrips() {
         upcomingTripsContainer.getChildren().clear();
         pastTripsContainer.getChildren().clear();
-        currentUser = UserList.getUser(currentUser.getId());
+        pendingTripsContainer.getChildren().clear();
+
+        try {
+            currentUser = UserList.getUser(currentUser.getId());
+        } catch (Exception e) { e.printStackTrace(); }
 
         CompletableFuture.runAsync(() -> {
             ArrayList<String> currentIds = new ArrayList<>();
             ArrayList<String> pastIds = new ArrayList<>();
+
+            // 1. Process Active/Past Trips
+            // (Assuming User has a list of trip IDs they are part of)
             ArrayList<String> trips = currentUser.getTrips();
-            for (String trip : trips) {
-                Trip valTrip = TripList.getTrip(trip);
-                if (!valTrip.isFinished()){
-                    currentIds.add(valTrip.getId());
-                } else {
-                    pastIds.add(valTrip.getId());
+            // Also check pastTrips list if your model has it separately
+
+            if (trips != null) {
+                Date today = new Date();
+                for (String tripId : trips) {
+                    Trip valTrip = TripList.getTrip(tripId);
+                    if (valTrip != null) {
+                        if (valTrip.getDepartureDate() != null && valTrip.getDepartureDate().before(today)){
+                            pastIds.add(valTrip.getId());
+                        } else {
+                            currentIds.add(valTrip.getId());
+                        }
+                    }
                 }
             }
-            ArrayList<JoinRequest> pendingList = new ArrayList<>();
-            ArrayList<String> tripRequests = currentUser.getJoinRequests();
-            for (String tripRequest : tripRequests) {
-                try {
-                    JoinRequest req = new JoinRequest(tripRequest);
-                    pendingList.add(req);
 
+            // 2. Process Pending Requests (The Fix)
+            List<PendingTripData> pendingDataList = new ArrayList<>();
+            try {
+                // Query Firestore: "Find all requests where I am the requester"
+                QuerySnapshot query = FirebaseService.getFirestore()
+                        .collection("join_requests")
+                        .whereEqualTo("requester", currentUser.getId())
+                        .get().get();
 
-                } catch (ExecutionException e) {
-                    throw new RuntimeException(e);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                for (DocumentSnapshot doc : query.getDocuments()) {
+                    String status = doc.getString("status");
+                    String tripId = doc.getString("trip"); // This is the ID of the trip I want to join
+
+                    if (tripId == null) {
+                        // You could add logic here to fetch trip doc if needed, skipping for now to prevent freeze
+                        continue;
+                    }
+
+                    // --- CRITICAL LOGIC FIX ---
+                    if ("APPROVED".equalsIgnoreCase(status) || "ACCEPTED".equalsIgnoreCase(status)) {
+                        // If approved, it BELONGS in Active/Upcoming, NOT Pending.
+                        // Only add if not already processed from User object
+                        if (!trips.contains(tripId)) {
+
+                            trips.add(tripId);
+                        }
+                    }
+                    if (status.equalsIgnoreCase("PENDING") || status.equalsIgnoreCase("DENIED")) {
+                        Trip trip = TripList.getTrip(tripId);
+                        if (trip != null) {
+                            // Double check: If I'm already in the trip's mate list, don't show as pending
+                            // This handles cases where status update might lag or desync
+                            boolean alreadyJoined = trip.getJoinedMates() != null && trip.getJoinedMates().contains(currentUser.getId());
+
+                            if (!alreadyJoined) {
+                                pendingDataList.add(new PendingTripData(trip, status.toUpperCase()));
+                            }
+                        }
+
+                    }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            if (pendingList != null) fetchAndRenderPendingTrips(pendingList, pendingTripsContainer, "No pending trip found.");
-            if (currentIds != null) fetchAndRenderTrips(currentIds, upcomingTripsContainer, "No upcoming trips.");
-            if (pastIds != null) fetchAndRenderTrips(pastIds, pastTripsContainer, "No past trips.");
+
+            // 3. Render Results
+            if (!pendingDataList.isEmpty()) {
+                Platform.runLater(() -> {
+                    pendingTripsContainer.getChildren().clear();
+                    for (PendingTripData data : pendingDataList) {
+                        pendingTripsContainer.getChildren().add(createPendingTripCard(data.trip, data.status));
+                    }
+                });
+            } else {
+                Platform.runLater(() -> pendingTripsContainer.getChildren().add(new Label("No pending requests.")));
+            }
+
+            if (!currentIds.isEmpty())
+                fetchAndRenderTrips(currentIds, upcomingTripsContainer, "No upcoming trips.", false);
+
+// For Past Trips -> Pass TRUE
+            if (!pastIds.isEmpty())
+                fetchAndRenderTrips(pastIds, pastTripsContainer, "No past trips.", true);
+
         }, networkExecutor);
     }
 
-    private void fetchAndRenderTrips(List<String> tripIds, FlowPane container, String emptyMsg) {
+
+
+    private static class PendingTripData {
+        Trip trip;
+        String status;
+        public PendingTripData(Trip trip, String status) {
+            this.trip = trip;
+            this.status = status;
+        }
+    }
+
+    private HBox createPendingTripCard(Trip trip, String status) {
+        HBox card = new HBox(15);
+        card.setPadding(new Insets(15));
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPrefWidth(420);
+        // SAME STYLE AS ACTIVE CARD
+        card.setStyle("-fx-background-color: #FFE7C2; -fx-background-radius: 20; -fx-border-color: #253A63; -fx-border-width: 2; -fx-border-radius: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 8, 0, 0, 4);");
+
+        // Image
+        ImageView cityImage = new ImageView();
+        cityImage.setFitWidth(100); cityImage.setFitHeight(90);
+        loadImage(cityImage, trip.getDestinationName());
+        Rectangle clip = new Rectangle(100, 90); clip.setArcWidth(20); clip.setArcHeight(20);
+        cityImage.setClip(clip);
+
+        // Info
+        VBox infoBox = new VBox(5);
+        HBox.setHgrow(infoBox, Priority.ALWAYS);
+
+        Label destLabel = new Label(trip.getDestinationName());
+        destLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px; -fx-text-fill: #253A63;");
+
+        Label dateLabel = new Label(trip.getDepartureDate() != null ? dateFormat.format(trip.getDepartureDate()) : "TBD");
+        dateLabel.setStyle("-fx-text-fill: #253A63;");
+
+        // Status Badge instead of Budget
+        Label statusBadge = new Label(status);
+        statusBadge.setFont(Font.font("System", 12));
+        statusBadge.setPadding(new Insets(2, 8, 2, 8));
+
+        if ("PENDING".equals(status)) {
+            statusBadge.setStyle("-fx-background-color: #FFF3CD; -fx-text-fill: #856404; -fx-background-radius: 10; -fx-border-color: #856404; -fx-border-radius: 10;");
+        } else if ("DENIED".equals(status)) {
+            statusBadge.setStyle("-fx-background-color: #F8D7DA; -fx-text-fill: #721C24; -fx-background-radius: 10; -fx-border-color: #721C24; -fx-border-radius: 10;");
+        }
+
+        infoBox.getChildren().addAll(destLabel, dateLabel, statusBadge);
+
+        // Button Box (Right Side)
+        VBox buttonBox = new VBox(8);
+        buttonBox.setAlignment(Pos.CENTER_RIGHT);
+
+        // VIEW TRIP DETAILS BUTTON
+        Button detailsBtn = createActionButton("View Details", "#CCFF00");
+        detailsBtn.setOnAction(e -> openDetailsPopup(trip));
+        buttonBox.getChildren().add(detailsBtn);
+
+        card.getChildren().addAll(cityImage, infoBox, buttonBox);
+        return card;
+    }
+
+    private void fetchAndRenderPendingTrips(List<JoinRequest> requests, FlowPane container, String emptyMsg) {
+        List<CompletableFuture<PendingTripData>> futures = new ArrayList<>();
+
+        for (JoinRequest req : requests) {
+            futures.add(CompletableFuture.supplyAsync(() -> {
+                try {
+                    // Fetch the Trip object using the ID stored in the Request
+                    Trip trip = TripList.getTrip(req.getId());
+                    if (trip != null) {
+                        // Return both the Trip and the Status
+                        return new PendingTripData(trip, req.getStatus());
+                    }
+                } catch (Exception e) {
+                    return null;
+                }
+                return null;
+            }, networkExecutor));
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(v -> {
+            List<PendingTripData> loadedData = new ArrayList<>();
+            for (CompletableFuture<PendingTripData> f : futures) {
+                try {
+                    if (f.get() != null) loadedData.add(f.get());
+                } catch (Exception e) {}
+            }
+
+            Platform.runLater(() -> {
+                container.getChildren().clear();
+                if (loadedData.isEmpty()) {
+                    container.getChildren().add(new Label(emptyMsg));
+                } else {
+                    for (PendingTripData data : loadedData) {
+                        // Call the specialized card creator
+                        container.getChildren().add(createPendingTripCard(data.trip, data.status));
+                    }
+                }
+            });
+        });
+    }
+
+
+
+    private void fetchAndRenderTrips(List<String> tripIds, FlowPane container, String emptyMsg, boolean isPast) {
         List<CompletableFuture<Trip>> futures = new ArrayList<>();
         for (String tripId : tripIds) {
             futures.add(CompletableFuture.supplyAsync(() -> {
@@ -151,36 +321,21 @@ public class MyTripsController implements Initializable {
             }
             Platform.runLater(() -> {
                 container.getChildren().clear();
-                if (loadedTrips.isEmpty()) container.getChildren().add(new Label(emptyMsg));
-                else for (Trip trip : loadedTrips) container.getChildren().add(createTripCard(trip));
+                if (loadedTrips.isEmpty()) {
+                    container.getChildren().add(new Label(emptyMsg));
+                } else {
+                    for (Trip trip : loadedTrips) {
+                        // Fix: Pass the 'isPast' flag to the card creator
+                        container.getChildren().add(createTripCard(trip, isPast));
+                    }
+                }
             });
         });
     }
 
-    private void fetchAndRenderPendingTrips(List<JoinRequest> pendingTrips, FlowPane container, String emptyMsg) {
-        /*List<CompletableFuture<Trip>> futures = new ArrayList<>();
-        for (String tripId : tripIds) {
-            futures.add(CompletableFuture.supplyAsync(() -> {
-                try { return TripList.getTrip(tripId); } catch (Exception e) { return null; }
-            }, networkExecutor));
-        }
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(v -> {
-            List<Trip> loadedTrips = new ArrayList<>();
-            for (CompletableFuture<Trip> f : futures) {
-                try { if (f.get() != null) loadedTrips.add(f.get()); } catch (Exception e) {}
-            }
-            Platform.runLater(() -> {
-                container.getChildren().clear();
-                if (loadedTrips.isEmpty()) container.getChildren().add(new Label(emptyMsg));
-                else for (Trip trip : loadedTrips) container.getChildren().add(createTripCard(trip));
-            });
-        });
-        */
 
-    }
-
-    private HBox createTripCard(Trip trip) {
+    private HBox createTripCard(Trip trip, boolean isPast) {
         HBox card = new HBox(15);
         card.setPadding(new Insets(15));
         card.setAlignment(Pos.CENTER_LEFT);
@@ -199,9 +354,7 @@ public class MyTripsController implements Initializable {
         destLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 20px; -fx-text-fill: #253A63;");
         Label dateLabel = new Label(trip.getDepartureDate() != null ? dateFormat.format(trip.getDepartureDate()) : "TBD");
         dateLabel.setStyle("-fx-text-fill: #253A63;");
-        Label budgetLabel = new Label(trip.getAverageBudget() + " " + trip.getCurrency());
-        budgetLabel.setStyle("-fx-text-fill: #253A63;");
-        infoBox.getChildren().addAll(destLabel, dateLabel, budgetLabel);
+        infoBox.getChildren().addAll(destLabel, dateLabel);
 
         VBox buttonBox = new VBox(8);
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
@@ -210,16 +363,219 @@ public class MyTripsController implements Initializable {
         detailsBtn.setOnAction(e -> openDetailsPopup(trip));
         buttonBox.getChildren().add(detailsBtn);
 
-        if (currentUser.getId().equals(trip.getUser())) {
-            Button editBtn = createActionButton("Edit Trip", "#CCFF00");
-            editBtn.setOnAction(e -> openEditPopup(trip));
-            Button requestsBtn = createActionButton("Requests", "#CCFF00");
-            requestsBtn.setOnAction(e -> openRequestsPopup(trip));
-            buttonBox.getChildren().addAll(requestsBtn, editBtn);
+        // --- BUTTON LOGIC USING 'isPast' ---
+        if (isPast) {
+            // PAST TRIPS: Show Review, Hide Edit/Requests
+            Button reviewBtn = createActionButton("Review Mates", "#FFD700"); // Gold color
+            reviewBtn.setOnAction(e -> openReviewPopup(trip));
+            buttonBox.getChildren().add(reviewBtn);
+        } else {
+            // UPCOMING TRIPS: Show Edit/Requests if owner
+            if (currentUser.getId().equals(trip.getUser())) {
+                Button editBtn = createActionButton("Edit Trip", "#CCFF00");
+                editBtn.setOnAction(e -> openEditPopup(trip));
+                Button requestsBtn = createActionButton("Requests", "#CCFF00");
+                requestsBtn.setOnAction(e -> openRequestsPopup(trip));
+                buttonBox.getChildren().addAll(requestsBtn, editBtn);
+            }
         }
 
         card.getChildren().addAll(cityImage, infoBox, buttonBox);
         return card;
+    }
+
+    private void openReviewPopup(Trip trip) {
+        if (reviewPopup == null || reviewListContainer == null) {
+            System.err.println("Review Popup FXML not linked!");
+            return;
+        }
+
+        selectedTrip = trip;
+        reviewListContainer.getChildren().clear();
+        Label header = new Label("Select a mate to review:");
+        header.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        reviewListContainer.getChildren().add(header);
+
+        showPopup(reviewPopup);
+
+        CompletableFuture.runAsync(() -> {
+            ArrayList<String> mates = trip.getJoinedMates();
+            if (!trip.getUser().equals(currentUser.getId())) {
+                if (mates == null) mates = new ArrayList<>();
+                if (!mates.contains(trip.getUser())) mates.add(trip.getUser());
+            }
+
+            if (mates != null) {
+                for (String uid : mates) {
+                    if (uid.equals(currentUser.getId())) continue;
+
+                    try {
+                        User u = UserList.getUser(uid);
+                        if (u != null) {
+                            Platform.runLater(() -> {
+                                HBox row = new HBox(10);
+                                row.setAlignment(Pos.CENTER_LEFT);
+                                row.setPadding(new Insets(10));
+                                row.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
+
+                                Circle av = new Circle(20, Color.LIGHTGRAY);
+                                setProfileImage(av, u);
+
+                                Label name = new Label(u.getName());
+                                name.setFont(Font.font("System", 14));
+                                HBox.setHgrow(name, Priority.ALWAYS);
+                                name.setMaxWidth(Double.MAX_VALUE);
+
+                                Button rateBtn = new Button("Rate");
+                                rateBtn.setStyle("-fx-background-color: #28A745; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 10;");
+                                rateBtn.setOnAction(e -> openRateUserForm(u, trip));
+
+                                Button seeReviewsBtn = new Button("Reviews");
+                                seeReviewsBtn.setStyle("-fx-background-color: #17a2b8; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 10;");
+                                seeReviewsBtn.setOnAction(e -> openReviewPage(u));
+
+                                row.getChildren().addAll(av, name, rateBtn, seeReviewsBtn);
+                                reviewListContainer.getChildren().add(row);
+                            });
+                        }
+                    } catch (Exception e) {}
+                }
+            }
+        }, networkExecutor);
+    }
+
+    private void openReviewPage(User user) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/Review.fxml"));
+            Parent root = loader.load();
+
+            // USE YOUR EXACT PROFILE LOGIC HERE
+            ReviewController controller = loader.getController();
+            Scene currentScene = mainContent.getScene();
+            controller.setReviewsContext(currentScene, user);
+
+            Stage stage = (Stage) currentScene.getWindow();
+            stage.setScene(new Scene(root));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void openRateUserForm(User targetUser, Trip trip) {
+        reviewListContainer.getChildren().clear();
+        Label title = new Label("Rate " + targetUser.getName());
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        VBox form = new VBox(10);
+        form.setPadding(new Insets(10));
+
+        Slider[] sliders = new Slider[6];
+        String[] labels = {"Friendliness", "Reliability", "Communication", "Adaptation", "Budget", "Helpfulness"};
+
+        for (int i = 0; i < 6; i++) {
+            VBox row = new VBox(2);
+            Label l = new Label(labels[i]);
+            Slider s = new Slider(1, 5, 5);
+            s.setShowTickMarks(true); s.setShowTickLabels(true); s.setMajorTickUnit(1); s.setBlockIncrement(1); s.setSnapToTicks(true);
+            sliders[i] = s;
+            row.getChildren().addAll(l, s);
+            form.getChildren().add(row);
+        }
+
+        TextArea commentArea = new TextArea();
+        commentArea.setPromptText("Write a comment...");
+        commentArea.setPrefRowCount(3);
+
+        Button submitBtn = new Button("Submit Review");
+        submitBtn.setStyle("-fx-background-color: #CCFF00; -fx-font-weight: bold;");
+        submitBtn.setMaxWidth(Double.MAX_VALUE);
+        submitBtn.setOnAction(e -> submitReview(targetUser, trip, sliders, commentArea.getText()));
+
+        Button backBtn = new Button("Back");
+        backBtn.setOnAction(e -> openReviewPopup(trip));
+
+        reviewListContainer.getChildren().addAll(backBtn, title, form, commentArea, submitBtn);
+    }
+
+    private void submitReview(User targetUser, Trip trip, Slider[] sliders, String comment) {
+        reviewListContainer.getChildren().clear();
+        reviewListContainer.getChildren().add(new Label("Submitting..."));
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                // 1. Prepare Data with CORRECT KEYS
+                Map<String, Object> reviewData = new HashMap<>();
+                // FIX: Use "trip" instead of "tripId" to match your Schema
+                reviewData.put("trip", trip.getId());
+                reviewData.put("evaluator", currentUser.getId());
+                reviewData.put("evaluated", targetUser.getId());
+
+                // Scores
+                reviewData.put("friendlinessPoint", (int) sliders[0].getValue());
+                reviewData.put("reliabilityPoint", (int) sliders[1].getValue());
+                reviewData.put("communicationPoint", (int) sliders[2].getValue());
+                reviewData.put("adaptationPoint", (int) sliders[3].getValue());
+                reviewData.put("budgetPoint", (int) sliders[4].getValue());
+                reviewData.put("helpfulnessPoint", (int) sliders[5].getValue());
+
+                reviewData.put("comments", comment);
+                // Save Date as String or Date object depending on your model.
+                // Using Date is standard for Firestore.
+                reviewData.put("createdAt", new Date());
+
+                // 2. Save Review to Firestore
+                DocumentReference ref = FirebaseService.getFirestore().collection("reviews").document();
+                String reviewId = ref.getId();
+                // Some models require the ID to be stored inside the document too
+                reviewData.put("id", reviewId);
+
+                // Blocking write to ensure it exists before we link it
+                ref.set(reviewData).get();
+
+                // 3. Update Target User
+                // We don't need 'new Review(reviewId)' here, just the ID string.
+                if (targetUser.getReviews() == null) {
+                    // Handle case where list might be null
+                    // (This depends on your User model setter access, but assuming direct list access:)
+                    // If direct access isn't possible, you might need a safe getter.
+                }
+
+                // Safely add ID
+                targetUser.getReviews().add(reviewId);
+
+                // Update stats locally if possible, or just save the ID
+                targetUser.setReviewCount(targetUser.getReviewCount() + 1);
+
+                // Calculate new total points (simplified logic)
+                double totalNewPoints = sliders[0].getValue() + sliders[1].getValue() +
+                        sliders[2].getValue() + sliders[3].getValue() +
+                        sliders[4].getValue() + sliders[5].getValue();
+                // Average of the 6 categories for this single review
+                double thisReviewAvg = totalNewPoints / 6.0;
+
+                // Add to user's total points (assuming reviewPoints tracks sum of averages or similar)
+                targetUser.setReviewPoints(targetUser.getReviewPoints() + (int)thisReviewAvg);
+
+                // Save User Changes
+                targetUser.updateUser();
+
+                Platform.runLater(() -> {
+                    closePopups();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Review submitted successfully!");
+                    alert.show();
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Platform.runLater(() -> {
+                    reviewListContainer.getChildren().clear();
+                    Label errorLbl = new Label("Error: " + e.getMessage());
+                    errorLbl.setTextFill(Color.RED);
+                    reviewListContainer.getChildren().add(errorLbl);
+                });
+            }
+        }, networkExecutor);
     }
 
     private Button createActionButton(String text, String color) {

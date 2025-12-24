@@ -1,5 +1,8 @@
 package com.travelmate.travelmate.controller;
 
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.FieldValue;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.model.*;
@@ -29,10 +32,7 @@ import javafx.util.Duration;
 import java.awt.Desktop;
 import java.lang.reflect.Array;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -79,6 +79,8 @@ public class ChannelsController {
     @FXML private VBox addRecPopup;
     @FXML private TextArea recCommentArea;
     @FXML private TextField recLinkField;
+
+    private Channel selectedChannel;
 
     public void initialize() {
         try {
@@ -224,23 +226,100 @@ public class ChannelsController {
             channelChatPopup.setVisible(true);
             channelChatPopup.toFront();
 
-            loadDummyMessages();
+            if (selectedChannel != null) {
+                loadRealMessages(selectedChannel.getId());
+            } else {
+                try {
+                    Channel ch = ChannelList.getChannel(currentCity);
+                    if (ch != null) {
+                        selectedChannel = ch;
+                        loadRealMessages(ch.getId());
+                    }
+                } catch(Exception e){}
+            }
         }
     }
+    private void loadRealMessages(String channelId) {
+        if (chatMessagesContainer == null) return;
+        chatMessagesContainer.getChildren().clear();
+        chatMessagesContainer.getChildren().add(new Label("Loading messages..."));
 
-    @FXML
-    public void closeChatPopup() {
-        if (mainContainer != null) mainContainer.setEffect(null);
-        if (channelChatPopup != null) channelChatPopup.setVisible(false);
+        networkExecutor.submit(() -> {
+            try {
+                DocumentSnapshot roomDoc = FirebaseService.getFirestore().collection("chatrooms").document(channelId).get().get();
+                List<String> messageIds = null;
+                if (roomDoc.exists()) {
+                    messageIds = (List<String>) roomDoc.get("messages");
+                } else {
+                    DocumentSnapshot chanDoc = FirebaseService.getFirestore().collection("channels").document(channelId).get().get();
+                    if(chanDoc.exists()) messageIds = (List<String>) chanDoc.get("messages");
+                }
+
+                if (messageIds == null || messageIds.isEmpty()) {
+                    Platform.runLater(() -> {
+                        chatMessagesContainer.getChildren().clear();
+                        chatMessagesContainer.getChildren().add(new Label("No messages yet. Say hi!"));
+                    });
+                    return;
+                }
+
+                int total = messageIds.size();
+                int start = Math.max(0, total - 50);
+                List<String> recentIds = messageIds.subList(start, total);
+
+                List<DocumentReference> refs = new ArrayList<>();
+                for (String mid : recentIds) if(mid != null) refs.add(FirebaseService.getFirestore().collection("messages").document(mid));
+
+                if(refs.isEmpty()) return;
+
+                List<DocumentSnapshot> snaps = FirebaseService.getFirestore().getAll(refs.toArray(new DocumentReference[0])).get();
+                List<Message> msgs = new ArrayList<>();
+                for(DocumentSnapshot ds : snaps) if(ds.exists()) msgs.add(new Message(ds));
+
+                msgs.sort(Comparator.comparing(m -> m.getCreatedAt() != null ? m.getCreatedAt() : new Date(0)));
+
+                Platform.runLater(() -> {
+                    chatMessagesContainer.getChildren().clear();
+                    for (Message m : msgs) {
+                        boolean isMe = m.getSender() != null && m.getSender().getId().equals(currentUser.getId());
+                        String sName = m.getSender() != null ? m.getSender().getName() : "User";
+                        addMessageBubble(m.getMessage(), isMe);
+                    }
+                    if(chatScrollPane != null) chatScrollPane.setVvalue(1.0);
+                });
+
+            } catch (Exception e) { e.printStackTrace(); }
+        });
     }
 
     @FXML
     public void handleSendPopupMessage() {
         if (chatInputPopup == null) return;
-        String msg = chatInputPopup.getText();
-        if (msg != null && !msg.isEmpty()) {
-            addMessageBubble(msg, true);
+        String msgText = chatInputPopup.getText();
+
+        if (msgText != null && !msgText.trim().isEmpty() && selectedChannel != null) {
+            addMessageBubble(msgText, true);
             chatInputPopup.clear();
+
+            networkExecutor.submit(() -> {
+                try {
+                    String msgId = UUID.randomUUID().toString();
+
+                    // !!! FIX: Just create the message.
+                    // The Message constructor itself saves to DB using a Map, avoiding array errors.
+                    Message msg = new Message(msgId, msgText, currentUser);
+
+                    // Link to Chatroom
+                    DocumentReference roomRef = FirebaseService.getFirestore().collection("chatrooms").document(selectedChannel.getId());
+                    if (!roomRef.get().get().exists()) {
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("messages", Arrays.asList(msgId));
+                        roomRef.set(data);
+                    } else {
+                        roomRef.update("messages", FieldValue.arrayUnion(msgId));
+                    }
+                } catch (Exception e) { e.printStackTrace(); }
+            });
         }
     }
 
@@ -266,12 +345,16 @@ public class ChannelsController {
         if(chatScrollPane != null) chatScrollPane.setVvalue(1.0);
     }
 
-    private void loadDummyMessages() {
-        if(chatMessagesContainer == null) return;
-        chatMessagesContainer.getChildren().clear();
-        addMessageBubble("Hey! Is there anyone staying at Covent Garden?", false);
-        addMessageBubble("I highly recommend the Gokyuzu restaurant!", false);
+    @FXML
+    public void closeChatPopup() {
+        if (mainContainer != null) mainContainer.setEffect(null);
+        if (channelChatPopup != null) channelChatPopup.setVisible(false);
     }
+
+
+
+
+
 
     private void loadCityButtons(String filter) {
         if (filter.isEmpty()) filter = "";
@@ -377,6 +460,7 @@ public class ChannelsController {
         if (channelTitleLabel != null) channelTitleLabel.setText(cityName);
         if(chatPopupTitle != null) chatPopupTitle.setText(cityName + " Chat");
         if(recsTitleLabel != null) recsTitleLabel.setText(cityName + " Recommendations");
+        selectedChannel = ChannelList.getChannel(cityName);
 
         if (channelJoinButton != null) {
             if (currentUser.getChannels().contains(cityName)) {
