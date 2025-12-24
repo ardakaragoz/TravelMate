@@ -28,6 +28,7 @@ public class Main extends Application {
         ChatList.loadAllChats();
         TripList.loadAllTrips();
         RecommendationList.loadRecommendations();
+        stage.setResizable(false);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/sign-in-page.fxml"));
         Parent root = loader.load();
