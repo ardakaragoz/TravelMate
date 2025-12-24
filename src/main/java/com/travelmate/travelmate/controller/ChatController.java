@@ -55,6 +55,7 @@ public class ChatController {
     @FXML private TextField messageInput;
     @FXML private ScrollPane messageScrollPane;
 
+    // --- CACHE & STATE ---
     private List<HBox> chatItemNodes = new ArrayList<>();
     private ChatRoom currentChatRoom = null;
     private User currentUser;
@@ -66,45 +67,49 @@ public class ChatController {
 
     // Image Cache (Load once, use everywhere)
     private static Image defaultUserImage;
-
+    // Message Cache (ChatID -> List of Messages)
     private Map<String, List<Message>> localMessageCache = new HashMap<>();
 
     public void initialize() {
         if(sidebarController != null) sidebarController.setActivePage("Chat");
 
-
+        // 1. Pre-load Default Image (Efficiency)
         try {
             InputStream is = getClass().getResourceAsStream("/images/user_icon.png");
             if (is != null) defaultUserImage = new Image(is);
         } catch (Exception e) { e.printStackTrace(); }
 
-
+        // 2. Setup Scroll Logic
         messageScrollPane.setFitToHeight(true);
         messageBubbleContainer.setAlignment(Pos.BOTTOM_CENTER);
         messageBubbleContainer.heightProperty().addListener((observable, oldValue, newValue) -> {
             messageScrollPane.setVvalue(1.0);
         });
 
+        // 3. Get User
         currentUser = UserSession.getCurrentUser();
         if (currentUser == null) return;
 
+        // 4. Load Sidebar in Background (Fixes Lag)
         loadChatsFromDatabase();
     }
 
     private void loadChatsFromDatabase() {
-
+        // Clear UI first
         chatListContainer.getChildren().clear();
         chatItemNodes.clear();
 
         List<String> chatIds = currentUser.getChatRooms();
         if (chatIds == null || chatIds.isEmpty()) return;
 
+        // --- OPTIMIZATION: Background Loading for Sidebar ---
         Task<List<ChatData>> loadSidebarTask = new Task<>() {
             @Override
             protected List<ChatData> call() throws Exception {
                 List<ChatData> loadedChats = new ArrayList<>();
 
                 for (String chatId : chatIds) {
+                    // fetching data might be slow, so we do it here
                     ChatRoom room = ChatList.getChat(chatId);
                     if (room != null) {
                         User otherUser = findOtherUser(room);
@@ -123,7 +128,10 @@ public class ChatController {
 
             for (ChatData chat : data) {
                 addChatToSidebar(chat.name, chat.lastMsg, "", isFirst, chat.room, chat.otherUser);
+
+                // Auto-open first chat
                 if (isFirst) {
+                    // We must get the last node added to chatItemNodes
                     if (!chatItemNodes.isEmpty()) {
                         handleChatClick(chatItemNodes.get(chatItemNodes.size() - 1), chat.name, chat.room, chat.otherUser);
                     }
@@ -134,6 +142,8 @@ public class ChatController {
 
         new Thread(loadSidebarTask).start();
     }
+
+    // Helper class to hold data during background fetch
     private static class ChatData {
         String name;
         String lastMsg;
@@ -201,6 +211,7 @@ public class ChatController {
         }).start();
     }
 
+    // --- ALGORITHM FOR IMAGEVIEW ---
     private void setImageForImageView(ImageView view, User user) {
         if (view == null) return;
         new Thread(() -> {
@@ -208,6 +219,8 @@ public class ChatController {
             Platform.runLater(() -> view.setImage(img));
         }).start();
     }
+
+    // --- SHARED FETCH LOGIC ---
     private Image fetchImage(User user) {
         Image imageToSet = null;
         try {
@@ -258,26 +271,23 @@ public class ChatController {
         if (activeChatListener != null) {
             activeChatListener.remove();
             activeChatListener = null;
-            if (localMessageCache.containsKey(room.getId())) {
-                renderMessages(localMessageCache.get(room.getId()));
-            }
+        }
 
-            // 1. Clear UI and Cache manually here ONE TIME
-            messageBubbleContainer.getChildren().clear();
-            loadedMessageIds.clear();
-            lastTotalMessageCount = 0;
+        // 1. Clear UI and Cache manually here ONE TIME
+        messageBubbleContainer.getChildren().clear();
+        loadedMessageIds.clear();
+        lastTotalMessageCount = 0;
 
-            // 2. Start Listener
-            // automatically fetch the initial history (Last 25 messages).
-            startChatListener(room.getId());
+        // 2. Start Listener
+        // automatically fetch the initial history (Last 25 messages).
+        startChatListener(room.getId());
 
-            // 3. (Optional) Instant load from local cache if available
-            // This makes it feel instant while the listener connects
-            if (localMessageCache.containsKey(room.getId())) {
-                List<Message> cached = localMessageCache.get(room.getId());
-                for (Message m : cached) loadedMessageIds.add(m.getId());
-                renderMessages(cached);
-            }
+        // 3. (Optional) Instant load from local cache if available
+        // This makes it feel instant while the listener connects
+        if (localMessageCache.containsKey(room.getId())) {
+            List<Message> cached = localMessageCache.get(room.getId());
+            for(Message m : cached) loadedMessageIds.add(m.getId());
+            renderMessages(cached);
         }
     }
 
@@ -421,6 +431,7 @@ public class ChatController {
         bubble.setMaxWidth(450);
         bubble.setPadding(new Insets(15, 20, 15, 20));
 
+        // Styling
         if (isSentByMe) {
             bubble.setStyle("-fx-background-color: #cbd45b; -fx-background-radius: 25 25 0 25;");
         } else {
@@ -428,12 +439,15 @@ public class ChatController {
         }
         bubble.setEffect(new DropShadow(5, Color.rgb(0,0,0,0.1)));
 
+        // --- MESSAGE LABEL (FIXED: Black & Wrapping) ---
         Label messageLabel = new Label(text);
         messageLabel.setFont(Font.font("League Spartan", 16));
 
+        // Force Black Text (Override any CSS inheritance)
         messageLabel.setTextFill(Color.BLACK);
         messageLabel.setStyle("-fx-text-fill: black;");
 
+        // Wrap Logic
         messageLabel.setWrapText(true);
         messageLabel.setMaxWidth(350);
         messageLabel.setMinHeight(Region.USE_PREF_SIZE);
