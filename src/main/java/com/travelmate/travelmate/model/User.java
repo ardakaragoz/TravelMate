@@ -1,9 +1,11 @@
 package com.travelmate.travelmate.model;
-
+//27.12.2025 Small note: loadFromDoc gets exact data from firebase and integrate in into instances directly.
 import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.FieldValue;
 import com.google.cloud.firestore.Firestore;
 import com.travelmate.travelmate.firebase.FirebaseService;
 import com.travelmate.travelmate.session.ChannelList;
+import com.travelmate.travelmate.session.UserList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -326,14 +328,19 @@ public class User {
     }
 
     public void joinChannel(Channel channel) throws ExecutionException, InterruptedException {
-        channel.addParticipant(this);
         channels.add(channel.getId());
-        updateUser();
+        CompletableFuture.runAsync(() -> {
+            FirebaseService.getFirestore().collection("users").document(this.id)
+                    .update("channels", FieldValue.arrayUnion(channel.getId()));
+        });
     }
 
     public void leaveChannel(Channel channel) throws ExecutionException, InterruptedException {
         channels.remove(channel.getId());
-        updateUser();
+        CompletableFuture.runAsync(() -> {
+            FirebaseService.getFirestore().collection("users").document(this.id)
+                    .update("channels", FieldValue.arrayRemove(channel.getId()));
+        });
     }
 
     public String getProfilePicture() {
